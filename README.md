@@ -1,8 +1,6 @@
-Below is a comprehensive **README.md** for the Arbor framework, reflecting its current structure and usage. Citations point to the GitHub repository and relevant code sections.
+# Arbor
 
----
-
-A modular PHP micro‑framework for fast, modern application development. citeturn0view0
+A modular PHP micro‑framework for fast, modern application development.
 
 ## Table of Contents
 - [Introduction](#introduction)  
@@ -14,19 +12,19 @@ A modular PHP micro‑framework for fast, modern application development. cit
 - [License](#license)  
 
 ## Introduction
-Arbor is a lightweight, highly modular PHP micro‑framework designed to give you full control over HTTP routing, middleware, dependency injection, configuration and more—while remaining fast and easy to extend. citeturn0view0
+Arbor is a lightweight, highly modular PHP micro‑framework designed to give you full control over HTTP routing, middleware, dependency injection, configuration and more—while remaining fast and easy to extend.
 
 ## Features
-- **Bootstrap & environment handling** through `Arbor\bootstrap\App`, enabling multi‑environment configuration (development, production) citeturn10view0  
-- **Configuration management** loaded from PHP files (`configs/`), supporting environment‑specific overrides citeturn10view0  
-- **Dependency Injection Container** for service registration and resolution (`Arbor\container`) citeturn10view0  
-- **Service Contracts** defining interfaces and abstractions (`Arbor\contracts`) citeturn10view0  
-- **Fragment system** for template fragments and reusable view components (`Arbor\fragment`) citeturn10view0  
-- **HTTP layer** with PSR‑7‑style requests/responses and context (`Arbor\http`) citeturn10view0  
-- **Middleware pipeline** to intercept and process requests (`Arbor\pipeline`) citeturn10view0  
-- **Routing system** supporting group files, error pages, and dynamic URIs (`Arbor\router`) citeturn10view0  
-- **Autoloader** for easy class loading (`Arbor/Autoloader.php`) citeturn10view0  
-- **Database abstraction & QueryBuilder** for SQL‑dialect‑agnostic queries (`Arbor\database`) citeturn10view0
+- **Bootstrap & environment handling** through `Arbor\bootstrap\App`, enabling multi‑environment configuration (development, production)
+- **Configuration management** loaded from PHP files (`configs/`), supporting environment‑specific overrides
+- **Dependency Injection Container** for service registration and resolution (`Arbor\container`)
+- **Service Contracts** defining interfaces and abstractions (`Arbor\contracts`)
+- **Fragment system** for template fragments and reusable view components (`Arbor\fragment`)
+- **HTTP layer** with PSR‑7‑style requests/responses and context (`Arbor\http`)
+- **Middleware pipeline** to intercept and process requests (`Arbor\pipeline`)
+- **Routing system** supporting group files, error pages, and dynamic URIs (`Arbor\router`)
+- **Autoloader** for easy class loading (`Arbor/Autoloader.php`)
+- **Database abstraction & QueryBuilder** for SQL‑dialect‑agnostic queries (`Arbor\database`)
 
 ## Installation
 ```bash
@@ -36,7 +34,6 @@ cd arbor
 
 # Point your web server document root to the `public/` directory.
 ```
-citeturn0view0
 
 ## Usage
 In `public/index.php`:
@@ -57,7 +54,7 @@ $app = (new App())
 $response = $app->handleHTTP();
 $response->send();
 ```
-This bootstraps Arbor, loads configuration from `configs/`, sets the environment, registers services and middleware, then dispatches routes to controllers. citeturn14view0
+This bootstraps Arbor, loads configuration from `configs/`, sets the environment, registers services and middleware, then dispatches routes to controllers.
 
 ## Directory Structure
 ```
@@ -83,7 +80,6 @@ routes/                 # Route definitions (app.php, errorPages.php)
 .htaccess               # Apache rewrite rules
 index.php               # Silent root stub
 ```
-citeturn10view0turn0view0
 
 
 ## 🚧 Upcoming Features
@@ -173,4 +169,4 @@ Planned global middlewares to enhance security and DX:
 4. Push to the branch (`git push origin feature/YourFeature`)  
 5. Open a Pull Request at https://github.com/unifiedcodes/arbor
 
-Bug reports and improvements are welcome via GitHub [Issues](https://github.com/unifiedcodes/arbor/issues). citeturn0view0
+Bug reports and improvements are welcome via GitHub [Issues](https://github.com/unifiedcodes/arbor/issues).

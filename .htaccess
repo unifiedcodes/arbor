@@ -1,0 +1,31 @@
+<IfModule mod_rewrite.c>
+
+    Options -Indexes
+    RewriteEngine On
+
+    # Block access to .php files from folders that serves static content.
+    RewriteRule ^(uploads|static)/.*\.php$ - [F,L]
+    # Block access to .htaccess
+    RewriteRule ^\.htaccess$ - [F,L]
+
+
+    # Set HTTP security headers
+    Header set X-XSS-Protection "1; mode=block"
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "DENY"
+    Header set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+
+
+    # Force HTTPS
+    # RewriteCond %{HTTPS} off
+    # RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+
+    # Allow access only to specific file types in the static folder
+    RewriteRule ^static/.*\.(css|js|jpeg|png|gif|svg)$ - [L]
+
+
+    # redirect all other requests to web/index.php
+    RewriteRule ^(.*)$ public/index.php [QSA,L]
+
+</IfModule>

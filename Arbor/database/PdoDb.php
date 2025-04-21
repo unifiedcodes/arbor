@@ -5,9 +5,8 @@ namespace Arbor\database;
 use PDO;
 use Exception;
 use PDOStatement;
-use PDOException;
-use Arbor\attributes\ConfigValue;
-use Arbor\database\Placeholders;
+use Arbor\database\utility\Placeholders;
+use Arbor\database\connection\Connection;
 
 /**
  * PdoDb - Database abstraction layer for PDO connections
@@ -21,16 +20,8 @@ use Arbor\database\Placeholders;
  */
 class PdoDb
 {
-    // Database credentials
-    protected string $db_host;
-    protected string $db_name;
-    protected string $db_username;
-    protected string $db_password;
-
-    /**
-     * @var PDO|null The PDO connection instance
-     */
-    protected ?PDO $connection = null;
+    protected PDO $pdo;
+    protected Connection $connection;
 
     /**
      * @var string|null SQL query string
@@ -47,18 +38,6 @@ class PdoDb
      */
     protected ?bool $result = null;
 
-    /**
-     * Default PDO connection options
-     * 
-     * @var array<int, mixed> PDO configuration options
-     */
-    private array $defaultPDOOptions = [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-        PDO::ATTR_EMULATE_PREPARES => false,
-        PDO::ATTR_PERSISTENT => false,
-        PDO::ATTR_TIMEOUT => 30,
-    ];
 
     /**
      * Default fetch mode for query results
@@ -72,64 +51,12 @@ class PdoDb
      */
     protected Placeholders $placeholders;
 
-    /**
-     * Constructor - initializes database connection
-     * 
-     * @param string $db_host Database host
-     * @param string $db_name Database name
-     * @param string $db_username Database username
-     * @param string $db_password Database password
-     * @param Placeholders $placeholders Placeholder handler for query parameters
-     */
-    public function __construct(
-        #[ConfigValue('db.host')]
-        string $db_host,
 
-        #[ConfigValue('db.name')]
-        string $db_name,
-
-        #[ConfigValue('db.username')]
-        string $db_username,
-
-        #[ConfigValue('db.password')]
-        string $db_password = '',
-
-        Placeholders $placeholders,
-
-        #[ConfigValue('db.pdo.attributes')]
-        ?array $options = []
-    ) {
-        $this->db_host     = $db_host;
-        $this->db_name     = $db_name;
-        $this->db_username = $db_username;
-        $this->db_password = $db_password;
-
-        $this->placeholders = $placeholders;
-
-        $this->connection($options);
-    }
-
-    /**
-     * Establish a PDO connection if not already connected.
-     * 
-     * @param array<int, mixed> $options Additional PDO connection options
-     * @return void
-     * @throws Exception When database connection fails
-     */
-    protected function connection(?array $options = []): void
+    public function __construct(Connection $connection, Placeholders $placeholder)
     {
-        if ($this->connection instanceof PDO) {
-            return;
-        }
-
-        $options = array_merge($this->defaultPDOOptions, $options ?? []);
-
-        try {
-            $dsn = "mysql:host={$this->db_host};dbname={$this->db_name}";
-            $this->connection = new PDO($dsn, $this->db_username, $this->db_password, $options);
-        } catch (PDOException $e) {
-            throw new Exception("Database connection failed");
-        }
+        $this->connection = $connection;
+        $this->pdo = $connection->getPdo();
+        $this->placeholders = $placeholder;
     }
 
     /**
@@ -149,19 +76,6 @@ class PdoDb
         $this->placeholders->reset();
     }
 
-    /**
-     * Explicitly close the database connection
-     *
-     * @return void
-     */
-    public function close(): void
-    {
-        // to free any references
-        $this->reset();
-
-        // Close the connection
-        $this->connection = null;
-    }
 
     // --- GETTERS
 
@@ -172,18 +86,9 @@ class PdoDb
      */
     public function getDatabaseType(): string
     {
-        return $this->connection->getAttribute(PDO::ATTR_DRIVER_NAME);
+        return $this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
     }
 
-    /**
-     * Get the underlying PDO instance
-     *
-     * @return PDO The PDO instance
-     */
-    public function getPDO(): PDO
-    {
-        return $this->connection;
-    }
 
     /**
      * Returns the corresponding PDO constant for a given type.
@@ -219,7 +124,7 @@ class PdoDb
      */
     public function beginTransaction(): bool
     {
-        return $this->connection->beginTransaction();
+        return $this->pdo->beginTransaction();
     }
 
     /**
@@ -229,7 +134,7 @@ class PdoDb
      */
     public function commit(): bool
     {
-        return $this->connection->commit();
+        return $this->pdo->commit();
     }
 
     /**
@@ -239,7 +144,7 @@ class PdoDb
      */
     public function rollBack(): bool
     {
-        return $this->connection->rollBack();
+        return $this->pdo->rollBack();
     }
 
     /**
@@ -249,7 +154,7 @@ class PdoDb
      */
     public function inTransaction(): bool
     {
-        return $this->connection->inTransaction();
+        return $this->pdo->inTransaction();
     }
 
 
@@ -306,16 +211,18 @@ class PdoDb
     /**
      * Prepare the SQL statement for execution
      * 
-     * @return void
+     * @return static
      * @throws Exception When SQL query is empty or not set
      */
-    protected function prepareStatement(): void
+    public function prepareStatement(): static
     {
         if (!$this->sql) {
             throw new Exception("Sql is empty or not set yet");
         }
 
-        $this->statement = $this->connection->prepare($this->sql);
+        $this->statement = $this->pdo->prepare($this->sql);
+
+        return $this;
     }
 
     /**
@@ -334,13 +241,15 @@ class PdoDb
     /**
      * Execute the prepared statement
      * 
-     * @return void
+     * @return static
      * @throws Exception When statement is not prepared before execution
      */
-    public function execute(): void
+    public function execute(): static
     {
         $this->ensureValidStatement();
         $this->result = $this->statement->execute();
+
+        return $this;
     }
 
     //--- Result Fetchers
@@ -396,10 +305,11 @@ class PdoDb
      */
     public function getInsertId(): string
     {
-        return $this->connection->lastInsertId();
+        return $this->pdo->lastInsertId();
     }
 
     //--- Query Builders
+
 
     /**
      * Prepare a SQL query
@@ -414,35 +324,18 @@ class PdoDb
         // Parse the query and collect placeholders, type hints and get a cleaned sql string
         $this->sql = $this->placeholders->parseSql($query);
 
-        // Prepare the SQL statement
-        $this->prepareStatement();
-
         return $this;
     }
 
-    /**
-     * Bind values to the prepared statement
-     * 
-     * @param array<string|int, mixed> $values Values to bind to placeholders
-     * @return static Current instance for method chaining
-     */
-    public function values(array $values): static
-    {
-        $this->bindValues($values);
-
-        $this->execute();
-
-        return $this;
-    }
 
     /**
      * Bind values to statement placeholders
      * 
      * @param array<string|int, mixed> $values Values to bind to placeholders
-     * @return void
+     * @return static
      * @throws Exception When binding fails or validation error occurs
      */
-    protected function bindValues(array $values): void
+    public function bindValues(array $values): static
     {
         // Ensure $this->statement is valid PDOStatement
         $this->ensureValidStatement();
@@ -458,6 +351,9 @@ class PdoDb
             // Bind the value with the proper placeholder and type
             $this->statement->bindValue($key, $value['value'], $value['type']);
         }
+
+
+        return $this;
     }
 
     /**
@@ -489,6 +385,7 @@ class PdoDb
                 }
 
                 if (!isset($placeholders[$key])) {
+                    // this defence to be removed if we need to support a placeholder parsing bypass.
                     throw new Exception("There is no such placeholder in query with name: '{$key}'");
                 }
             }

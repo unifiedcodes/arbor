@@ -3,6 +3,7 @@
 namespace Arbor\http\context;
 
 use Arbor\http\Request;
+use Arbor\http\ServerRequest;
 use BadMethodCallException;
 
 /**
@@ -18,7 +19,7 @@ class RequestContext
     /**
      * The underlying HTTP request object.
      */
-    protected Request $request;
+    protected Request|ServerRequest $request;
     protected string $baseURI = '';
     protected string $basePath = '';
 
@@ -27,10 +28,13 @@ class RequestContext
      *
      * @param Request $request The HTTP request to wrap
      */
-    public function __construct(Request $request, string $baseURI = '')
+    public function __construct(Request $request)
     {
         $this->request = $request;
-        $this->setBaseURI($baseURI);
+
+        if ($request instanceof ServerRequest) {
+            $this->setBaseURI($this->request->getBaseURI());
+        }
     }
 
     /**
@@ -124,15 +128,29 @@ class RequestContext
     }
 
 
+    protected static function prepareBaseURI($baseURI)
+    {
+        $parseURI = parse_url($baseURI ?? '');
+
+        if (!isset($parseURI['scheme'])) {
+            $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
+            $baseURI = $scheme . $baseURI;
+        }
+
+        return $baseURI;
+    }
+
     /**
      * Sets the base URI and extracts the base path
      * 
      * @param string|null $baseURI The base URI for the application
      * @return void
      */
-    protected function setBaseURI(?string $baseURI): void
+    protected function setBaseURI(?string $baseURI = null): void
     {
-        $parseURI = parse_url($baseURI ?? '');
+        $baseURI = $baseURI ?? '';
+        $baseURI  = $this->prepareBaseURI($baseURI);
+        $parseURI = parse_url($baseURI);
 
         $this->basePath = isset($parseURI['path']) ? $parseURI['path'] : '';
         $this->baseURI = $baseURI ?? '';
@@ -174,7 +192,7 @@ class RequestContext
         $requestedPath = '/' . ltrim($requestedPath, '/');
 
         // Ensure basePath is prefix of requestedPath
-        if ($basePath && str_starts_with($requestedPath, $basePath)) {
+        if ($basePath && str_starts_with($requestedPath, $basePath . '/')) {
             $relative = substr($requestedPath, strlen($basePath));
             return '/' . ltrim($relative, '/'); // always return path with leading slash
         }

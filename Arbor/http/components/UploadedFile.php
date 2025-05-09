@@ -222,4 +222,37 @@ class UploadedFile
     {
         return $this->clientMediaType;
     }
+
+    /**
+     * Retrieve the file extension based on the client's original filename.
+     *
+     * @return string|null The file extension (without dot), or null if unavailable
+     */
+    public function getClientExtension(): ?string
+    {
+        if (!$this->clientFilename) {
+            return null;
+        }
+
+        $extension = pathinfo($this->clientFilename, PATHINFO_EXTENSION);
+        return $extension !== '' ? strtolower($extension) : null;
+    }
+
+
+    /**
+     * Set or override the client-provided filename.
+     *
+     * @param string $newFilename
+     * @return void
+     */
+    public function setClientFilename(string $newFilename): void
+    {
+        $this->clientFilename = $newFilename;
+    }
+
+
+    public function isMoved(): bool
+    {
+        return $this->moved;
+    }
 }

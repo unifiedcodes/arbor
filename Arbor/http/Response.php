@@ -15,6 +15,7 @@ use Arbor\http\traits\BodyTrait;
  * for creating common response types.
  * 
  * @package Arbor\http
+ * 
  */
 class Response
 {

@@ -25,6 +25,14 @@
     RewriteRule ^static/.*\.(css|js|jpeg|png|gif|svg)$ - [L]
 
 
+    
+    # redirect /admin requests to admin/index.php
+    #RewriteRule ^admin(.*)$ admin/index.php [QSA,L]
+
+    # redirect /api requests to api/index.php
+    #RewriteRule ^api(.*)$ api/index.php [QSA,L]
+
+
     # redirect all other requests to web/index.php
     RewriteRule ^(.*)$ public/index.php [QSA,L]
 

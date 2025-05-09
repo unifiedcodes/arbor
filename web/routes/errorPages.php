@@ -1,7 +1,7 @@
 <?php
 
 
-use app\controllers\ErrorHandler;
+use web\controllers\ErrorHandler;
 
 
 return [

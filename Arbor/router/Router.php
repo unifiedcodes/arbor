@@ -10,10 +10,11 @@ use Arbor\router\URLBuilder;
 use Arbor\http\context\RequestContext;
 use Arbor\pipeline\PipelineFactory;
 use Arbor\router\RouteMethods;
+use Arbor\attributes\ConfigValue;
 use Exception;
 
 /**
- * Class Router
+ * Class Router (Router Facade)
  *
  * Manages route registration, grouping, resolution, and dispatching.
  * This class handles grouping of routes, adding individual routes,
@@ -72,8 +73,10 @@ class Router
      *
      * Initializes the registry and group manager.
      */
-    public function __construct($baseURI)
-    {
+    public function __construct(
+        #[ConfigValue('app.base_uri')]
+        $baseURI
+    ) {
         $this->baseURI = $baseURI;
         $this->registry = new Registry();
         $this->group = new Group();

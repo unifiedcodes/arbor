@@ -10,9 +10,16 @@ $autoloader = new Autoloader('../');
 
 $app = (new App())
     ->withConfig('../configs/')
-    ->onEnvironment('development')
+    
+    //environment setting effect configuration merging from all the apps installed.
+    ->onEnvironment('development') 
+
+    // uses file instead of array from global configs/app.php.
+    ->useAppConfig('admin/configs/app.php')
+    ->useAppConfig('web/configs/app.php')
+
     ->boot();
 
-// Handling Incoming Request
+
 $response = $app->handleHTTP();
 $response->send();

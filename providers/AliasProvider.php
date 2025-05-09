@@ -4,7 +4,8 @@ namespace providers;
 
 use Arbor\contracts\container\ServiceProvider;
 use Arbor\container\Container;
-use Arbor\config\Config;
+use Arbor\contracts\Container\ContainerInterface;
+use Arbor\config\Configurator;
 use Arbor\router\Router;
 
 /**
@@ -31,7 +32,7 @@ class AliasProvider extends ServiceProvider
      *
      * @return void
      */
-    public function register(Container $container): void
+    public function register(ContainerInterface $container): void
     {
         // This provider doesn't register any services.
     }
@@ -49,7 +50,7 @@ class AliasProvider extends ServiceProvider
     public function aliases(): array
     {
         return [
-            'config' => Config::class,
+            'config' => Configurator::class,
             'router' => Router::class,
         ];
     }

@@ -1,7 +1,7 @@
 <?php
 
 
-namespace app\controllers;
+namespace web\controllers;
 
 
 use Arbor\contracts\handlers\ControllerInterface;
@@ -11,7 +11,6 @@ use Arbor\http\context\RequestContext;
 
 class ErrorHandler implements ControllerInterface
 {
-
     public function process(RequestContext $input): Response
     {
         return new Response(
@@ -25,7 +24,7 @@ class ErrorHandler implements ControllerInterface
     public function notFound(): Response
     {
         return new Response(
-            'handler reached for not found !',
+            'not found !',
             404,
             ['Content-Type' => 'text/plain'],
         );
@@ -35,7 +34,7 @@ class ErrorHandler implements ControllerInterface
     public function notAllowed(): Response
     {
         return new Response(
-            'handler reached for not allowed !',
+            'not allowed !',
             403,
             ['Content-Type' => 'text/plain'],
         );
@@ -45,7 +44,7 @@ class ErrorHandler implements ControllerInterface
     public function methodNotAllowed(): Response
     {
         return new Response(
-            'handler reached for method not allowed !',
+            'method not allowed !',
             405,
             ['Content-Type' => 'text/plain'],
         );

@@ -12,8 +12,9 @@ use Exception;
  * of each file and provides access to configuration values using dot notation.
  *
  * @package Arbor\config
+ * 
  */
-class Config
+class Configurator
 {
     /**
      * The requested environment (e.g., 'development', 'production').
@@ -22,7 +23,7 @@ class Config
      */
     protected ?string $environment;
 
-    
+
     /**
      * Holds all configuration values.
      *
@@ -42,20 +43,33 @@ class Config
      *
      * @throws Exception If the configuration directory is not found or if file contents are invalid.
      */
-    public function __construct(string $configPath = 'configs', ?string $environment = null)
+    public function __construct(string $path = 'configs', ?string $environment = null)
     {
         $this->environment = $environment;
 
         // Load base configuration
-        $this->loadConfig($configPath);
+        $this->loadConfig($path);
 
         // Load environment-specific configuration overrides if provided
+        $this->mergeEnvironment($path, $environment);
+    }
+
+
+    public function mergeEnvironment($path, $environment)
+    {
         if ($environment !== null) {
-            $envPath = rtrim($configPath, '/\\') . DIRECTORY_SEPARATOR . $environment;
+            $envPath = rtrim($path, '/\\') . DIRECTORY_SEPARATOR . $environment;
             if (is_dir($envPath)) {
                 $this->loadConfig($envPath, true);
             }
         }
+    }
+
+
+    public function mergeByDir($path, $environment)
+    {
+        $this->loadConfig($path, true);
+        $this->mergeEnvironment($path, $environment);
     }
 
     /**
@@ -110,40 +124,71 @@ class Config
      */
     protected function arrayMergeRecursiveDistinct(array $base, array $override): array
     {
+        // Replace entire base array with override
+        if (isset($override['!replace']) && $override['!replace'] === true) {
+            unset($override['!replace']);
+            return $override;
+        }
+
+        // If both are list arrays, merge as lists
+        if (array_is_list($base) && array_is_list($override)) {
+            return array_merge($base, $override);
+        }
+
         foreach ($override as $key => $value) {
-            if (array_key_exists($key, $base) && is_array($base[$key]) && is_array($value)) {
-                $base[$key] = $this->arrayMergeRecursiveDistinct($base[$key], $value);
+            if (array_key_exists($key, $base)) {
+                if (is_array($base[$key]) && is_array($value)) {
+                    $base[$key] = $this->arrayMergeRecursiveDistinct($base[$key], $value);
+                } else {
+                    $base[$key] = $value;
+                }
             } else {
                 $base[$key] = $value;
             }
         }
+
         return $base;
     }
+
 
     /**
      * Retrieves a configuration value using dot notation.
      *
      * Example: get('database.host') returns the host value from the database config.
      *
-     * @param string $key     The configuration key in dot notation.
-     * @param mixed  $default The default value to return if the key is not found.
+     * If the second argument ($default) is provided — even if it's null — it will be returned
+     * when the key is not found. If the second argument is omitted and the key does not exist,
+     * an Exception will be thrown.
      *
-     * @return mixed The configuration value or the default if the key is not found.
+     * @param string $key     The configuration key in dot notation.
+     * @param mixed  $default (Optional) The default value to return if the key is not found.
+     *                        If not provided, an exception is thrown on missing keys.
+     *
+     * @return mixed The configuration value or the default if provided and the key is not found.
+     *
+     * @throws \Exception If the key is not found and no default is provided.
      */
     public function get(string $key, mixed $default = null): mixed
     {
+        $hasDefault = func_num_args() === 2;
         $keys = explode('.', $key);
         $value = $this->config;
 
         foreach ($keys as $segment) {
             if (!is_array($value) || !array_key_exists($segment, $value)) {
-                return $default;
+                if ($hasDefault) {
+                    return $default;
+                }
+
+                throw new Exception("Config key '{$key}' not found.");
             }
+
             $value = $value[$segment];
         }
 
         return $value;
     }
+
 
     /**
      * Sets a configuration value using dot notation.

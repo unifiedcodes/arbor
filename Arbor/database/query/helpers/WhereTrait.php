@@ -5,6 +5,7 @@ namespace Arbor\database\query\helpers;
 use Arbor\database\query\Builder;
 use Arbor\database\query\Expression;
 use Closure;
+use InvalidArgumentException;
 
 /**
  * Trait providing WHERE clause helper methods for the query builder.
@@ -191,7 +192,7 @@ trait WhereTrait
      */
     public function whereNotNull(string $column): static
     {
-        return $this->addWhere($column, null, 'IS', 'AND', true, 'null');
+        return $this->addWhere($column, null, 'IS NOT', 'AND', true, 'null');
     }
 
     /**
@@ -215,9 +216,16 @@ trait WhereTrait
      */
     public function orWhereNotNull(string $column): static
     {
-        return $this->addWhere($column, null, 'IS', 'OR', true, 'null');
+        return $this->addWhere($column, null, 'IS NOT', 'OR', true, 'null');
     }
 
+
+    protected function validBetweenValues(array $values)
+    {
+        if (count($values) !== 2) {
+            throw new InvalidArgumentException("Where Between requires array of exactly 2 values to compare from");
+        }
+    }
     /**
      * Add a WHERE BETWEEN clause.
      * 
@@ -226,8 +234,10 @@ trait WhereTrait
      * $query->whereBetween('created_at', 
      *     ['2023-01-01', '2023-12-31']);              // WHERE created_at BETWEEN '2023-01-01' AND '2023-12-31'
      */
-    public function whereBetween(string $column, array $values): static
+    public function whereBetween(string $column, mixed $values): static
     {
+        $this->validBetweenValues($values);
+
         return $this->addWhere($column, $values, 'BETWEEN', 'AND', false, 'between');
     }
 
@@ -240,6 +250,8 @@ trait WhereTrait
      */
     public function whereNotBetween(string $column, array $values): static
     {
+        $this->validBetweenValues($values);
+
         return $this->addWhere($column, $values, 'BETWEEN', 'AND', true, 'between');
     }
 
@@ -252,6 +264,8 @@ trait WhereTrait
      */
     public function orWhereBetween(string $column, array $values): static
     {
+        $this->validBetweenValues($values);
+
         return $this->addWhere($column, $values, 'BETWEEN', 'OR', false, 'between');
     }
 
@@ -264,6 +278,8 @@ trait WhereTrait
      */
     public function orWhereNotBetween(string $column, array $values): static
     {
+        $this->validBetweenValues($values);
+
         return $this->addWhere($column, $values, 'BETWEEN', 'OR', true, 'between');
     }
 

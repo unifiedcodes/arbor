@@ -24,8 +24,6 @@ trait JoinTrait
             throw new \InvalidArgumentException('Cannot add ON clause without a JOIN');
         }
 
-        $joinIndex = count($this->joins) - 1;
-
         $condition = $this->buildCondition(
             'join',
             $left,
@@ -37,15 +35,9 @@ trait JoinTrait
         );
 
         // If the join already has conditions, append to them
-        // Otherwise initialize the 'on' array
-        if (isset($this->joins[$joinIndex]['on']) && is_array($this->joins[$joinIndex]['on'])) {
-            $this->joins[$joinIndex]['on'] = array_merge(
-                $this->joins[$joinIndex]['on'],
-                $condition
-            );
-        } else {
-            $this->joins[$joinIndex]['on'] = $condition;
-        }
+        $key = array_key_last($this->joins);
+
+        $this->joins[$key]['on'][] = $condition;
 
         return $this;
     }

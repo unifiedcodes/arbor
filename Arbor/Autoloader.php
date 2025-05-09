@@ -21,6 +21,7 @@ class Autoloader
      * Root directory used as a fallback when no namespace mapping is found.
      *
      * @var string
+     * 
      */
     protected string $rootDir;
 
@@ -104,14 +105,12 @@ class Autoloader
 
     /**
      * Loads the class file corresponding to the given fully-qualified class name.
-     *
-     * If the file exists, it is required; otherwise, an exception is thrown.
+     *     
      *
      * @param string $className The fully-qualified class name.
      *
      * @return void
      *
-     * @throws Exception If the class file cannot be found.
      */
     public function load(string $className): void
     {
@@ -119,8 +118,6 @@ class Autoloader
 
         if (file_exists($filePath)) {
             require $filePath;
-        } else {
-            throw new Exception("Class '$className' not found at $filePath");
         }
     }
 }

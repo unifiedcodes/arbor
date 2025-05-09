@@ -1,7 +1,13 @@
 <?php
 
+define('ROOT_DIR', realpath('../'));
+define('BASE_URI', 'localhost/arbor/');
+
 return [
-    'isProduction' => false,
-    'title' => 'Arbor Sample App',
-    'baseURI' => 'http://localhost/arbor/',
+    'root_dir' => ROOT_DIR,
+    'global_base_uri' => BASE_URI,
+
+    'apps' =>    [
+        // included by public/index.php while bootstrapping
+    ]
 ];

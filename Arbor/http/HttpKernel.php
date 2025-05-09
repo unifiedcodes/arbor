@@ -2,38 +2,40 @@
 
 namespace Arbor\http;
 
-
 use Arbor\router\Router;
 use Arbor\attributes\ConfigValue;
 use Arbor\pipeline\PipelineFactory;
 use Arbor\contracts\handlers\MiddlewareInterface;
-
 use Arbor\http\Response;
 use Arbor\http\Request;
 use Arbor\http\context\RequestContext;
 use Arbor\http\context\RequestStack;
 use Arbor\http\traits\ResponseNormalizerTrait;
-
 use Throwable;
 use Exception;
 
-
+/**
+ * The central HTTP kernel responsible for handling HTTP and sub-requests,
+ * managing the request stack, executing middleware, and dispatching routes.
+ */
 class HttpKernel
 {
-
     use ResponseNormalizerTrait;
 
-
+    protected RequestFactory $requestFactory;
     protected PipelineFactory $pipelineFactory;
     protected Router $router;
     protected RequestStack $requestStack;
-    protected RequestFactory $requestFactory;
     protected bool $isDebug = false;
     protected array $globalMiddlewareStack = [];
-    protected string $baseURI = '';
 
-
-
+    /**
+     * @param RequestFactory $requestFactory for creating requests (will be inherited by HTTPSubKernel to make sub requests)
+     * @param RequestStack $requestStack Stack managing request contexts
+     * @param PipelineFactory $pipelineFactory Factory to create middleware pipelines
+     * @param Router $router The router instance
+     * @param bool|null $isDebug Enables debugging mode if true
+     */
     public function __construct(
         RequestFactory $requestFactory,
         RequestStack $requestStack,
@@ -41,114 +43,112 @@ class HttpKernel
         Router $router,
         #[ConfigValue('app.isDebug')]
         ?bool $isDebug = false,
-        #[ConfigValue('app.baseURI')]
-        string $baseURI = ''
     ) {
-        // dependencies.
         $this->requestFactory = $requestFactory;
         $this->requestStack = $requestStack;
         $this->pipelineFactory = $pipelineFactory;
         $this->router = $router;
 
-        // configs
         $this->isDebug = $isDebug ?: false;
-        $this->baseURI = $baseURI ?: '';
     }
 
-
-
+    /**
+     * Add a global middleware to be executed for every request.
+     *
+     * @param MiddlewareInterface $middleware
+     */
     public function addMiddleware(MiddlewareInterface $middleware): void
     {
         $this->globalMiddlewareStack[] = $middleware;
     }
 
-
-    /*
-    * only this method is responsible for turning responses into valid Response object.
-    * only this method is responsible for wrapping raw requests into valid requestContext
-    * and pushing it in request stack.
-    */
+    /**
+     * Handles an incoming request, manages its context and routing, and returns a response.
+     * Also applies global middlewares to non-subrequests and catches errors to ensure a valid response.
+     *
+     * @param Request $request The incoming request
+     * @param bool $isSubRequest True if this is an internal sub-request
+     * @return Response The processed response
+     */
     public function handle(Request $request, bool $isSubRequest = false): Response
     {
-        // prepare context.
-        $requestContext = new RequestContext($request, $this->baseURI);
+        $requestContext = new RequestContext($request);
 
-        // if request is subrequest ----> do inherit from parent & main here.
-
-        // push to stack.
+        // Push context into the stack
         $this->requestStack->push($requestContext);
 
-        // checking for circular calls.
+        // Prevent infinite recursion for sub-requests
         if ($this->requestStack->alreadyDispatched($request)) {
             throw new Exception("Infinite sub-request detected for route: " . $request->getUri());
         }
 
-        // calculate outputbuffer levels.
         $initialLevel = ob_get_level();
 
         try {
-
-            // start output buffer if not debug environment.
+            // Start output buffering in non-debug environments
             if (!$this->isDebug) {
                 ob_start();
             }
 
+            // Apply global middleware for main request only
             if (!$isSubRequest) {
-                // if not subrequest run globalmiddlewares and recieves modified requestContext.
                 $requestContext = $this->executeGlobalMiddlewares($requestContext);
             }
 
-            // capture response.
+            // Dispatch through router
             $response = $this->routerDispatch($requestContext);
 
-
-            // cleaning up output buffer.
+            // Clean up output buffers
             if (!$this->isDebug) {
                 while (ob_get_level() > $initialLevel) {
                     ob_end_clean();
                 }
             }
 
-            // returning formatted response object.
+            // Return the normalized response
             return $this->ensureValidResponse($response);
-        }
-
-        // catch error and decide to rethrow error or create a valid response (default)
-        catch (Throwable $error) {
-
-            // clean output buffer.
+        } catch (Throwable $error) {
+            // Clean output buffer in case of errors
             while (ob_get_level() > $initialLevel) {
                 ob_end_clean();
             }
 
             return $this->createErrorResponse($error);
-        }
-
-        // pop out request from stack if it's sub request.
-        finally {
+        } finally {
+            // Sub-requests should be removed from stack after handling
             if ($isSubRequest === true) {
                 $this->requestStack->pop();
             }
         }
     }
 
-
-
-    protected function executeGlobalMiddlewares(RequestContext $requestContext)
+    /**
+     * Execute the global middleware pipeline on the request context.
+     *
+     * @param RequestContext $requestContext
+     * @return RequestContext
+     */
+    protected function executeGlobalMiddlewares(RequestContext $requestContext): RequestContext
     {
         $pipeline = $this->pipelineFactory->create();
 
-        return $pipeline
+        /** @var RequestContext $context */
+        $context = $pipeline
             ->send($requestContext)
             ->through($this->globalMiddlewareStack)
             ->then(fn($request) => $request);
+
+        return $context;
     }
 
-
-
+    /**
+     * Dispatch the request context via the router.
+     *
+     * @param RequestContext $requestContext
+     * @return mixed The controller return value (to be normalized to Response)
+     */
     protected function routerDispatch(RequestContext $requestContext): mixed
     {
-        // Delegate the dispatching to the router and get the response
         return $this->router->dispatch($requestContext, $this->pipelineFactory);
     }
 }

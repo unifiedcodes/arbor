@@ -18,6 +18,7 @@ use Arbor\http\context\RequestContext;
  * - Converting the stack to a summary array.
  * 
  * @package Arbor\contracts
+ * 
  */
 interface RequestStackRO
 {

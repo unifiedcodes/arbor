@@ -5,7 +5,7 @@ namespace Arbor\attributes;
 
 use Attribute;
 use Arbor\contracts\metadata\AttributeInterface;
-use Arbor\config\Config;
+use Arbor\config\Configurator;
 
 /**
  * Class ConfigValue
@@ -28,9 +28,9 @@ class ConfigValue implements AttributeInterface
     /**
      * The Config instance used to resolve the value.
      *
-     * @var Config|null
+     * @var Configurator|null
      */
-    protected ?Config $config = null;
+    protected ?Configurator $config = null;
 
     /**
      * ConfigValue constructor.
@@ -45,11 +45,11 @@ class ConfigValue implements AttributeInterface
     /**
      * Sets the Config instance required for resolving the value.
      *
-     * @param Config $config The configuration instance.
+     * @param Configurator $config The configuration instance.
      *
      * @return void
      */
-    public function require(Config $config): void
+    public function require(Configurator $config): void
     {
         $this->config = $config;
     }

@@ -1,10 +1,12 @@
 <?php
 
-namespace providers;
+namespace web\providers;
 
 use Arbor\contracts\container\ServiceProvider;
 use Arbor\container\Container;
+use Arbor\contracts\Container\ContainerInterface;
 use Arbor\router\Router;
+use Arbor\facades\Route;
 
 /**
  * Class RouterProvider
@@ -31,15 +33,14 @@ class RouterProvider extends ServiceProvider
      *
      * @return void
      */
-    public function register(Container $container): void
+    public function register(ContainerInterface $container): void
     {
         $container->singleton(Router::class, function (Container $container): Router {
 
             /** 
-             * Instructing IDE 
              * @var App $container
              */
-            $baseURI = $container->getConfig('app.baseURI');
+            $baseURI = $container->getConfig('app.base_uri');
 
             return new Router($baseURI);
         });
@@ -56,18 +57,21 @@ class RouterProvider extends ServiceProvider
      * 
      * @return void
      */
-    public function boot(Container $container): void
+    public function boot(ContainerInterface $container): void
     {
         /** @var Router $router */
         $router = $container->make(Router::class);
 
+        // set router instance in facade.
+        Route::setInstance($router);
+
         /** 
-         * Instructing IDE 
          * @var App $container
          * 
          * Get the routes directory from configuration
          */
-        $routesDir = (string) $container->getConfig('dirs.routes');
+        $routesDir = (string) $container->getConfig('app.routes_dir');
+
 
         // Load the main application routes
         $router->groupByFile($routesDir . '/app.php');

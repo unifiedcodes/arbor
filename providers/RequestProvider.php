@@ -4,6 +4,7 @@ namespace providers;
 
 use Arbor\contracts\container\ServiceProvider;
 use Arbor\container\Container;
+use Arbor\contracts\Container\ContainerInterface;
 use Arbor\http\context\RequestStack;
 
 /**
@@ -23,7 +24,7 @@ class RequestProvider extends ServiceProvider
      * @param Container $container
      * @return void
      */
-    public function register(Container $container): void
+    public function register(ContainerInterface $container): void
     {
         // Singleton binding ensures consistent request stack
         $container->singleton(RequestStack::class, fn() => new RequestStack());

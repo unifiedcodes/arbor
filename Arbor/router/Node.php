@@ -2,7 +2,6 @@
 
 namespace Arbor\router;
 
-use Exception;
 use Arbor\router\Meta;
 
 /**

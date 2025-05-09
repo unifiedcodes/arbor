@@ -3,13 +3,17 @@
 namespace Arbor\bootstrap;
 
 
+use Exception;
+use Arbor\bootstrap\AppConfigScope;
 use Arbor\container\Container;
-use Arbor\config\Config;
+use Arbor\config\Configurator;
 use Arbor\http\HttpKernel;
 use Arbor\http\RequestFactory;
 use Arbor\http\Response;
 use Arbor\router\Router;
-use Exception;
+use Arbor\facades\Config;
+use Arbor\http\ServerRequest;
+use Arbor\support\Helpers;
 
 
 /**
@@ -19,6 +23,7 @@ use Exception;
  * configuration, service providers, and HTTP request handling.
  *
  * @package Arbor\bootstrap
+ * 
  */
 
 class App extends Container
@@ -44,34 +49,18 @@ class App extends Container
      */
     protected ?string $environment = null;
 
-    /**
-     * Providers to be registered (merged from config and inline).
-     *
-     * @var array
-     */
-    protected array $providersToRegister = [];
-
-    /**
-     * Inline providers explicitly passed.
-     *
-     * @var array
-     */
-    protected array $inlineProviders = [];
-
-    /**
-     * Flag to determine whether inline providers should be merged
-     * with providers from config.
-     *
-     * @var bool
-     */
-    protected bool $mergeProviders = false;
 
     /**
      * The Config instance.
      *
-     * @var Config
+     * @var Configurator
      */
-    public Config $config;
+    protected Configurator $configurator;
+
+
+    protected ServerRequest $request;
+
+    protected array $appConfigFiles = [];
 
     /**
      * App constructor.
@@ -126,34 +115,38 @@ class App extends Container
         return $this;
     }
 
-    /**
-     * Set inline providers with an option to merge with config providers.
-     *
-     * @param array $providers Array of provider class names.
-     * @param bool $merge Whether to merge with providers from config.
-     * @return $this
-     */
-    public function withProviders(array $providers = [], bool $merge = false): self
+
+    public function useAppConfig(string $config_file): self
     {
-        $this->inlineProviders = $providers;
-        $this->mergeProviders = $merge;
+        $this->appConfigFiles[] = $config_file;
+
         return $this;
     }
+
 
     /**
      * Boot the application by loading configuration and providers.
      *
      * @return $this
-     * @throws Exception if configuration directory is not specified.
+     * @throws Exception
      */
     public function boot(): self
     {
-        // Ensure configuration directory is set.
-        if (!isset($this->configDir)) {
-            throw new Exception("Configuration directory not specified.");
-        }
+        // load helper functions.
+        Helpers::load();
 
-        $this->loadConfiguration();
+        // since facades share only on instance of container
+        // set cotnainer instance to any one facade,
+        // and every facade will be able to access container.
+        Config::setContainer($this);
+
+        // load environment specific global configuration
+        $this->loadGlobalConfig();
+
+        // load environment specific app configuration
+        $this->scopeConfig();
+
+        // load service providers
         $this->loadProviders();
 
         return $this;
@@ -164,15 +157,30 @@ class App extends Container
      *
      * @return void
      */
-    protected function loadConfiguration(): void
+    protected function loadGlobalConfig(): void
     {
+        // Ensure configuration directory is set.
+        if (!isset($this->configDir)) {
+            throw new Exception("Configuration directory not specified.");
+        }
+
         // Bind the Config instance as a singleton.
-        $this->singleton(Config::class, function (): Config {
-            return new Config($this->configDir, $this->environment);
+        $this->singleton(Configurator::class, function (): Configurator {
+            return new Configurator($this->configDir, $this->environment);
         });
 
         // Retrieve and set the Config instance.
-        $this->config = $this->make(Config::class);
+        $this->configurator = $this->make(Configurator::class);
+    }
+
+
+    // loads app scoped configuration.
+    protected function scopeConfig()
+    {
+        $configScope = $this->resolve(AppConfigScope::class, ['environment' => $this->environment]);
+
+        $configScope->appConfigByFiles($this->appConfigFiles);
+        $configScope->scope($_SERVER['REQUEST_URI']);
     }
 
     /**
@@ -183,19 +191,10 @@ class App extends Container
     protected function loadProviders(): void
     {
         // Retrieve providers from the configuration.
-        $configProviders = $this->config ? $this->config->get('providers', []) : [];
-
-        // Determine which providers to register based on inline settings.
-        if ($this->inlineProviders) {
-            $this->providersToRegister = $this->mergeProviders
-                ? array_merge($configProviders, $this->inlineProviders)
-                : $this->inlineProviders;
-        } else {
-            $this->providersToRegister = $configProviders;
-        }
+        $providers = $this->configurator ? $this->configurator->get('providers', []) : [];
 
         // Register providers through the container.
-        $this->registerProviders($this->providersToRegister);
+        $this->registerProviders($providers);
 
         // Boot providers.
         $this->bootProviders();
@@ -216,9 +215,12 @@ class App extends Container
      */
     public function handleHTTP(): Response
     {
-        // create request from Globals.
-        $request = $this->resolve(RequestFactory::class)::fromGlobals();
+        $baseURI = $this->configurator->get('app.base_uri');
+        $this->request = $this->resolve(RequestFactory::class, ['baseURI' => $baseURI])::fromGlobals();
 
+        if (!$baseURI) {
+            throw new Exception("Configuration 'app.base_uri' cannot be empty");
+        }
 
         // Auto Resolve a Router instance from the container.
         $router = $this->make(Router::class);
@@ -232,18 +234,24 @@ class App extends Container
             [
                 'router' => $router,
                 'isDebug' => $isDebug,
-                'baseURI' => $this->config->get('app.baseURI')
+                'baseURI' => $baseURI
             ]
         );
 
+
         // Process the request through the Kernel and return the response.
-        return $kernel->handle($request);
+        return $kernel->handle($this->request);
     }
 
 
     public function getConfig(string $key, mixed $default = null)
     {
         // delegates to configuration...
-        return $this->config->get($key, $default);
+        return $this->configurator->get($key, $default);
+    }
+
+    public function print()
+    {
+        return $this->configurator;
     }
 }

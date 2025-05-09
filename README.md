@@ -6,10 +6,11 @@ A modular PHP micro‑framework for fast, modern application development.
 - [Introduction](#introduction)  
 - [Features](#features)  
 - [Installation](#installation)  
-- [Usage](#usage)  
+- [Usage](#usage)
 - [Directory Structure](#directory-structure)  
 - [Contributing](#contributing)  
-- [License](#license)  
+- [Support](#support)  
+- [License](#license)
 
 ## Introduction
 Arbor is a lightweight, highly modular PHP micro‑framework designed to give you full control over HTTP routing, middleware, dependency injection, configuration and more—while remaining fast and easy to extend.
@@ -95,12 +96,17 @@ These features are planned for upcoming releases of Arbor:
 ---
 
 ## Installation
-```php
+
+```bash
 # Clone the repository
 git clone https://github.com/unifiedcodes/arbor.git
 cd arbor
+```
 
-# Point your web server document root to the `public/` directory.
+## Usage
+Point your web server document root to the `public/` directory.
+
+```php
 use Arbor\Autoloader;
 use Arbor\bootstrap\App;
 
@@ -115,7 +121,7 @@ $app = (new App())
 
 $response = $app->handleHTTP();
 $response->send();
-
+```
 
 ## Directory Structure
 ```
@@ -236,5 +242,12 @@ index.php               # Silent root stub
 5. Open a Pull Request at https://github.com/unifiedcodes/arbor
 
 Bug reports and improvements are welcome via GitHub [Issues](https://github.com/unifiedcodes/arbor/issues)
-for Suppot email at info.unifiedcodes@gmail.com 
-or Whatsapp on +91 - 75 808 908 75
+
+## Support 
+- email - info.unifiedcodes@gmail.com 
+- Whatsapp - +91 - 75 808 908 75
+
+
+## License
+
+Arbor is licensed under the [Apache License 2.0](LICENSE).

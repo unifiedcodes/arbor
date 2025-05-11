@@ -129,6 +129,7 @@ class Resolver
             return $this->call($resolver, $customParams);
         }
 
+
         // Unsupported resolver type.
         throw new Exception("Unsupported resolver type provided. '{$resolver}' either class doesn't exists or it's not a valid fqn");
     }
@@ -179,11 +180,13 @@ class Resolver
      */
     protected function invokeClass(string $className, array $customParams = [])
     {
+
         $reflectionClass = new ReflectionClass($className);
 
         if (!$reflectionClass->isInstantiable()) {
             throw new Exception("Class {$className} is not instantiable");
         }
+
 
         $constructor = $reflectionClass->getConstructor();
         $parameters = $this->getResolvedParameters($constructor, $customParams);
@@ -272,6 +275,7 @@ class Resolver
      */
     protected function resolveParameterDependency(ReflectionParameter $parameter, array $customParams = [])
     {
+
         $paramName = $parameter->getName();
         $type = ($parameter->getType() instanceof ReflectionNamedType) ? $parameter->getType()->getName() : 'mixed';
 
@@ -283,11 +287,9 @@ class Resolver
             return $this->resolvePrimitiveParameter($parameter, $type);
         }
 
-
         if ($type === Container::class) {
             return $this->container;
         }
-
 
         // If the type is an interface.
         if (interface_exists($type)) {
@@ -320,6 +322,7 @@ class Resolver
      */
     protected function resolvePrimitiveParameter(ReflectionParameter $parameter, string $type)
     {
+
         $paramName = $parameter->getName();
         $attributes = $parameter->getAttributes();
 
@@ -327,12 +330,12 @@ class Resolver
             return $this->resolveAttributedParameter($attributes);
         }
 
-        if ($parameter->isOptional()) {
-            return null;
-        }
-
         if ($parameter->isDefaultValueAvailable()) {
             return $parameter->getDefaultValue();
+        }
+
+        if ($parameter->isOptional()) {
+            return null;
         }
 
         throw new Exception("Cannot resolve required primitive parameter: $paramName of type $type");

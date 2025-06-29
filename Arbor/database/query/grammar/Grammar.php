@@ -141,7 +141,7 @@ abstract class Grammar
         foreach ($insert['values'] as $valueRow) {
             // If the value is a subquery or expression
             if ($this->isFragment($valueRow)) {
-                $valueGroups[] = $this->compileFragment($valueRow);
+                $valueGroups[] = $this->fragment($valueRow);
             } else {
                 // Regular value list
                 $valueGroups[] = '(' . implode(', ', array_map([$this, 'value'], $valueRow)) . ')';

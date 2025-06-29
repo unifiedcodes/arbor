@@ -37,12 +37,6 @@ class Database
      */
     protected Connection $connection;
 
-    /**
-     * Base namespace for grammar classes
-     * 
-     * @var string
-     */
-    protected string $grammarNamespace = 'Arbor\\database\\query\\grammar\\';
 
     /**
      * Grammar resolver instance for loading appropriate SQL grammar classes
@@ -76,7 +70,9 @@ class Database
     public function __construct(ConnectionPool|null $connectionPool = null)
     {
         $this->connectionPool = $connectionPool;
-        $this->grammarResolver = new GrammarResolver($this->grammarNamespace);
+        $this->grammarResolver = new GrammarResolver(
+            'Arbor\\database\\query\\grammar\\'
+        );
     }
 
 
@@ -103,6 +99,7 @@ class Database
 
         // fallback to default
         $this->connection = $this->connectionPool->acquireConnection('default');
+
         return $this;
     }
 
@@ -141,8 +138,10 @@ class Database
      * @param string|null $alias Optional table alias
      * @return Builder Returns the query builder instance for chaining
      */
-    public function table(string|Closure|Builder|array $table, ?string $alias = null)
-    {
+    public function table(
+        string|Closure|Builder|array $table,
+        ?string $alias = null
+    ) {
         $this->connection ?? $this->withConnection();
         $this->grammar ?? $this->withGrammar();
 
@@ -190,7 +189,11 @@ class Database
     }
 
 
-    public function executeRaw(string $query, array $values) {}
+    public function executeRaw(string $query, array $values)
+    {
+        // convience method.
+        // delegate to query and values.
+    }
 
     /**
      * Execute the current query and fetch a single row result

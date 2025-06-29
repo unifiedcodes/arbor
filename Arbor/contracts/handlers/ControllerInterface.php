@@ -21,5 +21,5 @@ interface ControllerInterface
      *
      * @return Response The HTTP response after processing the request.
      */
-    public function process(RequestContext $input): Response;
+    public function process(RequestContext $input);
 }

@@ -1,39 +1,191 @@
+# ========================================================================
+# COMPREHENSIVE SECURITY CONFIGURATION FOR APACHE WEB SERVER
+# ========================================================================
+# This configuration implements defense-in-depth strategies to protect 
+# your application from common security threats including:
+#  - SQL injection attacks
+#  - Cross-site scripting (XSS)
+#  - Remote file inclusion
+#  - Directory traversal
+#  - Information disclosure
+#  - Unauthorized access to sensitive resources
+# ========================================================================
+
+# Disable server signature (hides Apache version in HTTP headers)
+ServerSignature Off
+
+# Prevent directory listing (stops attackers from seeing folder contents)
+Options -Indexes
+
+# Enable Apache's rewrite engine for URL manipulation
 <IfModule mod_rewrite.c>
-
-    Options -Indexes
     RewriteEngine On
-
-    # Block access to .php files from folders that serves static content.
-    RewriteRule ^(uploads|static)/.*\.php$ - [F,L]
-    # Block access to .htaccess
-    RewriteRule ^\.htaccess$ - [F,L]
-
-
-    # Set HTTP security headers
-    Header set X-XSS-Protection "1; mode=block"
-    Header set X-Content-Type-Options "nosniff"
-    Header set X-Frame-Options "DENY"
-    Header set Strict-Transport-Security "max-age=31536000; includeSubDomains"
-
-
-    # Force HTTPS
+    
+    # Force HTTPS redirection (production environments should uncomment)
     # RewriteCond %{HTTPS} off
     # RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
+    # ========================================================================
+    # FILE PROTECTION RULES
+    # ========================================================================
+    
+    # Block access to sensitive files
+    RewriteRule ^\.htaccess$ - [F,L]
+    RewriteRule ^\.git/?.*$ - [F,L]
 
-    # Allow access only to specific file types in the static folder
-    RewriteRule ^static/.*\.(css|js|jpeg|png|gif|svg)$ - [L]
 
+    # ========================================================================
+    # SQL INJECTION PREVENTION
+    # ========================================================================
+
+    # Block SQL injection attempts
+    RewriteCond %{QUERY_STRING} union.*select.*\( [NC,OR]
+    RewriteCond %{QUERY_STRING} concat.*\( [NC]
+    RewriteRule .* public/index.php [F,L]
+    
+    # ========================================================================
+    # COMMON EXPLOITS PREVENTION
+    # ========================================================================
+    
+    # Block various attack vectors including:
+    # - Base64 encoding exploits
+    # - HTML injection attempts
+    # - Local file inclusion via localhost references
+    # - Directory traversal attacks
+    # - /etc/passwd access attempts
+
+    # Block common exploits
+    RewriteCond %{QUERY_STRING} base64_encode[^(]*\([^)]*\) [OR]
+    RewriteCond %{QUERY_STRING} (>|<|'|%0A|%0D|%27|%3C|%3E|%00) [NC,OR]
+    RewriteCond %{QUERY_STRING} (localhost|loopback|127\.0\.0\.1) [NC,OR]
+    RewriteCond %{QUERY_STRING} \.\./\.\. [OR]
+    RewriteCond %{QUERY_STRING} \.\./etc/passwd [NC]
+    RewriteRule .* public/index.php [F,L]
+    
+    # ========================================================================
+    # STATIC CONTENT SECURITY
+    # ========================================================================
+
+    # Block access to PHP files in static content directories
+    RewriteRule ^(static|assets|uploads|images|css|js)/.*\.php$ - [F,L]
+    
+    
+    # Allow specific file types in static folder
+    RewriteRule ^static/.*\.(css|js|jpg|jpeg|png|gif|svg|webp|ico|ttf|woff|woff2|eot)$ - [L]
+
+
+    # ========================================================================
+    # SENSITIVE FILE PROTECTION
+    # ========================================================================
 
     
-    # redirect /admin requests to admin/index.php
-    #RewriteRule ^admin(.*)$ admin/index.php [QSA,L]
+    # Prevent access to dot files (but allow .well-known for SSL)
+    RewriteRule (^\.|/\.)(?!well-known) - [F]
 
-    # redirect /api requests to api/index.php
-    #RewriteRule ^api(.*)$ api/index.php [QSA,L]
+    # Block access to potentially sensitive development/configuration files
+    RewriteRule \.(bak|config|sql|log|ini|env|gitignore|sample|dist|md|txt|sh|json|lock|xml|yml|yaml)$ - [F,L]
+    
+
+    # ========================================================================
+    # XSS PROTECTION
+    # ========================================================================
 
 
-    # redirect all other requests to web/index.php
+    # Protect against script injections
+    RewriteCond %{QUERY_STRING} (<|%3C).*script.*(>|%3E) [NC,OR]
+    RewriteCond %{QUERY_STRING} GLOBALS(=|\[|\%[0-9A-Z]{0,2}) [OR]
+    RewriteCond %{QUERY_STRING} _REQUEST(=|\[|\%[0-9A-Z]{0,2})
+    RewriteRule .* public/index.php [F,L]
+    
+    
+    # ========================================================================
+    # PUBLIC DIRECTORY PROTECTION
+    # ========================================================================
+
+
+    # Block PHP files in public directory except index.php
+    RewriteCond %{REQUEST_URI} ^/public/.*\.php$
+    RewriteCond %{REQUEST_URI} !^/public/index\.php$
+    RewriteRule .* - [F,L]
+    
+    
+    # ========================================================================
+    # STATIC ASSETS MANAGEMENT
+    # ========================================================================
+
+
+    # Allow only safe static files from any 'assets/' or 'static/' folder
+    RewriteCond %{REQUEST_URI} (^|/)(assets|static)/.*\.(css|js|jpg|jpeg|png|gif|svg|webp|ico|woff|woff2|ttf|eot)$ [NC]
+    RewriteCond %{REQUEST_FILENAME} -f
+    RewriteRule .* - [L]
+
+
+    # ========================================================================
+    # FRONT CONTROLLER PATTERN
+    # ========================================================================
+
+    # Redirect all other file access attempts in 'assets/' or 'static/' folders to index.php
+    RewriteCond %{REQUEST_URI} (^|/)(assets|static)/ [NC]
+    RewriteRule .* public/index.php [QSA,L]
+
+    # Redirect all other requests to public/index.php (front controller pattern)
     RewriteRule ^(.*)$ public/index.php [QSA,L]
 
+
+    # ========================================================================
+    # FILE UPLOAD PROTECTION
+    # ========================================================================
+
+    # Restrict file uploads to prevent malicious file execution
+    RewriteCond %{REQUEST_URI} ^/public/index\.php$
+    RewriteCond %{REQUEST_METHOD} =POST
+    RewriteCond %{HTTP:Content-Type} multipart/form-data
+    RewriteCond %{HTTP:Content-Disposition} filename=.+\.(php|ph|pht|phtml|phps|php5|php7|phar|inc|pl|cgi|asp|aspx|jsp|py|rb|htaccess)$ [NC]
+    RewriteRule .* - [F,L]
+</IfModule>
+
+# ========================================================================
+# PHP EXECUTION RESTRICTIONS
+# ========================================================================
+
+# Disable PHP execution in all directories except public
+<FilesMatch "\.ph(ar|p[0-9]|tml|ps|t)$">
+    <If "%{REQUEST_URI} !~ m#^/public/#">
+        Require all denied
+    </If>
+</FilesMatch>
+
+
+# ========================================================================
+# SERVER CAPABILITIES RESTRICTIONS
+# ========================================================================
+
+# Disable server-side includes and scripts
+Options -Includes -ExecCGI
+
+
+# ========================================================================
+# HTTP METHODS RESTRICTION
+# ========================================================================
+
+
+# Allow standard web methods
+<LimitExcept GET POST HEAD OPTIONS>
+    Require all denied
+</LimitExcept>
+
+
+# ========================================================================
+# PHP CONFIGURATION
+# ========================================================================
+
+# Disable PHP functions through .htaccess if allowed by server config
+<IfModule mod_php.c>
+    php_flag display_errors on
+    php_flag expose_php off
+    php_value max_execution_time 60
+    php_value max_input_time 60
+    php_value memory_limit 128M
+    php_value post_max_size 8M
+    php_value upload_max_filesize 8M
 </IfModule>

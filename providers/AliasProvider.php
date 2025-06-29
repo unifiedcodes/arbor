@@ -19,6 +19,7 @@ use Arbor\router\Router;
  * it only creates aliases for services registered by other providers.
  *
  * @package Arbor\providers
+ * 
  */
 class AliasProvider extends ServiceProvider
 {

@@ -88,7 +88,7 @@ class ServerRequest extends Request
         array $queryParams = [],
         array $parsedBody = [],
         array $uploadedFiles = [],
-        string $baseURI
+        string $baseURI = '/'
     ) {
         // Construct the parent Request class
         parent::__construct($method, $uri, $headers, $body, $attributes, $version);

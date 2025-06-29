@@ -23,12 +23,12 @@ class Home implements ControllerInterface
     {
         $this->fragment = $fragment;
     }
-    
+
 
     public function process(RequestContext $input): Response
     {
         return new Response(
-            'Welcome to Arbor Admin !',
+            'Welcome to Arbor Dashboard !',
             200,
             ['Content-Type' => 'text/plain'],
         );

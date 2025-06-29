@@ -24,6 +24,7 @@ class ConfigValue implements AttributeInterface
      * @var string
      */
     protected string $key;
+    protected mixed $default;
 
     /**
      * The Config instance used to resolve the value.
@@ -37,9 +38,10 @@ class ConfigValue implements AttributeInterface
      *
      * @param string $key The configuration key.
      */
-    public function __construct(string $key)
+    public function __construct(string $key, mixed $default = null)
     {
         $this->key = $key;
+        $this->default = $default;
     }
 
     /**
@@ -67,6 +69,6 @@ class ConfigValue implements AttributeInterface
             throw new \Exception("Config instance not found.");
         }
 
-        return $this->config->get($this->key);
+        return $this->config->get($this->key, $this->default);
     }
 }

@@ -9,7 +9,7 @@ use Arbor\http\Response;
 use Arbor\http\context\RequestContext;
 
 
-class ErrorHandler implements ControllerInterface
+class ErrorPages implements ControllerInterface
 {
     public function process(RequestContext $input): Response
     {
@@ -24,7 +24,7 @@ class ErrorHandler implements ControllerInterface
     public function notFound(): Response
     {
         return new Response(
-            'not found !',
+            'handler reached for not found !',
             404,
             ['Content-Type' => 'text/plain'],
         );
@@ -34,7 +34,7 @@ class ErrorHandler implements ControllerInterface
     public function notAllowed(): Response
     {
         return new Response(
-            'not allowed !',
+            'handler reached for not allowed !',
             403,
             ['Content-Type' => 'text/plain'],
         );
@@ -44,7 +44,7 @@ class ErrorHandler implements ControllerInterface
     public function methodNotAllowed(): Response
     {
         return new Response(
-            'method not allowed !',
+            'handler reached for method not allowed !',
             405,
             ['Content-Type' => 'text/plain'],
         );

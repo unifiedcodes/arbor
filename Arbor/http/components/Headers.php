@@ -263,4 +263,24 @@ class Headers
             return (string) $v;
         }, $value);
     }
+
+    /**
+     * Convert headers to a simple associative array format.
+     * 
+     * This converts from the internal format (where values are always arrays)
+     * to a simple format where single values are strings and multiple values remain arrays.
+     *
+     * @return array<string, string|string[]> Headers as key-value pairs
+     */
+    public function toArray(): array
+    {
+        $result = [];
+
+        foreach ($this->headers as $name => $values) {
+            // Convert single-value arrays to strings for cleaner output
+            $result[$name] = count($values) === 1 ? $values[0] : $values;
+        }
+
+        return $result;
+    }
 }

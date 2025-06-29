@@ -74,7 +74,7 @@ class RouterProvider extends ServiceProvider
 
 
         // Load the main application routes
-        $router->groupByFile($routesDir . '/app.php');
+        $router->groupByFile($routesDir . '/admin.php');
 
 
         // Load error page definitions

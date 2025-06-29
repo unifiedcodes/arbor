@@ -47,7 +47,7 @@ class App extends Container
      *
      * @var string|null
      */
-    protected ?string $environment = null;
+    protected ?string $environment = 'production';
 
 
     /**
@@ -132,6 +132,9 @@ class App extends Container
      */
     public function boot(): self
     {
+        // Set error display contextually
+        $this->environmentContext();
+
         // load helper functions.
         Helpers::load();
 
@@ -146,10 +149,25 @@ class App extends Container
         // load environment specific app configuration
         $this->scopeConfig();
 
+        // verify base configurations
+        $this->validateBaseConfig();
+
         // load service providers
         $this->loadProviders();
 
         return $this;
+    }
+
+
+    protected function environmentContext()
+    {
+        if ($this->environment === 'production') {
+            ini_set('display_errors', '0');
+            error_reporting(0);
+        } else {
+            ini_set('display_errors', '1');
+            error_reporting(E_ALL);
+        }
     }
 
     /**
@@ -203,9 +221,14 @@ class App extends Container
 
     public function isDebug(): bool
     {
-        // this can be extended to create more extensive approach
-        // one of that can be overriding with configuration too.
-        return $this->environment == 'production' ? false : true;
+        // Default is always false.
+        $isDebug = false;
+
+        // Override with configuration if set, otherwise use the default.
+        $isDebug = $this->configurator->get('app.isDebug', $isDebug);
+
+        // Environment override: true if not in production.
+        return $this->environment !== 'production' ? true : $isDebug;
     }
 
     /**
@@ -250,8 +273,8 @@ class App extends Container
         return $this->configurator->get($key, $default);
     }
 
-    public function print()
+
+    protected function validateBaseConfig()
     {
-        return $this->configurator;
     }
 }

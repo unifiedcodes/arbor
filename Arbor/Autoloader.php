@@ -98,6 +98,7 @@ class Autoloader
                 }
             }
         }
+
         // Fallback: use the root directory with namespace-to-path conversion.
         $relativeClass = ltrim(str_replace('\\', DIRECTORY_SEPARATOR, $className), DIRECTORY_SEPARATOR);
         return $this->rootDir . DIRECTORY_SEPARATOR . $relativeClass . '.php';

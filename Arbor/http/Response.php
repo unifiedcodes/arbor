@@ -28,14 +28,14 @@ class Response
      * @var string
      */
     private string $protocolVersion;
-    
+
     /**
      * HTTP status code
      * 
      * @var int
      */
     private int $statusCode;
-    
+
     /**
      * HTTP reason phrase
      * 
@@ -222,70 +222,6 @@ class Response
         return $statusLine . "\r\n" . $headers . "\r\n" . (string) $this->body;
     }
 
-    /**
-     * Creates a JSON response with the provided data
-     *
-     * @param array|object $data Data to encode as JSON
-     * @return self
-     */
-    public function asJson(array|object $data): self
-    {
-        return $this
-            ->withHeader('Content-Type', 'application/json')
-            ->withBody(json_encode($data));
-    }
-
-    /**
-     * Creates an HTML response with the provided content
-     *
-     * @param string $html HTML content
-     * @return self
-     */
-    public function asHtml(string $html): self
-    {
-        return $this
-            ->withHeader('Content-Type', 'text/html; charset=utf-8')
-            ->withBody($html);
-    }
-
-    /**
-     * Creates a plain text response with the provided content
-     *
-     * @param string $text Plain text content
-     * @return self
-     */
-    public function asText(string $text): self
-    {
-        return $this
-            ->withHeader('Content-Type', 'text/plain; charset=utf-8')
-            ->withBody($text);
-    }
-
-    /**
-     * Creates a redirect response to the specified location
-     *
-     * @param string $location Target URL for the redirect
-     * @param int $statusCode HTTP status code to use (default: 302 Found)
-     * @return self
-     */
-    public function asRedirect(string $location, int $statusCode = 302): self
-    {
-        $new = clone $this;
-
-        // Set Location header
-        $new->headers = $new->headers->set('Location', $location);
-
-        // Set status code and reason phrase
-        $new->statusCode = $statusCode;
-
-        if (isset(self::$phrases[$statusCode])) {
-            $new->reasonPhrase = self::$phrases[$statusCode];
-        } else {
-            $new->reasonPhrase = 'Redirect';
-        }
-
-        return $new;
-    }
 
     /**
      * Sends the response to the client

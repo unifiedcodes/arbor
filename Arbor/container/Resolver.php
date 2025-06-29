@@ -308,7 +308,14 @@ class Resolver
             $class = $this->get($type);
             return $class;
         } catch (Throwable $th) {
-            throw new Exception("Failed to resolve parameter '{$paramName}' of type '{$type}'", 0, $th);
+
+            // refactor to use a stack based exception handler later.
+            $message = "Failed to resolve parameter '{$paramName}' of type '{$type}'";
+            $message .= ' ' . $th->getMessage();
+
+            throw new Exception($message);
+
+            throw $th;
         }
     }
 

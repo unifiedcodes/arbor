@@ -2,35 +2,58 @@
 
 namespace Arbor\fragment;
 
-use Arbor\container\Container;
+use Stringable;
 use Arbor\router\Router;
 use Arbor\http\Response;
+use Arbor\http\ServerRequest;
 use Arbor\http\HttpSubKernel;
-use Arbor\http\traits\ResponseNormalizerTrait;
 use InvalidArgumentException;
+use Arbor\container\Container;
+use Arbor\http\components\Uri;
+use Arbor\contracts\handlers\ControllerInterface;
+use Arbor\http\traits\ResponseNormalizerTrait;
 
 /**
- * Fragment renderer for inline controller or route fragments.
- *
- * Allows rendering a sub-request either by route name or by directly
- * invoking a controller method, and normalizes the result into a Response.
+ * Fragment Class
  * 
- * @package Arbor\fragment
+ * This class provides methods to execute sub-requests within the main application,
+ * allowing for the creation of reusable fragments of content that can be composed
+ * together to build complete responses.
+ * 
+ * Fragments can be generated from routes, controllers, URIs, or custom requests.
  * 
  */
 class Fragment
 {
     use ResponseNormalizerTrait;
 
+    /**
+     * The dependency injection container.
+     *
+     * @var Container
+     */
     protected Container $container;
-    protected Router $router;
-    protected HttpSubKernel $httpSubKernel;
-    protected ?Response $lastResponse = null;
 
     /**
-     * @param Container    $container      The DI container
-     * @param Router       $router         The router for URL generation
-     * @param HttpSubKernel $httpSubKernel Sub-kernel for internal sub-requests
+     * The router instance.
+     *
+     * @var Router
+     */
+    protected Router $router;
+
+    /**
+     * The HTTP sub-kernel for handling sub-requests.
+     *
+     * @var HttpSubKernel
+     */
+    protected HttpSubKernel $httpSubKernel;
+
+    /**
+     * Constructor.
+     *
+     * @param Container     $container     The dependency injection container.
+     * @param Router        $router        The router instance.
+     * @param HttpSubKernel $httpSubKernel The HTTP sub-kernel.
      */
     public function __construct(Container $container, Router $router, HttpSubKernel $httpSubKernel)
     {
@@ -40,43 +63,15 @@ class Fragment
     }
 
     /**
-     * Render a fragment, either by controller callable or named route.
-     *
-     * @param string|array $identifier  Controller callable as [Class::class, 'method'] or route name
-     * @param array        $parameters  Parameters to pass to controller or route
-     * @param string       $method      HTTP method when using a route
-     *
-     * @return Response   The fragment’s HTTP response
-     *
-     * @throws InvalidArgumentException If the identifier is not a valid route or callable
+     * Generate a fragment by executing a named route.
+     * 
+     * @param string $routeName  The name of the route to execute.
+     * @param string $method     The HTTP method to use (default: 'GET').
+     * @param array<string,mixed> $parameters Additional parameters to pass to the route.
+     * 
+     * @return Response The response from the route.
      */
-    public function render(string|array $identifier, array $parameters = [], string $method = 'GET'): Response
-    {
-        if (is_array($identifier) && count($identifier) === 2) {
-            /** @var class-string $class */
-            [$class, $methodName] = $identifier;
-            return $this->lastResponse = $this->fromController($class, $methodName, $parameters);
-        }
-
-        if (is_string($identifier)) {
-            return $this->lastResponse = $this->fromRoute($identifier, $method, $parameters);
-        }
-
-        throw new InvalidArgumentException(
-            'Invalid fragment identifier; expected a route name or a [Class::class, "method"] array.'
-        );
-    }
-
-    /**
-     * Render a fragment by named route.
-     *
-     * @param string $routeName  The route name to generate URL
-     * @param string $method     HTTP method to use for the sub-request
-     * @param array  $parameters Query or body parameters (passed via attributes)
-     *
-     * @return Response The fragment’s HTTP response
-     */
-    public function fromRoute(string $routeName, string $method = 'GET', array $parameters = []): Response
+    public function route(string $routeName, string $method = 'GET', array $parameters = []): Response
     {
         $url = $this->router->URL($routeName);
 
@@ -88,37 +83,90 @@ class Fragment
             attributes: $parameters
         );
 
-        $response = $this->httpSubKernel->handle($request, true);
-
-        return $this->ensureValidResponse($response);
+        return $this->ensureValidResponse($this->httpSubKernel->handle($request, true));
     }
 
     /**
-     * Render a fragment by directly invoking a controller method.
-     *
-     * @param string $className  The controller class to instantiate
-     * @param string $methodName The method on the controller to call
-     * @param array  $parameters Parameters to pass to the controller method
-     *
-     * @return Response The fragment’s HTTP response
+     * Generate a fragment by executing a controller.
+     * 
+     * @param ControllerInterface|string|array<int,string|object> $controller The controller to execute, either:
+     *                                                                 - A ControllerInterface instance
+     *                                                                 - An array of [ControllerClass::class, 'methodName']
+     *                                                                 - A string of Controller FQN
+     * @param array<string,mixed> $parameters Additional parameters to pass to the controller.
+     * 
+     * @return Response The response from the controller.
+     * 
+     * @throws InvalidArgumentException If the controller is not properly specified.
      */
-    public function fromController(string $className, string $methodName, array $parameters = []): Response
+    public function controller(ControllerInterface|array|string $controller, array $parameters = []): Response
     {
-        $controller = $this->container->make($className);
+        if (is_string($controller)) {
+            return $this->fromController($controller, 'process', $parameters);
+        }
 
-        /** @var mixed $result */
-        $result = $this->container->call([$controller, $methodName], $parameters);
+        if ($controller instanceof ControllerInterface) {
+            return $this->fromController($controller::class, 'process', $parameters);
+        }
+
+        if (is_array($controller) && count($controller) === 2) {
+            [$class, $method] = $controller;
+            return $this->fromController($class, $method, $parameters);
+        }
+
+        throw new InvalidArgumentException('Controller must be a valid instance or an instance of ControllerInterface or [Class::class, "method"] array.');
+    }
+
+    /**
+     * Generate a fragment by executing a request to a specific URI.
+     * 
+     * @param string|Stringable|Uri $uri       The URI to request.
+     * @param string                $method    The HTTP method to use (default: 'GET').
+     * @param array<string,mixed>   $parameters Additional parameters to pass to the request.
+     * 
+     * @return Response The response from the URI.
+     */
+    public function uri(string|Stringable|Uri $uri, string $method = 'GET', array $parameters = []): Response
+    {
+        $uri = (string) $uri;
+
+        $request = $this->httpSubKernel->create(
+            uri: $uri,
+            method: $method,
+            headers: [],
+            body: '',
+            attributes: $parameters
+        );
+
+        return $this->ensureValidResponse($this->httpSubKernel->handle($request, true));
+    }
+
+    /**
+     * Generate a fragment by executing a custom server request.
+     * 
+     * @param ServerRequest $request The server request to execute.
+     * 
+     * @return Response The response from the request.
+     */
+    public function request(ServerRequest $request): Response
+    {
+        return $this->ensureValidResponse($this->httpSubKernel->handle($request, true));
+    }
+
+    /**
+     * Execute a controller method and ensure it returns a valid response.
+     * 
+     * @param string               $className  The fully qualified class name of the controller.
+     * @param string               $methodName The method name to call on the controller.
+     * @param array<string,mixed>  $parameters Additional parameters to pass to the controller method.
+     * 
+     * @return Response The normalized response from the controller.
+     */
+    protected function fromController(string $className, string $methodName, array $parameters = []): Response
+    {
+        $controller = $this->container->make($className, $parameters);
+        $result = $this->container->call([$controller, $methodName]);
 
         return $this->ensureValidResponse($result);
-    }
-
-    /**
-     * Get the last rendered Response, if any.
-     *
-     * @return Response|null
-     */
-    public function getLastResponse(): ?Response
-    {
-        return $this->lastResponse;
     }
 }

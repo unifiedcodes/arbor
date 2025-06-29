@@ -13,6 +13,12 @@ use BadMethodCallException;
  * while providing additional context-specific functionality.
  * 
  * @package Arbor\http\context
+ * 
+ * 
+ * Dynamically call to Request by following methods.
+ * 
+ * @method string getMethod()
+ * 
  */
 class RequestContext
 {
@@ -71,6 +77,7 @@ class RequestContext
      * @return mixed The result of the proxied method call
      * 
      * @throws BadMethodCallException When the method does not exist on the Request object
+     * 
      */
     public function __call(string $method, array $args): mixed
     {

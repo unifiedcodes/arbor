@@ -67,6 +67,17 @@ if (!function_exists('normalizeDirPath')) {
 }
 
 
+if (!function_exists('normalizeFilePath')) {
+    function normalizeFilePath(string $path): string
+    {
+        // Replace all slashes with the system-specific separator
+        $path = normalizeDirPath($path);
+        // Trim trailing slashes for file
+        return rtrim($path, DIRECTORY_SEPARATOR);
+    }
+}
+
+
 if (!function_exists('ensureDir')) {
     function ensureDir(string $path): string
     {

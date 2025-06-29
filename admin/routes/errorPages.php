@@ -1,11 +1,11 @@
 <?php
 
 
-use admin\controllers\ErrorHandler;
+use admin\controllers\ErrorPages;
 
 
 return [
-    403 => [ErrorHandler::class, 'notAllowed'],
-    404 => [ErrorHandler::class, 'notFound'],
-    405 => [ErrorHandler::class, 'methodNotAllowed'],
+    403 => [ErrorPages::class, 'notAllowed'],
+    404 => [ErrorPages::class, 'notFound'],
+    405 => [ErrorPages::class, 'methodNotAllowed'],
 ];

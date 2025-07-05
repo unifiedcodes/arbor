@@ -1,0 +1,10 @@
+{
+  "name": "unifiedcodes/arbor",
+  "description": "A modular PHP micro-framework for fast, modern application development.",
+  "autoload": {
+    "psr-4": {
+      "Arbor\\": "src/"
+    }
+  },
+  "license": "Apache-2.0"
+}

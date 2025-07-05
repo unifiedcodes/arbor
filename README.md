@@ -26,7 +26,7 @@ Arbor is a lightweight, highly modular PHP micro‑framework designed to give yo
 - Fast and flexible DI container
 - Attribute injection supported
 - Provider system for lazy-loaded services
-- Will support contextual resolution in future
+- Will support contextual resolution in the future
 
 ### 🔄 Configuration System
 - Environment-aware config loading from PHP files
@@ -40,6 +40,9 @@ Arbor is a lightweight, highly modular PHP micro‑framework designed to give yo
 - Fully-featured HTTP stack inspired by PSR standards
 - `Request`, `ServerRequest`, `Response`, `UploadedFile`, `Streams`, `Cookies`, `Headers`
 - RequestContext, RequestStack, and SubKernel support for advanced routing scenarios
+
+### 🧭 Fragment System
+- Fragment engine for internally calling Controllers with or without a parent HTTP request context
 
 ### 🧩 Routing System
 - Efficient trie-based router for dynamic routes
@@ -55,9 +58,14 @@ Arbor is a lightweight, highly modular PHP micro‑framework designed to give yo
 - Secure file uploader with MIME type checking and extension mapping
 - Pluggable processor system per file type
 
-### 🧭 Fragment & Template System
-- Fragment engine for reusable view components
-- Will evolve into a full-fledged lightweight template engine
+### 🖼️ View & Template System
+- Newly added View module consisting of:
+  - **Builder**: manages HTML head, metadata, scripts, styles, and body content
+  - **Renderer**: renders plain PHP templates, deferred components, and controller-rendered components
+  - **ViewFactory**: supports configurable view presets and default setup
+- Templates remain simple `.php` files, staying true to Arbor’s micro‑framework philosophy of simplicity and minimal abstraction
+- Supports both dumb components (simple includes) and dynamic controller-rendered components
+- Developers keep full responsibility for template's structure and cleanliness
 
 ### 🧰 Helpers
 - Auto-loaded utility functions to ease development
@@ -221,6 +229,10 @@ arbor/                  # Core framework code
 │   ├── Helpers
 │   └── helpers/
 │       └── common.php
+├── view/               # Lightweight View system
+│   ├── Builder         
+│   ├── Renderer        
+│   └── ViewFactory     
 └── Autoloader.php      # PSR-4-style autoloader
 
 

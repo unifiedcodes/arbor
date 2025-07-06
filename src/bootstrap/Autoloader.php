@@ -1,6 +1,6 @@
 <?php
 
-namespace Arbor;
+namespace Arbor\bootstrap;
 
 
 use Exception;

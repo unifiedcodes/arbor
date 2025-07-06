@@ -36,7 +36,7 @@ final class ViewFactory
      * Each preset is defined as a closure that receives a Builder instance
      * and shared configuration array for customization.
      * 
-     * @var array<string, Closure(Builder, array): void>
+     * @var array<string, [Closure(Builder, array): void]>
      */
     protected array $presets = [];
 
@@ -156,7 +156,10 @@ final class ViewFactory
      */
     public function setPreset(string $name, Closure $configurator): void
     {
-        $this->presets[$name] = $configurator;
+        if (!isset($this->presets[$name])) {
+            $this->presets[$name] = [];
+        }
+        $this->presets[$name][] = $configurator;
     }
 
     /**
@@ -173,7 +176,9 @@ final class ViewFactory
     public function setDefaultPreset(string|Closure $preset): void
     {
         if ($preset instanceof Closure) {
-            $this->presets['default'] = $preset;
+
+            $this->setPreset('default', $preset);
+
             $this->defaultPreset = 'default';
             return;
         }
@@ -184,6 +189,28 @@ final class ViewFactory
         }
 
         $this->defaultPreset = $preset;
+    }
+
+
+    /**
+     * Extend an existing preset by adding another configurator.
+     *
+     * @param string $parentName Existing preset name to extend
+     * @param string $newName New preset name to register
+     * @param Closure(Builder, array): void $extraConfigurator
+     * @throws Exception
+     */
+    public function extendPreset(string $parentName, string $newName, Closure $extraConfigurator): void
+    {
+        if (!isset($this->presets[$parentName])) {
+            throw new Exception("Cannot extend non-existing preset '{$parentName}'");
+        }
+
+        // new preset = copy parent’s configurators + extraConfigurator
+        $this->presets[$newName] = array_merge(
+            $this->presets[$parentName],
+            [$extraConfigurator]
+        );
     }
 
     // ========================================================================
@@ -210,7 +237,7 @@ final class ViewFactory
             throw new Exception("Preset with name '{$name}' not found");
         }
 
-        return $this->resolveConfigurator($this->presets[$name]);
+        return $this->resolveConfiguratorStack($this->presets[$name]);
     }
 
     /**
@@ -228,7 +255,7 @@ final class ViewFactory
             throw new Exception("No default preset defined. Use setDefaultPreset() first.");
         }
 
-        return $this->resolveConfigurator($this->presets[$this->defaultPreset]);
+        return $this->resolveConfiguratorStack($this->presets[$this->defaultPreset]);
     }
 
     // ========================================================================
@@ -242,13 +269,17 @@ final class ViewFactory
      * the provided configuration closure to customize it with both the
      * Builder instance and shared configuration.
      * 
-     * @param Closure(Builder, array): void $configurator The configuration closure to execute
+     * @param array  of configurator closures
      * @return Builder A freshly configured Builder instance
      */
-    protected function resolveConfigurator(Closure $configurator): Builder
+    protected function resolveConfiguratorStack(array $configurators): Builder
     {
         $builder = new Builder($this->view_dir, $this->fragment);
-        $configurator($builder, $this->config);
+
+        foreach ($configurators as $configurator) {
+            $configurator($builder, $this->config);
+        }
+
         return $builder;
     }
 
@@ -291,5 +322,19 @@ final class ViewFactory
     public function get(?string $name = null): Builder
     {
         return $this->getPreset($name);
+    }
+
+
+    /**
+     * Extend an existing preset by adding another configurator.
+     *
+     * @param string $parentName Existing preset name to extend
+     * @param string $newName New preset name to register
+     * @param Closure(Builder, array): void $extraConfigurator
+     * @throws Exception
+     */
+    public function extends(string $parentName, string $newName, Closure $extraConfigurator): void
+    {
+        $this->extendPreset($parentName, $newName, $extraConfigurator);
     }
 }

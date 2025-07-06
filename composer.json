@@ -3,17 +3,37 @@
   "description": "A modular PHP micro-framework for fast, modern application development.",
   "type": "library",
   "license": "Apache-2.0",
+  "keywords": [
+    "php",
+    "framework",
+    "micro-framework",
+    "arbor",
+    "modular",
+    "dependency-injection",
+    "psr"
+  ],
+  "homepage": "https://github.com/unifiedcodes/arbor",
+  "authors": [
+    {
+      "name": "Harshit Mishra",
+      "email": "info@unifiedcodes.com",
+      "homepage": "https://unifiedcodes.com",
+      "role": "Developer"
+    }
+  ],
+  "support": {
+    "issues": "https://github.com/unifiedcodes/arbor/issues",
+    "source": "https://github.com/unifiedcodes/arbor",
+    "docs": "https://github.com/unifiedcodes/arbor/wiki"
+  },
+  "require": {
+    "php": ">=8.1"
+  },
   "autoload": {
     "psr-4": {
       "Arbor\\": "src/"
     }
   },
-  "authors": [
-    {
-      "name": "Harshit Mishra",
-      "email": "info@unifiedcodes.com",
-      "homepage": "unifiedcodes.com",
-      "role": "75-808-908-75"
-    }
-  ]
+  "minimum-stability": "dev",
+  "prefer-stable": true
 }

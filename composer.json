@@ -1,10 +1,19 @@
 {
   "name": "unifiedcodes/arbor",
   "description": "A modular PHP micro-framework for fast, modern application development.",
+  "type": "library",
+  "license": "Apache-2.0",
   "autoload": {
     "psr-4": {
       "Arbor\\": "src/"
     }
   },
-  "license": "Apache-2.0"
+  "authors": [
+    {
+      "name": "Harshit Mishra",
+      "email": "info@unifiedcodes.com",
+      "homepage": "unifiedcodes.com",
+      "role": "75-808-908-75"
+    }
+  ]
 }

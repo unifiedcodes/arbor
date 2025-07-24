@@ -140,11 +140,21 @@ class ResponseFactory
     public static function redirect(
         string $location,
         int $statusCode = 302,
-        array|Headers $headers = []
+        array|Headers $headers = [],
+        array $parameters = []
     ): Response {
         if (!in_array($statusCode, [301, 302, 303, 307, 308])) {
             throw new \InvalidArgumentException('Invalid redirect status code');
         }
+
+
+        // Append parameters to the URL
+        if (!empty($parameters)) {
+            $queryString = http_build_query($parameters);
+            $separator = str_contains($location, '?') ? '&' : '?';
+            $location .= $separator . $queryString;
+        }
+
 
         $headers = self::ensureHeaderIsArray($headers);
         $headers['Location'] = $location;

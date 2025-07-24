@@ -1,6 +1,7 @@
 # .gitignore
 /vendor/
 /node_modules/
+/.notes/
 .env
 .DS_Store
 *.log

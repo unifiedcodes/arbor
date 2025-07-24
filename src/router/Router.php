@@ -10,7 +10,7 @@ use Arbor\router\URLBuilder;
 use Arbor\http\context\RequestContext;
 use Arbor\pipeline\PipelineFactory;
 use Arbor\router\RouteMethods;
-use Arbor\attributes\ConfigValue;
+use Arbor\http\context\RequestStack;
 use Exception;
 
 /**
@@ -66,18 +66,22 @@ class Router
      */
     protected string $lastPath;
 
-    protected string $baseURI;
+    /**
+     * requeststack instance.
+     *
+     * @var RequestStack
+     */
+    protected RequestStack $requestStack;
 
     /**
      * Router constructor.
      *
      * Initializes the registry and group manager.
      */
-    public function __construct(
-        #[ConfigValue('app.base_uri')]
-        $baseURI
-    ) {
-        $this->baseURI = $baseURI;
+    public function __construct(RequestStack $requestStack)
+    {
+        $this->requestStack = $requestStack;
+
         $this->registry = new Registry();
         $this->group = new Group();
         $this->URLBuilder = new URLBuilder();
@@ -298,9 +302,10 @@ class Router
      * @param array $parameters Optional parameters for the route.
      * @return string|null The absolute URL if found, otherwise null.
      */
-    public function URL(string $name, array $parameters = []): ?string
+    public function url(string $name, array $parameters = []): ?string
     {
-        $baseURI = $this->baseURI;
+        $baseURI = $this->requestStack->getCurrent()->getBaseUri();
+
         $routeURL = $this->URLBuilder->getAbsoluteURL($baseURI, $name, $parameters);
 
         return $routeURL;
@@ -313,7 +318,7 @@ class Router
      * @param array $parameters Optional parameters for the route.
      * @return string|null The relative URL if found, otherwise null.
      */
-    public function relativeURL(string $name, array $parameters): ?string
+    public function relativeURL(string $name, array $parameters = []): ?string
     {
         $routeURL = $this->URLBuilder->getRelativeURL($name, $parameters);
         return $routeURL;

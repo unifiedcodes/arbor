@@ -284,8 +284,12 @@ class App
     }
 
 
-    public function getConfig(string $key, mixed $default = null)
+    public function getConfig(?string $key = null, mixed $default = null)
     {
+        if ($key === null) {
+            return $this->configurator->all();
+        }
+
         // delegates to configuration...
         return $this->configurator->get($key, $default);
     }

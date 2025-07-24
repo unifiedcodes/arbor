@@ -41,7 +41,7 @@ final class URLBuilder
         $route = $this->namedRegistry[$routeName] ?? null;
 
         if (!$route) {
-            throw new Exception("Route not registered: {$routeName}");
+            throw new Exception("Route name not defined: {$routeName}");
         }
 
         return $this->buildRouteUrl($route, $parameters);

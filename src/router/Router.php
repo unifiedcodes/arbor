@@ -141,6 +141,33 @@ class Router
     }
 
     /**
+     * Loads and groups routes from all PHP files in a directory.
+     *
+     * Routes from all files will be grouped together under the current groupOptions.
+     *
+     * @param string $directoryPath The path to the directory containing route definition files.
+     *
+     * @throws Exception If the directory does not exist or is not readable.
+     *
+     * @return void
+     */
+    public function groupByDir(string $directoryPath): void
+    {
+        if (!is_dir($directoryPath) || !is_readable($directoryPath)) {
+            throw new Exception("Directory '{$directoryPath}' does not exist or is not readable.");
+        }
+
+        $files = glob(rtrim($directoryPath, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . '*.php');
+
+        $this->group(function () use ($files): void {
+            $router = $this;
+            foreach ($files as $file) {
+                require_once $file;
+            }
+        });
+    }
+
+    /**
      * Adds a new route to the registry.
      *
      * If a group is active, the route path is prefixed with the group's prefix,

@@ -102,4 +102,12 @@ trait RouteMethods
     {
         return $this->addRoute($path, $handler, 'ANY');
     }
+
+    /**
+     * Adds a handler for HTTP Error Codes.
+     */
+    public function error($errorCode, $handler): void
+    {
+        $this->registry->setErrorPage($errorCode, $handler);
+    }
 }

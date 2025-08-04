@@ -33,7 +33,7 @@ class Registry
     /**
      * repository for error pages..
      *
-     * @var Node
+     * @var array
      */
     protected array $errorPages = [];
 
@@ -226,8 +226,15 @@ class Registry
     {
         foreach ($errorPages as $code => $handler) {
             $this->validateHandler($handler);
-            $this->errorPages[(int)$code] = $handler;
+            $this->errorPages[(int) $code] = $handler;
         }
+    }
+
+
+    public function setErrorPage($errorCode, $handler): void
+    {
+        $this->validateHandler($handler);
+        $this->errorPages[(int) $errorCode] = $handler;
     }
 
 

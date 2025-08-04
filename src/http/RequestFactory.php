@@ -20,13 +20,13 @@ use Arbor\attributes\ConfigValue;
  */
 class RequestFactory
 {
-    protected static $baseURI;
+    protected $baseURI;
 
     public function __construct(
-        #[ConfigValue('app.base_uri')]
+        #[ConfigValue('root.uri')]
         string $baseURI
     ) {
-        static::$baseURI = $baseURI;
+        $this->baseURI = $baseURI;
     }
 
     /**
@@ -37,7 +37,7 @@ class RequestFactory
      * 
      * @return ServerRequest The server request object
      */
-    public static function fromGlobals(): ServerRequest
+    public function fromGlobals(): ServerRequest
     {
         $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
         $uri = RequestFactory::URIfromGlobals($_SERVER);
@@ -62,7 +62,7 @@ class RequestFactory
             $_GET,
             $_POST,
             $_FILES,
-            static::$baseURI
+            $this->baseURI
         );
     }
 
@@ -79,7 +79,7 @@ class RequestFactory
      * 
      * @return Request The created request object
      */
-    public static function make(
+    public function make(
         string $uri,
         string $method = 'GET',
         array $headers = [],
@@ -103,7 +103,7 @@ class RequestFactory
      * @param array<string, mixed> $data Array containing request parameters
      * @return Request The created request object
      */
-    public static function fromArray(array $data): Request
+    public function fromArray(array $data): Request
     {
         return RequestFactory::make(
             uri: $data['uri'] ?? '',
@@ -121,7 +121,7 @@ class RequestFactory
      * @param array<string, mixed> $server The $_SERVER array
      * @return Uri The created Uri object
      */
-    protected static function URIfromGlobals(array $server): Uri
+    protected function URIfromGlobals(array $server): Uri
     {
         $scheme = (!empty($server['HTTPS']) && $server['HTTPS'] !== 'off') ? 'https' : 'http';
         $host = $server['HTTP_HOST'] ?? $server['SERVER_NAME'] ?? 'localhost';
@@ -149,7 +149,7 @@ class RequestFactory
      * @param array<string, mixed> $server The $_SERVER array
      * @return Headers The created Headers object
      */
-    protected static function HeadersFromGlobals(array $server): Headers
+    protected function HeadersFromGlobals(array $server): Headers
     {
         $headers = [];
         foreach ($server as $key => $value) {

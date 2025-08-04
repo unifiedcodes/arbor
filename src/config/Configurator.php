@@ -87,11 +87,13 @@ class Configurator
      */
     protected function loadConfig(string $configPath, bool $merge = false): void
     {
+        $configPath = rtrim($configPath, '/') . '/';
+
         if (!is_dir($configPath)) {
             throw new Exception("Config directory not found: $configPath");
         }
 
-        foreach (glob($configPath . '/*.php') as $file) {
+        foreach (glob($configPath . '*.php') as $file) {
             $key = basename($file, '.php');
             try {
                 $data = require $file;

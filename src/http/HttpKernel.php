@@ -41,7 +41,7 @@ class HttpKernel
         RequestStack $requestStack,
         PipelineFactory $pipelineFactory,
         Router $router,
-        #[ConfigValue('app.isDebug')]
+        #[ConfigValue('root.is_debug')]
         ?bool $isDebug = false,
     ) {
         $this->requestFactory = $requestFactory;

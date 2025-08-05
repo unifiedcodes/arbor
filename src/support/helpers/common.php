@@ -1,5 +1,7 @@
 <?php
 
+use Arbor\facades\Config;
+
 
 if (!function_exists('crypto_random')) {
     function crypto_random(int $min, int $max)
@@ -100,5 +102,13 @@ if (!function_exists('normalizeURLSlashes')) {
     function normalizeURLSlashes(string $url): string
     {
         return preg_replace('#(?<!:)//+#', '/', trim($url));
+    }
+}
+
+
+if (!function_exists('config')) {
+    function config(string $key): mixed
+    {
+        return Config::get($key);
     }
 }

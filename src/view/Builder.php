@@ -3,10 +3,10 @@
 namespace Arbor\view;
 
 use Exception;
-use InvalidArgumentException;
-use Arbor\contracts\handlers\ControllerInterface;
 use Arbor\fragment\Fragment;
+use InvalidArgumentException;
 use Arbor\attributes\ConfigValue;
+use Arbor\contracts\handlers\ControllerInterface;
 
 /**
  * HTML Document Builder
@@ -128,13 +128,6 @@ class Builder
      */
     protected array $bindings = [];
 
-    /**
-     * Data container for passing structured information to views.
-     * Separate from bindings to maintain clean separation of concerns.
-     * 
-     * @var array<string, mixed>
-     */
-    protected array $data = [];
 
     /**
      * Auto-escape flag for content security.
@@ -218,8 +211,29 @@ class Builder
      */
     public function set(string $key, mixed $value): void
     {
-        $this->bindings[$key] = $value;
+        if (!str_contains($key, '.')) {
+            $this->bindings[$key] = $value;
+            return;
+        }
+
+        $segments = explode('.', $key);
+        $ref = &$this->bindings;
+
+        foreach ($segments as $segment) {
+            if (!is_array($ref)) {
+                $ref = [];
+            }
+
+            if (!array_key_exists($segment, $ref)) {
+                $ref[$segment] = [];
+            }
+
+            $ref = &$ref[$segment];
+        }
+
+        $ref = $value;
     }
+
 
     /**
      * Retrieve a bound variable value by key.
@@ -231,11 +245,26 @@ class Builder
      */
     public function get(string|null $key = null, mixed $default = null): mixed
     {
-        if (empty($key)) {
+        if ($key === null) {
             return $this->bindings;
         }
 
-        return $this->bindings[$key] ?? $default;
+        if (!str_contains($key, '.')) {
+            return $this->bindings[$key] ?? $default;
+        }
+
+        $segments = explode('.', $key);
+        $value = $this->bindings;
+
+        foreach ($segments as $segment) {
+            if (is_array($value) && array_key_exists($segment, $value)) {
+                $value = $value[$segment];
+            } else {
+                return $default;
+            }
+        }
+
+        return $value;
     }
 
     /**

@@ -91,6 +91,9 @@ final class ViewFactory
      */
     protected array $config = [];
 
+
+    protected array $sharedData = [];
+
     // ========================================================================
     // Constructor & Initialization
     // ========================================================================
@@ -129,6 +132,12 @@ final class ViewFactory
     public function setConfig(array $config): void
     {
         $this->config = $config;
+    }
+
+
+    public function setSharedData(array $data): void
+    {
+        $this->sharedData = $data;
     }
 
     // ========================================================================
@@ -275,6 +284,8 @@ final class ViewFactory
     protected function resolveConfiguratorStack(array $configurators): Builder
     {
         $builder = new Builder($this->view_dir, $this->fragment);
+
+        $builder->set('shared', $this->sharedData);
 
         foreach ($configurators as $configurator) {
             $configurator($builder, $this->config);

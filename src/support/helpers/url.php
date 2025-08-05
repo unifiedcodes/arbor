@@ -77,3 +77,42 @@ if (!function_exists('routeURL')) {
         return Route::url($name, $params);
     }
 }
+
+
+if (!function_exists('assets')) {
+    /**
+     * Generate a full asset URL using the asset directory defined in config.
+     * Example: asset('css/style.css') → /sandbox/assets/css/style.css
+     *
+     * @param string $path
+     * @return string
+     */
+    function assets(string $path): string
+    {
+        $base = rtrim(Config::get('root.uri', '/'), '/');
+        $assetDir = trim(Config::get('app.assets_dir', 'assets'), '/');
+        $path = ltrim($path, '/');
+
+        return "{$base}/{$assetDir}/{$path}";
+    }
+}
+
+
+if (!function_exists('statics')) {
+    /**
+     * Generate a full static URL using the static directory defined in config.
+     * Example: static('img/logo.png') → /sandbox/static/img/logo.png
+     *
+     * @param string $path
+     * @return string
+     */
+    function statics(string $path): string
+    {
+        $base = rtrim(Config::get('root.uri', '/'), '/');
+        $root_statics_dir = Config::get('root.statics_dir', 'statics');
+        $staticDir = trim(Config::get('app.statics_dir', $root_statics_dir), '/');
+        $path = ltrim($path, '/');
+
+        return "{$base}/{$staticDir}/{$path}";
+    }
+}

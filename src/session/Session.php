@@ -15,11 +15,6 @@ use InvalidArgumentException;
 class Session implements SessionInterface
 {
     /**
-     * @var bool Session started flag
-     */
-    private bool $started = false;
-
-    /**
      * @var array Session configuration
      */
     private array $config = [
@@ -66,7 +61,7 @@ class Session implements SessionInterface
      */
     public function start(array $config = []): void
     {
-        if ($this->started) {
+        if ($this->isStarted()) {
             return;
         }
 
@@ -82,8 +77,6 @@ class Session implements SessionInterface
         if (!session_start()) {
             throw new RuntimeException('Failed to start session');
         }
-
-        $this->started = true;
 
         // Initialize session security
         $this->initializeSecurity();
@@ -142,7 +135,7 @@ class Session implements SessionInterface
      */
     public function isStarted(): bool
     {
-        return $this->started && session_status() === PHP_SESSION_ACTIVE;
+        return session_status() === PHP_SESSION_ACTIVE;
     }
 
     /**
@@ -258,7 +251,6 @@ class Session implements SessionInterface
 
         // Destroy session
         session_destroy();
-        $this->started = false;
     }
 
     /**
@@ -290,7 +282,7 @@ class Session implements SessionInterface
      * @param string $type Message type (success, error, warning, info)
      * @param string $message
      */
-    public function flash(string $type, string $message): void
+    public function flash(string $type, string|array $message): void
     {
         $this->ensureStarted();
 

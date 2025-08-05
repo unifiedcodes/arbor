@@ -109,7 +109,7 @@ interface SessionInterface
      * @param string $message
      * @return void
      */
-    public function flash(string $type, string $message): void;
+    public function flash(string $type, string|array $message): void;
 
     /**
      * Get flash messages

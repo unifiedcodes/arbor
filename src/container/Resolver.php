@@ -273,7 +273,6 @@ class Resolver
      */
     protected function resolveParameterDependency(ReflectionParameter $parameter, array $customParams = [])
     {
-
         $paramName = $parameter->getName();
         $type = ($parameter->getType() instanceof ReflectionNamedType) ? $parameter->getType()->getName() : 'mixed';
 
@@ -289,18 +288,18 @@ class Resolver
             return $this->container;
         }
 
-        // If the type is an interface.
-        if (interface_exists($type)) {
-            // fetch concrete from registery.
-            // use this->get to call it recursively and return.
-            if ($this->registry->has($type)) {
-                $bond = $this->registry->getBinding($type);
-                return $this->get($bond->getResolver());
+        if (interface_exists($type) || class_exists($type)) {
+            $reflection = new \ReflectionClass($type);
+
+            if ($reflection->isInterface() || $reflection->isAbstract()) {
+                if ($this->registry->has($type)) {
+                    return $this->get($type);
+                }
+
+                $kind = $reflection->isInterface() ? 'interface' : 'abstract class';
+                throw new Exception("Cannot resolve parameter '{$paramName}': no binding found for {$kind} '{$type}'");
             }
-
-            throw new Exception("Failed to resolve parameter '{$paramName}' of type '{$type}'");
         }
-
 
         try {
             $class = $this->get($type);

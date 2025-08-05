@@ -1,8 +1,8 @@
 <?php
 
-namespace Arbor\Session;
+namespace Arbor\session;
 
-use Arbor\Contracts\Session\SessionInterface;
+use Arbor\Contracts\session\SessionInterface;
 use RuntimeException;
 use InvalidArgumentException;
 
@@ -11,6 +11,8 @@ use InvalidArgumentException;
  * 
  * Provides secure session management with CSRF protection,
  * flash messages, and configurable options.
+ * 
+ * @package Arbor\session
  */
 class Session implements SessionInterface
 {

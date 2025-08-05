@@ -290,13 +290,16 @@ class Uploader
 
     /**
      * Sanitizes a filename by replacing disallowed characters
+     * convert all charachters into lowercase.
      * 
      * @param string $name Original file name
      * @return string Filtered file name with special characters replaced by underscores
      */
     protected function filterFileName(string $name): string
     {
-        return preg_replace('/[^a-zA-Z0-9_\.-]/', '_', $name);
+        return strtolower(
+            preg_replace('/[^a-zA-Z0-9_\.-]/', '_', $name)
+        );
     }
 
     /**

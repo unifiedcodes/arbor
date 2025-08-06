@@ -5,7 +5,7 @@ namespace Arbor\database;
 use PDO;
 use Exception;
 use PDOStatement;
-use Arbor\database\utility\Placeholders;
+use Arbor\database\utility\PlaceholderParser;
 use Arbor\database\connection\Connection;
 
 /**
@@ -49,10 +49,10 @@ class PdoDb
     /**
      * Placeholders handler for query parameter binding
      */
-    protected Placeholders $placeholders;
+    protected PlaceholderParser $placeholders;
 
 
-    public function __construct(Connection $connection, Placeholders $placeholder)
+    public function __construct(Connection $connection, PlaceholderParser $placeholder)
     {
         $this->connection = $connection;
         $this->pdo = $connection->getPdo();
@@ -100,12 +100,12 @@ class PdoDb
     {
         static $dataTypesMap = [
             'default' => PDO::PARAM_STR,
-            's'       => PDO::PARAM_STR,
             'null'    => PDO::PARAM_NULL,
             'n'       => PDO::PARAM_NULL,
             'integer' => PDO::PARAM_INT,
             'i'       => PDO::PARAM_INT,
             'string'  => PDO::PARAM_STR,
+            's'       => PDO::PARAM_STR,
             'blob'    => PDO::PARAM_LOB,
             'bb'      => PDO::PARAM_LOB,
             'boolean' => PDO::PARAM_BOOL,

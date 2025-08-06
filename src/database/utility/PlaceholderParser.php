@@ -5,7 +5,7 @@ namespace Arbor\database\utility;
 use RuntimeException;
 
 /**
- * Placeholders - A performance biased SQL placeholders parser
+ * PlaceholderParser - A performance biased SQL placeholders parser
  * 
  * This class parses SQL statements to extract named placeholders and their optional type hints
  * while properly handling SQL comments and string literals. It can work with both named placeholders
@@ -20,7 +20,7 @@ use RuntimeException;
  * @package Arbor\database
  * 
  */
-class Placeholders
+class PlaceholderParser
 {
     /**
      * The SQL statement being parsed

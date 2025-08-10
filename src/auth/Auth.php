@@ -10,5 +10,5 @@ use Arbor\auth\SslKeysGenerator;
 
 class Auth
 {
-    // mostly act as a facade for easy access.
+    // Orchestrator for easy access.
 }

@@ -2,7 +2,10 @@
 
 namespace Arbor\validation;
 
+use RuntimeException;
 use InvalidArgumentException;
+use RecursiveIteratorIterator;
+use RecursiveDirectoryIterator;
 use Arbor\contracts\validation\RuleInterface;
 use Arbor\contracts\validation\RuleListInterface;
 
@@ -61,6 +64,48 @@ class Registry
             )
         );
     }
+
+
+    public function registerFromDir(string $dir, string $namespace): void
+    {
+        if (!is_dir($dir)) {
+            throw new InvalidArgumentException("Provided path is not a directory: $dir");
+        }
+
+        $rii = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir));
+
+        foreach ($rii as $file) {
+            if ($file->isFile() && $file->getExtension() === 'php') {
+                $filePath = $file->getRealPath();
+
+                // Get path relative to base directory
+                $relativePath = substr($filePath, strlen(rtrim($dir, DIRECTORY_SEPARATOR)) + 1);
+
+                // Convert directory separators to namespace separators
+                $className = str_replace(DIRECTORY_SEPARATOR, '\\', $relativePath);
+
+                // Remove the .php extension
+                $className = substr($className, 0, -4);
+
+                // Compose fully qualified class name
+                $fqn = rtrim($namespace, '\\') . '\\' . $className;
+
+                // Normalize namespace separators (in case)
+                $fqn = str_replace('\\\\', '\\', $fqn);
+
+                // Instantiate class (assumes no-argument constructor)
+                if (class_exists($fqn)) {
+                    $instance = new $fqn();
+
+                    // Register the instance using this class's register method
+                    $this->register($instance);
+                } else {
+                    throw new RuntimeException("Class $fqn not found.");
+                }
+            }
+        }
+    }
+
 
     /**
      * Register a single validation rule

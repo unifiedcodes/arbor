@@ -5,6 +5,7 @@ namespace Arbor\validation;
 use Arbor\validation\Parser;
 use Arbor\validation\Registry;
 use Arbor\validation\RuleList;
+use Arbor\validation\Definition;
 use Arbor\validation\Evaluator;
 use Arbor\contracts\validation\RuleInterface;
 use Arbor\contracts\validation\RuleListInterface;
@@ -47,6 +48,13 @@ class ValidatorFactory
     protected Evaluator $evaluator;
 
     /**
+     * Definition instance for filtering and validating input definition
+     * 
+     * @var Definition
+     */
+    protected Definition $definition;
+
+    /**
      * Constructor - Initialize the factory with required dependencies
      * 
      * @param Registry $registry The rule registry for storing validation rules
@@ -56,10 +64,10 @@ class ValidatorFactory
         Registry $registry,
         Parser $parser,
     ) {
-
         $this->registry = $registry;
         $this->parser = $parser;
         $this->evaluator = new Evaluator($this->registry);
+        $this->definition = new Definition($this->evaluator);
     }
 
     /**
@@ -79,12 +87,6 @@ class ValidatorFactory
         return $this;
     }
 
-    public function setEarlyReturn(bool $is): self
-    {
-        $this->evaluator->setEarlyReturn($is);
-
-        return $this;
-    }
 
     /**
      * Register custom validation rules
@@ -100,6 +102,22 @@ class ValidatorFactory
         $this->registry->register($class);
     }
 
+
+    public function setEarlyBreak(bool $is): self
+    {
+        $this->evaluator->setEarlyBreak($is);
+        $this->definition->setEarlyBreak($is);
+
+        return $this;
+    }
+
+
+    public function keepErrors(bool $is)
+    {
+        // set if validator can keep errors from every subsequent validation or not.
+        // resets on new validator creations to default.
+    }
+
     /**
      * Create a new Validator instance
      * 
@@ -113,7 +131,8 @@ class ValidatorFactory
         return new Validator(
             $this->registry,
             $this->parser,
-            $this->evaluator
+            $this->evaluator,
+            $this->definition,
         );
     }
 

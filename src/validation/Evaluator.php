@@ -2,6 +2,7 @@
 
 namespace Arbor\validation;
 
+use Throwable;
 use InvalidArgumentException;
 use Arbor\validation\Registry;
 use Arbor\validation\ValidationException;
@@ -22,7 +23,7 @@ class Evaluator
     protected Registry $registry;
 
     /** @var bool Flag to enable early return optimization when first valid group is found */
-    protected bool $earlyReturn = false;
+    protected bool $earlyBreak = false;
 
     /**
      * Constructor initializes the evaluator with a validation registry.
@@ -42,24 +43,46 @@ class Evaluator
      * 
      * @param bool $is True to enable early return, false to evaluate all groups
      */
-    public function setEarlyReturn(bool $is): void
+    public function setEarlyBreak(bool $is): void
     {
-        $this->earlyReturn = $is;
+        $this->earlyBreak = $is;
     }
 
     /**
      * Evaluate a single validation rule against input data.
      * 
      * This method provides a simplified interface for evaluating a single rule
-     * without the complexity of AST processing.
+     * without the complexity of AST processing. Returns both pass/fail status
+     * and any error messages encountered.
      * 
-     * @param mixed $input The data to validate
-     * @param string $rule The name of the validation rule to apply
-     * @return bool True if the rule passes, false otherwise
+     * @param mixed  $input The data to validate
+     * @param string $rule  The name of the validation rule to apply
+     * @param array  $params Additional parameters for the rule
+     * @param bool   $negate Whether to negate the rule result
+     * @return array Returns ['validated' => bool, 'errors' => array]
      */
-    public function evaluateSingle($input, string $rule): bool
-    {
-        return $this->evaluateRule($input, $rule);
+    public function evaluateSingle(
+        mixed $input,
+        string $rule,
+        array $params = [],
+        bool $negate = false
+    ): array {
+        $errors = [];
+        $validated = false;
+
+        try {
+            $validated = $this->evaluateRule($input, $rule, $params, $negate);
+            if (!$validated) {
+                $errors[] = "Rule '{$rule}' failed.";
+            }
+        } catch (ValidationException | Throwable $e) {
+            $errors[] = $e->getMessage();
+        }
+
+        return [
+            'validated' => $validated,
+            'errors'    => $errors
+        ];
     }
 
     /**
@@ -75,7 +98,7 @@ class Evaluator
      *               - $passed: true if at least one AND group passed validation
      *               - $errors: array of error messages grouped by AND group
      */
-    public function evaluate($input, $ast): array
+    public function evaluate(mixed $input, array $ast): array
     {
         $errors = [];
         $passed = false;
@@ -87,7 +110,7 @@ class Evaluator
             if ($groupPassed) {
                 $passed = true;
 
-                if ($this->earlyReturn) {
+                if ($this->earlyBreak) {
                     // Early termination: stop processing once we find a passing group
                     break;
                 }
@@ -97,14 +120,17 @@ class Evaluator
             $errors[] = $groupErrors;
         }
 
-        return [$passed, $errors];
+        return [
+            'validated' => $passed,
+            'errors' => $errors
+        ];
     }
 
     /**
      * Evaluate a single AND group of validation rules.
      * 
      * All rules within an AND group must pass for the group to be considered valid.
-     * Processing stops early if earlyReturn is enabled and a rule fails.
+     * Processing stops early if earlyBreak is enabled and a rule fails.
      * 
      * @param mixed $input The data to validate
      * @param array $andGroup Array of rule nodes, each containing rule definition
@@ -112,7 +138,7 @@ class Evaluator
      *               - $allPassed: true if all rules in the group passed
      *               - $errors: array of error messages from failed rules
      */
-    protected function evaluateAndGroup($input, array $andGroup): array
+    protected function evaluateAndGroup(mixed $input, array $andGroup): array
     {
         $errors = [];
         $allPassed = true;
@@ -137,7 +163,7 @@ class Evaluator
                 $allPassed = false;
                 $errors[] = $e->getMessage();
 
-                if ($this->earlyReturn) {
+                if ($this->earlyBreak) {
                     // Early termination: return immediately on first failure
                     return [false, $errors];
                 }
@@ -160,7 +186,7 @@ class Evaluator
      * @return bool True if the rule passes (considering negation), false otherwise
      * @throws InvalidArgumentException If the rule cannot be resolved or is not callable
      */
-    protected function evaluateRule($input, string $ruleName, array $params = [], bool $negate = false): bool
+    protected function evaluateRule(mixed $input, string $ruleName, array $params = [], bool $negate = false): bool
     {
         // Resolve the validation rule from the registry
         $callable = $this->registry->resolve($ruleName);

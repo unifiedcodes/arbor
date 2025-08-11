@@ -54,6 +54,8 @@ class ValidatorFactory
      */
     protected Definition $definition;
 
+    protected bool $keepErrors = true;
+
     /**
      * Constructor - Initialize the factory with required dependencies
      * 
@@ -102,7 +104,16 @@ class ValidatorFactory
         $this->registry->register($class);
     }
 
-
+    /**
+     * Configure early break behavior for validation
+     * 
+     * Sets whether validation should stop on the first error encountered (early break)
+     * or continue validating all rules. This affects both the evaluator and definition
+     * components. Provides a fluent interface for method chaining.
+     * 
+     * @param bool $is True to enable early break, false to validate all rules
+     * @return self Returns the factory instance for method chaining
+     */
     public function setEarlyBreak(bool $is): self
     {
         $this->evaluator->setEarlyBreak($is);
@@ -111,11 +122,21 @@ class ValidatorFactory
         return $this;
     }
 
-
+    /**
+     * Configure error retention behavior
+     * 
+     * Sets whether the validator should keep errors from every subsequent validation
+     * or reset them. This setting is applied to new validator instances and resets
+     * to default (true) after each validator creation.
+     * 
+     * @param bool $is True to keep errors across validations, false to reset them
+     * @return void
+     */
     public function keepErrors(bool $is)
     {
         // set if validator can keep errors from every subsequent validation or not.
         // resets on new validator creations to default.
+        $this->keepErrors = $is;
     }
 
     /**
@@ -128,12 +149,20 @@ class ValidatorFactory
      */
     public function create(): Validator
     {
-        return new Validator(
+
+        $validator = new Validator(
             $this->registry,
             $this->parser,
             $this->evaluator,
             $this->definition,
         );
+
+        $validator->keepErrors($this->keepErrors);
+
+        // reset to default.
+        $this->keepErrors = true;
+
+        return $validator;
     }
 
     /**

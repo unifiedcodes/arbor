@@ -65,7 +65,25 @@ class Registry
         );
     }
 
-
+    /**
+     * Register validation rules from a directory
+     * 
+     * Automatically discovers and registers validation rules from PHP files within
+     * a specified directory. This method recursively scans the directory, converts
+     * file paths to fully qualified class names using the provided namespace, and
+     * registers any classes that implement the required validation interfaces.
+     * 
+     * The method assumes:
+     * - All PHP files contain classes with no-argument constructors
+     * - Class names match their file names
+     * - Directory structure mirrors namespace structure
+     * 
+     * @param string $dir The directory path to scan for rule classes
+     * @param string $namespace The base namespace for the discovered classes
+     * @return void
+     * @throws InvalidArgumentException If the provided path is not a directory
+     * @throws RuntimeException If a discovered class cannot be found or instantiated
+     */
     public function registerFromDir(string $dir, string $namespace): void
     {
         if (!is_dir($dir)) {

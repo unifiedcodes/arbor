@@ -7,6 +7,7 @@ namespace Arbor\validation;
 use Arbor\validation\Parser;
 use Arbor\validation\Registry;
 use Arbor\validation\Evaluator;
+use Arbor\validation\Definition;
 use Arbor\contracts\validation\RuleInterface;
 use Arbor\contracts\validation\RuleListInterface;
 
@@ -27,6 +28,7 @@ class Validator
     protected Registry $registry;
     protected Parser $parser;
     protected Evaluator $evaluator;
+    protected Definition $definition;
 
     protected array $errors = [];
 
@@ -34,36 +36,71 @@ class Validator
     public function __construct(
         Registry $registry,
         Parser $parser,
-        Evaluator $evaluator
+        Evaluator $evaluator,
+        Definition $definition
     ) {
         $this->registry = $registry;
         $this->parser = $parser;
         $this->evaluator = $evaluator;
+        $this->definition = $definition;
     }
 
 
-    public function check($input, $rule)
+    public function validateRule(mixed $value, string $rule, ?string $name = null): bool
     {
-        return $this->evaluator->evaluateSingle($input, $rule);
+        $result = $this->evaluator->evaluateSingle($value, $rule);
+
+        // merge errors
+        if ($name) {
+            $this->errors[$name] = $result['errors'];
+        } else {
+            $this->errors[] = $result['errors'];
+        }
+
+        return $result['validated'];
     }
 
 
-    public function checkRules($input, $dsl)
+    public function validateRules(mixed $input, string|array $dsl, ?string $name = null): bool
     {
         $ast = $this->parser->parse($dsl);
-        return $this->evaluator->evaluate($input, $ast);
+
+        $result = $this->evaluator->evaluate($input, $ast);
+
+        // merge errors
+        if ($name) {
+            $this->errors[$name] = $result['errors'];
+        } else {
+            $this->errors[] = $result['errors'];
+        }
+
+        return $result['validated'];
     }
 
 
-    public function checkBatch($inputs, $defintion)
+    public function validateBatch(array $inputs, array $definition)
     {
-        // validate array of inputs with array of definition
+        // parse definition.
+        // set definition to validator.
+        // validate input.
+        $this->errors = [];
+
+        $parsedDefinition = $this->parser->parseDefinition($definition);
+
+        $this->definition->define($parsedDefinition);
+
+        $result = $this->definition->validate($inputs);
+
+        $this->errors = $result['errors'];
+
+        return $result['validated'];
     }
 
 
-    protected function addError(string $field, string $message): void
+    public function define(array $definition)
     {
-        $this->errors[$field][] = $message;
+        $parsedDefinition = $this->parser->parseDefinition($definition);
+        $this->definition->define($parsedDefinition);
     }
 
 
@@ -79,5 +116,16 @@ class Validator
     }
 
 
-    public function addRulesFromDir() {}
+    public function addRulesFromDir(string $dir, string $namespace): void
+    {
+        $this->registry->registerFromDir($dir, $namespace);
+    }
+
+
+    public function getErrors()
+    {
+        return $this->errors;
+    }
+
+    public function getReadableErrors() {}
 }

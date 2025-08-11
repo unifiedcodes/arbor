@@ -41,21 +41,36 @@ class Parser
      * @return array The parsed AST structure
      * @throws \InvalidArgumentException When input is neither string nor array
      */
-    public function parse(string|array $input): array
+    public function parse(string|array $dsl): array
     {
         // checks if input is string -> delegate to parseStr
         // if input is array -> delegate to parseArr
 
-        if (is_string($input)) {
-            return $this->parseStr($input);
+        if (is_string($dsl)) {
+            return $this->parseStr($dsl);
         }
 
-        if (is_array($input)) {
-            return $this->parseArr($input);
+        if (is_array($dsl)) {
+            return $this->parseArr($dsl);
         }
 
         throw new \InvalidArgumentException('DSL input must be a string or array.');
     }
+
+
+    public function parseDefinition(array $definition): array
+    {
+        // loop throgh definition,
+        // convert and set dsl to ast.
+        $parsedDefinition = [];
+
+        foreach ($definition as $fieldName => $value) {
+            $parsedDefinition[$fieldName] = $this->parse($value);
+        }
+
+        return $parsedDefinition;
+    }
+
 
     /**
      * Parses string-based validation rule definitions
@@ -70,7 +85,7 @@ class Parser
      * @param string $input The validation rule string to parse
      * @return array The parsed AST structure
      */
-    public function parseStr(string $input): array
+    public function parseStr(string $dsl): array
     {
         // break into or groups.
         // break into and groups.
@@ -79,7 +94,7 @@ class Parser
 
 
         // Split on '||' to create OR groups - each group represents an alternative validation path
-        $orGroups = explode('||', $input);
+        $orGroups = explode('||', $dsl);
 
         foreach ($orGroups as $orGroup) {
             // Split each OR group on whitespace to get individual AND-ed rules
@@ -177,18 +192,18 @@ class Parser
      * @param array $input The validation rules array to parse
      * @return array The parsed AST structure
      */
-    public function parseArr(array $input): array
+    public function parseArr(array $dsl): array
     {
         $ast = [];
 
         // Normalize input - if not already a list of groups, wrap it as a single group
         // This handles cases like ['required', 'email'] vs [['required', 'email'], ['phone']]
-        if (!(array_is_list($input) && isset($input[0]) && is_array($input[0]))) {
-            $input = [$input]; // Wrap single rule group in array
+        if (!(array_is_list($dsl) && isset($dsl[0]) && is_array($dsl[0]))) {
+            $dsl = [$dsl]; // Wrap single rule group in array
         }
 
         // Parse each OR group
-        foreach ($input as $group) {
+        foreach ($dsl as $group) {
             $ast[] = $this->parseGroup($group);
         }
 

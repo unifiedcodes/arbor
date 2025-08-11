@@ -57,7 +57,35 @@ class Parser
         throw new \InvalidArgumentException('DSL input must be a string or array.');
     }
 
-
+    /**
+     * Parses a validation definition array containing multiple field rules
+     * 
+     * Takes an associative array where keys are field names and values are
+     * validation rule definitions (either strings or arrays). Each field's
+     * rules are parsed into the standardized AST format.
+     * 
+     * Example input:
+     * [
+     *     'email' => 'required email',
+     *     'age' => ['required', 'min' => [18]],
+     *     'phone' => 'phone || !empty'
+     * ]
+     * 
+     * Example output:
+     * [
+     *     'email' => [
+     *         [
+     *             ['rule' => 'required', 'negate' => false, 'params' => []],
+     *             ['rule' => 'email', 'negate' => false, 'params' => []]
+     *         ]
+     *     ],
+     *     'age' => [...],
+     *     'phone' => [...]
+     * ]
+     * 
+     * @param array $definition Associative array of field names to validation rules
+     * @return array Parsed definition with each field's rules converted to AST format
+     */
     public function parseDefinition(array $definition): array
     {
         // loop throgh definition,

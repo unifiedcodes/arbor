@@ -3,9 +3,11 @@
 namespace Arbor\filters;
 
 use Arbor\pipeline\PipelineFactory;
+use Arbor\filters\Registry;
 use InvalidArgumentException;
-use RecursiveIteratorIterator;
-use RecursiveDirectoryIterator;
+use Arbor\contracts\filters\StageInterface;
+use Arbor\contracts\filters\StageListInterface;
+use Arbor\filters\StageList;
 
 /**
  * Filters class for managing and applying data filtering operations through a pipeline system.
@@ -21,83 +23,73 @@ class Filters
     /**
      * Factory for creating pipeline instances.
      * 
+     * Used to create new pipeline instances for processing data through registered filter stages.
+     * 
      * @var PipelineFactory
      */
     protected PipelineFactory $pipelineFactory;
 
     /**
-     * Maps filter names to their corresponding class names.
+     * Registry for managing and storing filter stage instances.
      * 
-     * @var array<string, string>
+     * Handles the registration, storage, and resolution of filter stages. Acts as a
+     * container for all available filter stages that can be applied to data.
+     * 
+     * @var Registry
      */
-    protected array $stageMap = [];
+    protected Registry $registry;
 
     /**
-     * Initialize the Filters instance with a pipeline factory.
+     * Initialize the Filters instance with a pipeline factory and registry.
      * 
-     * Automatically registers all filter stages found in the default stages directory.
+     * Sets up the core dependencies required for filter processing. The pipeline factory
+     * is used to create processing pipelines, while the registry manages available filter stages.
      * 
      * @param PipelineFactory $pipelineFactory Factory for creating pipeline instances
+     * @param Registry $registry Registry for managing filter stage instances
      */
-    public function __construct(PipelineFactory $pipelineFactory)
+    public function __construct(PipelineFactory $pipelineFactory, Registry $registry)
     {
         $this->pipelineFactory = $pipelineFactory;
-
-        $this->registerByDir(realpath(__DIR__ . '/stages/'), 'Arbor\filters\stages');
+        $this->registry = $registry;
     }
 
     /**
-     * Register a single filter stage with a given name.
+     * Register a filter stage or stage list with the registry.
      * 
-     * @param string $name The name to register the filter under (used for lookup)
-     * @param string $class The fully qualified class name of the filter stage
-     * @return void
+     * Adds a new filter stage or collection of stages to the registry, making them
+     * available for use in filter operations. Supports both individual stages
+     * implementing StageInterface and collections implementing StageListInterface.
+     * 
+     * @param StageInterface|StageListInterface $class The filter stage or stage list to register
+     * @return mixed The result of the registry registration operation
      */
-    public function register(string $name, string $class): void
+    public function register(StageInterface|StageListInterface $class)
     {
-        $this->stageMap[$name] = $class;
+        return $this->registry->register($class);
     }
 
     /**
-     * Automatically register all PHP classes in a directory as filter stages.
+     * Register the default collection of filter stages.
      * 
-     * Recursively scans the given directory for PHP files and registers each class
-     * as a filter stage using the lowercase filename (without extension) as the filter name.
+     * Convenience method that registers a new StageList instance containing
+     * the default set of filter stages. This provides a quick way to load
+     * commonly used filters without manual registration.
      * 
-     * @param string $dir The directory path to scan for filter stage classes
-     * @param string $namespace The namespace prefix for the classes in the directory
      * @return void
-     * @throws InvalidArgumentException If the specified directory does not exist
      */
-    public function registerByDir(string $dir, string $namespace)
+    public function withStages()
     {
-        if (!is_dir($dir)) {
-            throw new InvalidArgumentException("Directory {$dir} not found.");
-        }
-
-        $iterator = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator($dir)
-        );
-
-        foreach ($iterator as $file) {
-            if ($file->isFile() && $file->getExtension() === 'php') {
-                $className = $namespace . '\\' . $file->getBasename('.php');
-
-                if (!class_exists($className)) {
-                    continue;
-                }
-
-                $filterName = strtolower($file->getBasename('.php'));
-                $this->register($filterName, $className);
-            }
-        }
+        $this->register(new StageList());
     }
 
     /**
      * Apply filters to multiple input fields in batch.
      * 
      * Processes multiple input fields, applying their respective filter definitions
-     * and returning the filtered results in the same structure.
+     * and returning the filtered results in the same structure. This method is useful
+     * for processing form data, API requests, or any scenario where multiple fields
+     * need different filter treatments.
      * 
      * @param array<string, mixed> $inputs Associative array of input data keyed by field names
      * @param array<string, string|array> $definitions Filter definitions for each field
@@ -120,7 +112,8 @@ class Filters
      * 
      * Filters can be specified as a comma-separated string or an array of filter names.
      * Each filter is applied sequentially through a pipeline, with the output of one
-     * filter becoming the input to the next.
+     * filter becoming the input to the next. The pipeline processes data through all
+     * registered stages in the order specified.
      * 
      * @param mixed $input The input value to be filtered
      * @param string|array<string> $filters Filter names as comma-separated string or array
@@ -133,13 +126,7 @@ class Filters
             $filters = explode(',', $filters);
         }
 
-        foreach ($filters as $filterName) {
-            if (!isset($this->stageMap[$filterName])) {
-                throw new InvalidArgumentException("Filter stage '{$filterName}' is not registered.");
-            }
-
-            $stages[] = $this->stageMap[$filterName];
-        }
+        $stages = $this->registry->resolveAll($filters);
 
         $pipeline = $this->pipelineFactory->create();
 

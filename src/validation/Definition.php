@@ -11,6 +11,8 @@ use Arbor\validation\Evaluator;
  * This class provides functionality to define validation rules and validate input data
  * against those rules using an Evaluator instance. It supports early breaking on
  * validation failures and returns comprehensive validation results.
+ * 
+ * @package Arbor\validation
  */
 class Definition
 {

@@ -6,6 +6,7 @@ use Arbor\validation\Parser;
 use Arbor\validation\Registry;
 use Arbor\validation\Evaluator;
 use Arbor\validation\Definition;
+use Arbor\validation\ErrorsFormatter;
 use Arbor\contracts\validation\RuleInterface;
 use Arbor\contracts\validation\RuleListInterface;
 
@@ -17,9 +18,6 @@ use Arbor\contracts\validation\RuleListInterface;
  * 
  * WIP: This class is 99% complete.
  * Pending:
- * - Implement checkBatch()
- * - Implement addRulesFromDir()
- * - Comment Documentation
  * 
  * @package Arbor\validation
  */
@@ -54,6 +52,13 @@ class Validator
     protected Definition $definition;
 
     /**
+     * ErrorsFormatter instance for handling formatting of error messages
+     * 
+     * @var ErrorsFormatter
+     */
+    protected ErrorsFormatter $errorsFormatter;
+
+    /**
      * Flag to determine if errors should be accumulated across validations
      * 
      * @var bool
@@ -82,12 +87,14 @@ class Validator
         Registry $registry,
         Parser $parser,
         Evaluator $evaluator,
-        Definition $definition
+        Definition $definition,
+        ErrorsFormatter $errorsFormatter
     ) {
         $this->registry = $registry;
         $this->parser = $parser;
         $this->evaluator = $evaluator;
         $this->definition = $definition;
+        $this->errorsFormatter = $errorsFormatter;
     }
 
     /**
@@ -259,7 +266,7 @@ class Validator
      * 
      * @return array Array of validation errors
      */
-    public function getErrors()
+    public function getErrors(): array
     {
         return $this->errors;
     }
@@ -267,9 +274,10 @@ class Validator
     /**
      * Get human-readable validation errors
      * 
-     * TODO: Implementation pending - should format errors into user-friendly messages
-     * 
-     * @return mixed Formatted error messages (implementation pending)
+     * @return array Formatted error messages
      */
-    public function getReadableErrors() {}
+    public function getFormattedErrors(): array
+    {
+        return $this->errorsFormatter->format($this->errors);
+    }
 }

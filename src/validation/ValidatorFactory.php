@@ -5,8 +5,9 @@ namespace Arbor\validation;
 use Arbor\validation\Parser;
 use Arbor\validation\Registry;
 use Arbor\validation\RuleList;
-use Arbor\validation\Definition;
 use Arbor\validation\Evaluator;
+use Arbor\validation\Definition;
+use Arbor\validation\ErrorsFormatter;
 use Arbor\contracts\validation\RuleInterface;
 use Arbor\contracts\validation\RuleListInterface;
 
@@ -57,6 +58,13 @@ class ValidatorFactory
     protected bool $keepErrors = true;
 
     /**
+     * ErrorsFormatter instance for filtering and validating input definition
+     * 
+     * @var ErrorsFormatter
+     */
+    protected ErrorsFormatter $errorsFormatter;
+
+    /**
      * Constructor - Initialize the factory with required dependencies
      * 
      * @param Registry $registry The rule registry for storing validation rules
@@ -70,6 +78,7 @@ class ValidatorFactory
         $this->parser = $parser;
         $this->evaluator = new Evaluator($this->registry);
         $this->definition = new Definition($this->evaluator);
+        $this->errorsFormatter = new ErrorsFormatter();
     }
 
     /**
@@ -155,6 +164,7 @@ class ValidatorFactory
             $this->parser,
             $this->evaluator,
             $this->definition,
+            $this->errorsFormatter
         );
 
         $validator->keepErrors($this->keepErrors);

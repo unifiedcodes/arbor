@@ -7,6 +7,8 @@ use Arbor\validation\ValidationException;
 
 /**
  * Provides a collection of validation methods for common data validation needs
+ * 
+ * @package Arbor\validation
  */
 class RuleList implements RuleListInterface
 {
@@ -58,7 +60,7 @@ class RuleList implements RuleListInterface
     public function email($input): bool
     {
         if (filter_var($input, FILTER_VALIDATE_EMAIL) === false) {
-            throw new ValidationException('The Input : {input} must be a valid email address.');
+            throw new ValidationException('must be a valid email address');
         }
         return true;
     }
@@ -73,7 +75,7 @@ class RuleList implements RuleListInterface
     public function url($input): bool
     {
         if (filter_var($input, FILTER_VALIDATE_URL) === false) {
-            throw new ValidationException('The Input : {input} must be a valid URL.');
+            throw new ValidationException('must be a valid URL');
         }
         return true;
     }
@@ -88,7 +90,7 @@ class RuleList implements RuleListInterface
     public function integer($input): bool
     {
         if (filter_var($input, FILTER_VALIDATE_INT) === false) {
-            throw new ValidationException('The Input : {input} must be an integer.');
+            throw new ValidationException('must be an integer');
         }
         return true;
     }
@@ -103,7 +105,7 @@ class RuleList implements RuleListInterface
     public function float($input): bool
     {
         if (filter_var($input, FILTER_VALIDATE_FLOAT) === false) {
-            throw new ValidationException('The Input : {input} must be a valid float number.');
+            throw new ValidationException('must be a valid float number');
         }
         return true;
     }
@@ -118,7 +120,7 @@ class RuleList implements RuleListInterface
     public function boolean($input): bool
     {
         if (filter_var($input, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) === null) {
-            throw new ValidationException('The Input : {input} must be a boolean value.');
+            throw new ValidationException('must be a boolean value');
         }
         return true;
     }
@@ -143,7 +145,7 @@ class RuleList implements RuleListInterface
         }
 
         if ($isEmpty) {
-            throw new ValidationException('The Input : {input} is required.');
+            throw new ValidationException('is required');
         }
 
         return true;
@@ -160,11 +162,11 @@ class RuleList implements RuleListInterface
     public function minLength($input, int $min = 1): bool
     {
         if (!is_string($input)) {
-            throw new ValidationException('The Input : {input} must be a string.');
+            throw new ValidationException('must be a string');
         }
 
         if (mb_strlen($input) < $min) {
-            throw new ValidationException("The Input : {input} must be at least {$min} characters long.");
+            throw new ValidationException("must be at least {$min} characters long");
         }
 
         return true;
@@ -181,11 +183,11 @@ class RuleList implements RuleListInterface
     public function maxLength($input, int $max): bool
     {
         if (!is_string($input)) {
-            throw new ValidationException('The Input : {input} must be a string.');
+            throw new ValidationException('must be a string');
         }
 
         if (mb_strlen($input) > $max) {
-            throw new ValidationException("The Input : {input} must not exceed {$max} characters.");
+            throw new ValidationException("must not exceed {$max} characters");
         }
 
         return true;
@@ -202,11 +204,11 @@ class RuleList implements RuleListInterface
     public function length($input, int $length): bool
     {
         if (!is_string($input)) {
-            throw new ValidationException('The Input : {input} must be a string.');
+            throw new ValidationException('must be a string');
         }
 
         if (mb_strlen($input) !== $length) {
-            throw new ValidationException("The Input : {input} must be exactly {$length} characters long.");
+            throw new ValidationException("must be exactly {$length} characters long");
         }
 
         return true;
@@ -223,11 +225,11 @@ class RuleList implements RuleListInterface
     public function min($input, float $min): bool
     {
         if (!is_numeric($input)) {
-            throw new ValidationException('The Input : {input} must be numeric.');
+            throw new ValidationException('must be numeric');
         }
 
         if ((float)$input < $min) {
-            throw new ValidationException("The Input : {input} must be at least {$min}.");
+            throw new ValidationException("must be at least {$min}");
         }
 
         return true;
@@ -244,11 +246,11 @@ class RuleList implements RuleListInterface
     public function max($input, float $max): bool
     {
         if (!is_numeric($input)) {
-            throw new ValidationException('The Input : {input} must be numeric.');
+            throw new ValidationException('must be numeric');
         }
 
         if ((float)$input > $max) {
-            throw new ValidationException("The Input : {input} must not exceed {$max}.");
+            throw new ValidationException("must not exceed {$max}");
         }
 
         return true;
@@ -268,7 +270,7 @@ class RuleList implements RuleListInterface
             $allowedValues = implode(', ', array_map(function ($val) {
                 return is_string($val) ? "'{$val}'" : $val;
             }, $allowed));
-            throw new ValidationException("The Input : {input} must be one of: {$allowedValues}.");
+            throw new ValidationException("must be one of: {$allowedValues}");
         }
 
         return true;
@@ -284,7 +286,7 @@ class RuleList implements RuleListInterface
     public function phone($input): bool
     {
         if (!is_string($input)) {
-            throw new ValidationException('The Input : {input} must be a string.');
+            throw new ValidationException('must be a string');
         }
 
         // Remove common phone number separators
@@ -292,7 +294,7 @@ class RuleList implements RuleListInterface
 
         // Check if it contains only digits and is between 10-15 characters
         if (preg_match('/^\d{10,15}$/', $cleaned) !== 1) {
-            throw new ValidationException('The Input : {input} must be a valid phone number.');
+            throw new ValidationException('must be a valid phone number');
         }
 
         return true;
@@ -309,12 +311,12 @@ class RuleList implements RuleListInterface
     public function date($input, string $format = 'Y-m-d'): bool
     {
         if (!is_string($input)) {
-            throw new ValidationException('The Input : {input} must be a string.');
+            throw new ValidationException('must be a string');
         }
 
         $date = \DateTime::createFromFormat($format, $input);
         if (!$date || $date->format($format) !== $input) {
-            throw new ValidationException("The Input : {input} must be a valid date in format {$format}.");
+            throw new ValidationException("must be a valid date in format {$format}");
         }
 
         return true;
@@ -337,7 +339,7 @@ class RuleList implements RuleListInterface
             } elseif ($flags === FILTER_FLAG_IPV6) {
                 $type = ' IPv6';
             }
-            throw new ValidationException("The Input : {input} must be a valid{$type} IP address.");
+            throw new ValidationException("must be a valid{$type} IP address");
         }
 
         return true;
@@ -353,12 +355,12 @@ class RuleList implements RuleListInterface
     public function json($input): bool
     {
         if (!is_string($input)) {
-            throw new ValidationException('The Input : {input} must be a string.');
+            throw new ValidationException('must be a string');
         }
 
         json_decode($input);
         if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new ValidationException('The Input : {input} must be valid JSON.');
+            throw new ValidationException('must be valid JSON');
         }
 
         return true;
@@ -374,12 +376,12 @@ class RuleList implements RuleListInterface
     public function uuid($input): bool
     {
         if (!is_string($input)) {
-            throw new ValidationException('The Input : {input} must be a string.');
+            throw new ValidationException('must be a string');
         }
 
         $pattern = '/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i';
         if (preg_match($pattern, $input) !== 1) {
-            throw new ValidationException('The Input : {input} must be a valid UUID.');
+            throw new ValidationException('must be a valid UUID');
         }
 
         return true;
@@ -395,11 +397,11 @@ class RuleList implements RuleListInterface
     public function alphanumeric($input): bool
     {
         if (!is_string($input)) {
-            throw new ValidationException('The Input : {input} must be a string.');
+            throw new ValidationException('must be a string');
         }
 
         if (preg_match('/^[a-zA-Z0-9]+$/', $input) !== 1) {
-            throw new ValidationException('The Input : {input} must contain only letters and numbers.');
+            throw new ValidationException('must contain only letters and numbers');
         }
 
         return true;
@@ -415,11 +417,11 @@ class RuleList implements RuleListInterface
     public function alpha($input): bool
     {
         if (!is_string($input)) {
-            throw new ValidationException('The Input : {input} must be a string.');
+            throw new ValidationException('must be a string');
         }
 
         if (preg_match('/^[a-zA-Z]+$/', $input) !== 1) {
-            throw new ValidationException('The Input : {input} must contain only letters.');
+            throw new ValidationException('must contain only letters');
         }
 
         return true;
@@ -435,7 +437,7 @@ class RuleList implements RuleListInterface
     public function numeric($input): bool
     {
         if (!is_numeric($input)) {
-            throw new ValidationException('The Input : {input} must be numeric.');
+            throw new ValidationException('must be numeric');
         }
 
         return true;
@@ -451,11 +453,11 @@ class RuleList implements RuleListInterface
     public function digits($input): bool
     {
         if (!is_string($input)) {
-            throw new ValidationException('The Input : {input} must be a string.');
+            throw new ValidationException('must be a string');
         }
 
         if (preg_match('/^\d+$/', $input) !== 1) {
-            throw new ValidationException('The Input : {input} must contain only digits.');
+            throw new ValidationException('must contain only digits');
         }
 
         return true;
@@ -472,7 +474,7 @@ class RuleList implements RuleListInterface
     public function same($input, $other): bool
     {
         if ($input !== $other) {
-            throw new ValidationException('The Input : {input} must be the same as the comparison value.');
+            throw new ValidationException('must be the same as the comparison value');
         }
 
         return true;
@@ -489,7 +491,7 @@ class RuleList implements RuleListInterface
     public function different($input, $other): bool
     {
         if ($input === $other) {
-            throw new ValidationException('The Input : {input} must be different from the comparison value.');
+            throw new ValidationException('must be different from the comparison value');
         }
 
         return true;
@@ -505,7 +507,7 @@ class RuleList implements RuleListInterface
     public function array($input): bool
     {
         if (!is_array($input)) {
-            throw new ValidationException('The Input : {input} must be an array.');
+            throw new ValidationException('must be an array');
         }
 
         return true;
@@ -521,7 +523,7 @@ class RuleList implements RuleListInterface
     public function file($input): bool
     {
         if (!is_array($input) || !isset($input['tmp_name']) || !is_uploaded_file($input['tmp_name'])) {
-            throw new ValidationException('The Input : {input} must be a valid uploaded file.');
+            throw new ValidationException('must be a valid uploaded file');
         }
 
         return true;
@@ -537,11 +539,11 @@ class RuleList implements RuleListInterface
     public function slug($input): bool
     {
         if (!is_string($input)) {
-            throw new ValidationException('The Input : {input} must be a string.');
+            throw new ValidationException('must be a string');
         }
 
         if (preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)*$/', $input) !== 1) {
-            throw new ValidationException('The Input : {input} must be a valid slug (lowercase letters, numbers, and hyphens only).');
+            throw new ValidationException('must be a valid slug (lowercase letters, numbers, and hyphens only)');
         }
 
         return true;
@@ -558,11 +560,11 @@ class RuleList implements RuleListInterface
     public function password($input): bool
     {
         if (!is_string($input)) {
-            throw new ValidationException('The Input : {input} must be a string.');
+            throw new ValidationException('must be a string');
         }
 
         if (preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/', $input) !== 1) {
-            throw new ValidationException('The Input : {input} must be at least 8 characters long and contain at least one lowercase letter, one uppercase letter, one digit, and one special character.');
+            throw new ValidationException('must be at least 8 characters long and contain at least one lowercase letter, one uppercase letter, one digit, and one special character');
         }
 
         return true;

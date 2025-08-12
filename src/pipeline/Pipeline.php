@@ -98,16 +98,14 @@ class Pipeline
      */
     public function then(callable|string|array $destination): mixed
     {
-        $destination = $this->prepareDestination($destination);
+        $destination = $this->normalizeStage($destination);
         $pipeline = $this->buildPipeline($destination);
         return $pipeline($this->input);
     }
 
 
     /**
-     * refactor to normalizeStage() which should normalise all stages and destination.
-     * 
-     * Prepares the final destination callable.
+     * Prepares the Stage Callable.
      *
      * This method ensures that the final handler in the pipeline is always a callable.
      * It supports:
@@ -118,26 +116,35 @@ class Pipeline
      * @param callable|string|array $destination The final stage of the pipeline.
      * @return callable A callable that can be used in the pipeline.
      */
-    protected function prepareDestination(callable|string|array $destination): callable
+    protected function normalizeStage(callable|string|array $stage): callable
     {
-        // If destination is a class name, resolve it and use the 'process' method
-        if (is_string($destination)) {
-            return function ($input) use ($destination) {
-                return $this->container->call([$destination, 'process'], ['input' => $input]);
-            };
+        // Callable → already fine
+        if (is_callable($stage)) {
+            return $stage;
         }
 
 
-        // If destination is given as [ClassName::class, 'methodName']
-        if (is_array($destination) && count($destination) === 2) {
-            return function ($input) use ($destination) {
-                return $this->container->call([$destination[0], $destination[1]], ['input' => $input]);
+        // Class name → resolve and call default method
+        if (is_string($stage)) {
+            return function ($input, $next) use ($stage) {
+                return $this->container->call([$stage, $this->methodName], [
+                    'input' => $input,
+                    'next'  => $next
+                ]);
             };
         }
 
+        // [ClassName, method] → resolve and call specific method
+        if (is_array($stage) && count($stage) === 2) {
+            return function ($input, $next) use ($stage) {
+                return $this->container->call([$stage[0], $stage[1]], [
+                    'input' => $input,
+                    'next'  => $next
+                ]);
+            };
+        }
 
-        // If it's already a callable, return as is
-        return $destination;
+        throw new \InvalidArgumentException('Invalid stage format.');
     }
 
     /**
@@ -153,8 +160,9 @@ class Pipeline
         return array_reduce(
             $reversedStages,
             function ($next, $stage) {
-                return function ($input) use ($stage, $next) {
-                    return $this->container->call([$stage, $this->methodName], ['input' => $input, 'next' => $next]);
+                $stageCallable = $this->normalizeStage($stage); // normalize each stage
+                return function ($input) use ($stageCallable, $next) {
+                    return $stageCallable($input, $next);
                 };
             },
             $destination

@@ -31,7 +31,9 @@ class ErrorsFormatter
             $formattedErrors[$field] = $this->formatBucket($field, $bucket);
         }
 
-        return $formattedErrors;
+        $formatted = array_filter($formattedErrors, fn($msg) => $msg !== '');
+
+        return $formatted;
     }
 
 
@@ -53,13 +55,20 @@ class ErrorsFormatter
         $messages = [];
 
         foreach ($bucket as $andGroup) {
+
+            // early return if any of the OR level errors are empty array, meaning validation was successful.
+            if (empty($andGroup)) {
+                return '';
+            }
+
             $andMessage = implode(' and ', $andGroup);
 
-            !empty($andMessage) ? $messages[] = $andMessage : null;
+            if (!empty($andMessage)) {
+                $messages[] = $andMessage;
+            }
         }
 
-
-        return "'$field' " . implode(' Or ', $messages);
+        return !empty($messages) ? "'$field' " . implode(' Or ', $messages) : '';
     }
 
 

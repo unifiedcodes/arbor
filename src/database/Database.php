@@ -10,7 +10,7 @@ use Arbor\database\connection\Connection;
 use Arbor\database\connection\ConnectionPool;
 use Arbor\database\utility\GrammarResolver;
 use Arbor\database\query\grammar\Grammar;
-use Arbor\database\utility\Placeholders;
+use Arbor\database\utility\PlaceholderParser;
 
 /**
  * 
@@ -152,14 +152,14 @@ class Database
      * Get a PDO database wrapper instance
      * 
      * Creates and returns a PdoDb instance using the current connection
-     * and a new Placeholders utility for parameter handling.
+     * and a new PlaceholderParser utility for parameter handling.
      * 
      * @return PdoDb The PDO database wrapper instance
      * 
      */
     public function getPdoDb(): PdoDb
     {
-        return new PdoDb($this->connection, new Placeholders());
+        return new PdoDb($this->connection, new PlaceholderParser());
     }
 
 

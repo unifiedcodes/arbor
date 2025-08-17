@@ -35,6 +35,13 @@ class Query extends Builder
     protected ?PdoDb $statement = null;
 
     /**
+     * Flag indicating whether the query has been executed
+     * 
+     * @var bool
+     */
+    protected bool $executed = false;
+
+    /**
      * Parameter values to be bound to the prepared statement
      * 
      * @var array
@@ -62,7 +69,8 @@ class Query extends Builder
      * Set parameter values for the query
      * 
      * Sets the values that will be bound to placeholders in the prepared statement.
-     * This method supports method chaining.
+     * This method supports method chaining and resets the statement cache and 
+     * execution flag to ensure fresh execution.
      * 
      * @param array $values Associative array of parameter values
      * @return self Returns the current instance for method chaining
@@ -70,7 +78,33 @@ class Query extends Builder
     public function values(array $values): self
     {
         $this->values = $values;
+        $this->statement = null;   // reset prepared statement
+        $this->executed = false;   // reset execution flag
         return $this;
+    }
+
+
+    /**
+     * Get or create the prepared statement
+     * 
+     * Returns a PdoDb instance with the prepared statement and bound values.
+     * The statement is cached after first creation to improve performance.
+     * If the statement doesn't exist, it creates one by converting the query
+     * to SQL, preparing it, and binding the parameter values.
+     * 
+     * @return PdoDb The prepared statement with bound values
+     */
+    public function statement(): PdoDb
+    {
+        if (!$this->statement) {
+            $this->statement = $this->database
+                ->getPdoDb()
+                ->sql($this->toSql())
+                ->prepareStatement()
+                ->bindValues($this->values);
+        }
+
+        return $this->statement;
     }
 
 
@@ -79,13 +113,15 @@ class Query extends Builder
      * 
      * Executes the built SQL query with the provided parameter values.
      * The statement is cached after first execution to avoid re-execution.
+     * Uses the execution flag to prevent multiple executions of the same query.
      * 
      * @return PdoDb The executed statement object
      */
     public function execute(): PdoDb
     {
-        if (!$this->statement) {
-            $this->statement = $this->database->execute($this->toSql(), $this->values);
+        if (!$this->executed) {
+            $this->statement()->execute();
+            $this->executed = true;
         }
 
         return $this->statement;
@@ -96,9 +132,10 @@ class Query extends Builder
      * Fetch all rows from the result set
      * 
      * Executes the query (if not already executed) and returns all rows
-     * from the result set as an array.
+     * from the result set as an array. This method is typically used for
+     * SELECT queries that are expected to return multiple rows.
      * 
-     * @return mixed All rows from the result set
+     * @return mixed All rows from the result set as an array
      */
     public function fetchAll()
     {
@@ -111,8 +148,10 @@ class Query extends Builder
      * 
      * Executes the query (if not already executed) and returns the next row
      * from the result set, or false if no more rows are available.
+     * This method is useful for retrieving one row at a time or when expecting
+     * a single result.
      * 
-     * @return mixed A single row from the result set or false
+     * @return mixed A single row from the result set or false if no rows available
      */
     public function fetch()
     {
@@ -124,10 +163,12 @@ class Query extends Builder
      * Fetch a single column from the next row
      * 
      * Executes the query (if not already executed) and returns a single column
-     * from the next row in the result set.
+     * from the next row in the result set. This is useful for queries that
+     * return a single value, such as COUNT() queries or when you only need
+     * one specific column value.
      * 
      * @param int $colIndex The 0-indexed column number to retrieve (default: 0)
-     * @return mixed The value of the specified column or false
+     * @return mixed The value of the specified column or false if no data available
      */
     public function fetchColumn(int $colIndex = 0)
     {
@@ -140,6 +181,8 @@ class Query extends Builder
      * 
      * Executes the query (if not already executed) and returns the number
      * of rows affected by the last DELETE, INSERT, or UPDATE statement.
+     * For SELECT statements, this method may not return the expected count
+     * and fetchAll() or similar methods should be used instead.
      * 
      * @return int The number of affected rows
      */

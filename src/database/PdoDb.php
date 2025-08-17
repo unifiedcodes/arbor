@@ -318,7 +318,7 @@ class PdoDb
      * @param string $query SQL query with placeholders
      * @return static Current instance for method chaining
      */
-    public function query(string $query): static
+    public function sql(string $query): static
     {
         $this->reset();
 

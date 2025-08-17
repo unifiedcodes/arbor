@@ -156,7 +156,7 @@ class Database
      * @param string|null $alias Optional table alias
      * @return Builder Returns the query builder instance for chaining
      */
-    public function builder(
+    public function queryBuilder(
         string|Closure|Builder|array $table,
         ?string $alias = null
     ): Builder {

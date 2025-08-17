@@ -272,7 +272,7 @@ class PdoDb
      * @param int|null $mode PDO fetch mode (defaults to class fetch mode)
      * @return mixed Single row from the result set or false if no rows
      */
-    public function fetchOne(?int $mode = null): mixed
+    public function fetch(?int $mode = null): mixed
     {
         $fetchMode = $mode ?? $this->fetchMode;
         return $this->statement->fetch($fetchMode);
@@ -283,9 +283,9 @@ class PdoDb
      * 
      * @return mixed Value of the column or false if no rows
      */
-    public function fetchColumn(): mixed
+    public function fetchColumn(int $colIndex = 0): mixed
     {
-        return $this->statement->fetchColumn();
+        return $this->statement->fetchColumn($colIndex);
     }
 
     /**

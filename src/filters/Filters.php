@@ -2,12 +2,12 @@
 
 namespace Arbor\filters;
 
-use Arbor\pipeline\PipelineFactory;
 use Arbor\filters\Registry;
+use Arbor\filters\StageList;
 use InvalidArgumentException;
+use Arbor\pipeline\PipelineFactory;
 use Arbor\contracts\filters\StageInterface;
 use Arbor\contracts\filters\StageListInterface;
-use Arbor\filters\StageList;
 
 /**
  * Filters class for managing and applying data filtering operations through a pipeline system.

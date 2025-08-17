@@ -6,6 +6,7 @@ namespace Arbor\database;
 use Closure;
 use Arbor\database\PdoDb;
 use Arbor\database\query\Builder;
+use Arbor\database\Query;
 use Arbor\database\connection\Connection;
 use Arbor\database\connection\ConnectionPool;
 use Arbor\database\utility\GrammarResolver;
@@ -133,12 +134,32 @@ class Database
      * 
      * @param string|Closure|Builder|array $table Table name, subquery or expression
      * @param string|null $alias Optional table alias
-     * @return Builder Returns the query builder instance for chaining
+     * @return Query Returns the query builder instance for chaining
      */
     public function table(
         string|Closure|Builder|array $table,
         ?string $alias = null
-    ) {
+    ): Query {
+        $this->connection ?? $this->withConnection();
+        $this->grammar ?? $this->withGrammar();
+
+        return (new Query($this->grammar, $this))->table($table, $alias);
+    }
+
+    /**
+     * Entry point for creating a pure query builder instance
+     * 
+     * Initializes connection and grammar if not already set, then creates
+     * a new Builder instance with the specified table.
+     * 
+     * @param string|Closure|Builder|array $table Table name, subquery or expression
+     * @param string|null $alias Optional table alias
+     * @return Builder Returns the query builder instance for chaining
+     */
+    public function builder(
+        string|Closure|Builder|array $table,
+        ?string $alias = null
+    ): Builder {
         $this->connection ?? $this->withConnection();
         $this->grammar ?? $this->withGrammar();
 

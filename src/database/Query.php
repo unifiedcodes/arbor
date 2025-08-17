@@ -56,7 +56,7 @@ class Query extends Builder
      * and a database connection for execution.
      * 
      * @param Grammar $grammar The SQL grammar instance for query building
-     * @param Database $database The database connection instance
+     * @param Database $database The Database orchestrator instance
      */
     public function __construct(Grammar $grammar, Database $database)
     {

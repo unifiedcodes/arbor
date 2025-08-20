@@ -67,6 +67,7 @@ abstract class Grammar
             'insert' => $this->compileInsert(),
             'update' => $this->compileUpdate(),
             'delete' => $this->compileDelete(),
+            'upsert' => $this->compileUpsert(),
 
             default => throw new Exception("Undefined query type encountered while trying to serialize sql")
         };
@@ -153,6 +154,32 @@ abstract class Grammar
 
         return $sql;
     }
+
+
+    /**
+     * Compile an UPSERT query into SQL string
+     *
+     * MySQL style: INSERT ... ON DUPLICATE KEY UPDATE ...
+     *
+     * @return string
+     */
+    protected function compileUpsert(): string
+    {
+        $insertSql = $this->compileInsert();
+
+        $updates = $this->properties['upsertUpdates'] ?? [];
+
+        if (!empty($updates)) {
+            $updateParts = [];
+            foreach ($updates as $column) {
+                $updateParts[] = $this->identifier($column) . ' = VALUES(' . $this->identifier($column) . ')';
+            }
+            $insertSql .= ' ON DUPLICATE KEY UPDATE ' . implode(', ', $updateParts);
+        }
+
+        return $insertSql;
+    }
+
 
     /**
      * Compile an UPDATE query into SQL string

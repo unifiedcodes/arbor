@@ -156,7 +156,7 @@ class Database
      * @param string|null $alias Optional table alias
      * @return Builder Returns the query builder instance for chaining
      */
-    public function queryBuilder(
+    public function builder(
         string|Closure|Builder|array $table,
         ?string $alias = null
     ): Builder {
@@ -170,7 +170,7 @@ class Database
     // =========== EXECUTION METHODS ============
 
     /**
-     * Get a PDO database wrapper instance
+     * Get a configured PDO database wrapper instance
      * 
      * Creates and returns a PdoDb instance using the current connection
      * and a new PlaceholderParser utility for parameter handling.
@@ -195,10 +195,10 @@ class Database
      * @return PdoDb Returns the PdoDb instance for further operations
      * 
      */
-    public function execute(string $sql, array $values = []): PdoDb
+    public function raw(string $sql, array $values = []): PdoDb
     {
         $pdoDb = $this->getPdoDb();
-        $pdoDb->query($sql)->prepareStatement()->bindValues($values)->execute();
+        $pdoDb->sql($sql)->prepareStatement()->bindValues($values)->execute();
         return $pdoDb;
     }
 }

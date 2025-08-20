@@ -158,7 +158,18 @@ class Builder
         'update' => [],
     ];
 
+    /**
+     * Updates to apply during UPSERT operations on duplicate key
+     * @var array<int, string>
+     */
+    protected array $upsertUpdates = [];
 
+
+    /**
+     * Create and return a new Builder instance with the same grammar
+     * 
+     * @param Grammar $grammar The SQL grammar instance to use
+     */
     public function __construct(Grammar $grammar)
     {
         $this->grammar = $grammar;
@@ -400,10 +411,15 @@ class Builder
      * @return $this For method chaining
      * @throws InvalidArgumentException If column type is invalid
      */
-    public function select(?array $columns = null): static
+    public function select(array|string|Expression|null $columns = null): static
     {
         $this->type = 'select';
         $columns = $columns ?: ['*'];
+
+        // Normalize to array
+        if (!is_array($columns)) {
+            $columns = [$columns];
+        }
 
         if (is_array($columns)) {
             // supports following convention.
@@ -423,6 +439,20 @@ class Builder
             }
         }
 
+        return $this;
+    }
+
+    /**
+     * Add a raw SQL expression to the SELECT clause without parameter binding
+     * 
+     * @param string $expression Raw SQL expression to add to SELECT
+     * @return $this For method chaining
+     */
+    public function selectRaw(string $expression): static
+    {
+        $this->select[] = [
+            'column' => new Expression($expression),
+        ];
         return $this;
     }
 
@@ -620,6 +650,7 @@ class Builder
         return $this;
     }
 
+
     /**
      * Set the OFFSET value
      * 
@@ -725,7 +756,7 @@ class Builder
      * @param array<int|string, mixed> $values Row data to insert
      * @return $this For method chaining
      */
-    public function insert(array $values): static
+    public function insert(array $values)
     {
         if (array_is_list($values)) {
 
@@ -740,12 +771,28 @@ class Builder
     }
 
     /**
+     * Create an UPSERT query (INSERT with ON DUPLICATE KEY UPDATE)
+     * 
+     * @param array<string, mixed> $values Column-value pairs to insert
+     * @param array<int, string> $updateColumns Columns to update on duplicate key
+     * @return $this For method chaining
+     * @throws InvalidArgumentException If values array is invalid
+     */
+    public function upsert(array $values, array $updateColumns): static
+    {
+        $this->type = 'upsert';
+        $this->addInsert($values);
+        $this->upsertUpdates = $updateColumns; // columns to update on duplicate
+        return $this;
+    }
+
+    /**
      * Create an UPDATE query
      * 
      * @param array<string, mixed> $values Column-value pairs to update
      * @return $this For method chaining
      */
-    public function update(array $values): static
+    public function update(array $values)
     {
         $this->type = 'update';
 
@@ -767,7 +814,7 @@ class Builder
      * @param string|null $alias Optional alias to delete from
      * @return $this For method chaining
      */
-    public function delete(?string $alias = null): static
+    public function delete(?string $alias = null)
     {
         $this->type = 'delete';
 
@@ -820,6 +867,7 @@ class Builder
             'limit'    => $this->limit,
             'offset'   => $this->offset,
             'unions'   => $this->unions,
+            'upsertUpdates' => $this->upsertUpdates
         ];
 
         // if no key requested, return full map

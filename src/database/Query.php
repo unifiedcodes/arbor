@@ -7,6 +7,7 @@ use Arbor\database\PdoDb;
 use Arbor\database\Database;
 use Arbor\database\query\Builder;
 use Arbor\database\query\grammar\Grammar;
+use InvalidArgumentException;
 
 /**
  * Query
@@ -283,15 +284,22 @@ class Query extends Builder
      */
     public function insert(array $values)
     {
-        parent::insert($values); // Delegate to Builder
-
-        // If it was a single row, execute immediately and return insert ID
-        if (!array_is_list($values)) {
-            return $this->execute()->getInsertId();
+        if (array_is_list($values)) {
+            throw new InvalidArgumentException("Insert can only accept associative array of column=>value pair");
         }
 
-        // If it was multiple rows, return $this for chaining
-        return $this;
+        parent::insert($values); // Delegate to Builder
+        return $this->execute()->getInsertId();
+    }
+
+
+    public function insertMany(array $rows)
+    {
+        if (!array_is_list($rows)) {
+            throw new InvalidArgumentException("InsertMany can only accept list of rows of column=>value pair");
+        }
+
+        parent::insert($rows); // Delegate to Builder
     }
 
     /**

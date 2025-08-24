@@ -52,9 +52,16 @@ trait WhereTrait
      */
     public function where(
         Expression|Closure|Builder|string|array $left,
-        mixed $right = null,
-        string $operator = '='
+        mixed $operator = null,
+        mixed $right = null
     ): static {
+
+        // If 2 arguments are provided, assume = operator
+        if ($right === null) {
+            $right = $operator;
+            $operator = '=';
+        }
+
         return $this->addWhere($left, $right, $operator, 'AND');
     }
 
@@ -68,9 +75,16 @@ trait WhereTrait
      */
     public function whereNot(
         Expression|Closure|Builder|string|array $left,
-        mixed $right = null,
-        string $operator = '='
+        mixed $operator = null,
+        mixed $right = null
     ): static {
+
+        // If 2 arguments are provided, assume = operator
+        if ($right === null) {
+            $right = $operator;
+            $operator = '=';
+        }
+
         return $this->addWhere($left, $right, $operator, 'AND', true);
     }
 
@@ -86,9 +100,16 @@ trait WhereTrait
      */
     public function orWhere(
         Expression|Closure|Builder|string|array $left,
-        mixed $right = null,
-        string $operator = '='
+        mixed $operator = null,
+        mixed $right = null
     ): static {
+
+        // If 2 arguments are provided, assume = operator
+        if ($right === null) {
+            $right = $operator;
+            $operator = '=';
+        }
+
         return $this->addWhere($left, $right, $operator, 'OR');
     }
 
@@ -104,9 +125,16 @@ trait WhereTrait
      */
     public function orWhereNot(
         Expression|Closure|Builder|string|array $left,
-        mixed $right = null,
-        string $operator = '='
+        mixed $operator = null,
+        mixed $right = null
     ): static {
+
+        // If 2 arguments are provided, assume = operator
+        if ($right === null) {
+            $right = $operator;
+            $operator = '=';
+        }
+
         return $this->addWhere($left, $right, $operator, 'OR', true);
     }
 

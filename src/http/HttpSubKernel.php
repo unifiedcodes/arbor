@@ -32,7 +32,7 @@ class HttpSubKernel extends HttpKernel
         array $attributes = [],
         ?string $version = null,
     ): Request {
-        return $this->requestFactory::make(
+        return $this->requestFactory->make(
             uri: $uri,
             method: $method,
             headers: $headers,

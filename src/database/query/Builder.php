@@ -256,13 +256,32 @@ class Builder
             return $group;
         }
 
-        // If list-style array: [left, right, operator?]
-        if (array_is_list($conditions)) {
-            return [$this->buildCondition($section, ...$conditions)];
+        $normalized = [];
+
+        if (!array_is_list($conditions)) {
+            // Case: ['col' => 'val']
+            $normalized = [$key, $val, '='];
+        } else {
+            // Case: list array
+            $count = count($conditions);
+
+            if ($count === 2) {
+                // Case: ['col', 'val']
+                [$col, $val] = $conditions;
+                $normalized = [$col, $val, '='];
+            } elseif ($count === 3) {
+                // Case: ['col', '>', 'val'] → reorder
+                [$col, $op, $val] = $conditions;
+                $normalized = [$col, $val, $op];
+            } else {
+                throw new InvalidArgumentException(
+                    "Invalid condition array: " . json_encode($conditions)
+                );
+            }
         }
 
-        // Else associative array: [column => value]
-        return [$this->buildCondition($section, $key, $val, '=')];
+        // 3. Single return path
+        return [$this->buildCondition($section, ...$normalized)];
     }
 
     /**

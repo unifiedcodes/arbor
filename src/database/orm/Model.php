@@ -1,31 +1,57 @@
 <?php
 
-
 namespace Arbor\database\orm;
 
-
+use Exception;
 use ArrayAccess;
 use JsonSerializable;
+use Arbor\database\orm\ModelQuery;
+use Arbor\database\Database;
 
 
 abstract class Model implements ArrayAccess, JsonSerializable
 {
+    protected static ?string $tableName = null;
+    protected static Database $database;
+
     protected array $attributes = [];
     protected array $original = [];
-
-    protected string $table;
     protected string $primaryKey = 'id';
-
     protected bool $exists = false;
 
-    protected $db;
 
-    public function __construct($db, array $attributes = [], bool $exists = false)
+    public function __construct(array $attributes = [], bool $exists = false)
     {
-        $this->db = $db;
+        if (!static::$tableName) {
+            $classname = get_class($this);
+            throw new Exception("table name is not defined by Model Class: '{$classname}'");
+        }
+
+        if (!static::$database) {
+            throw new Exception("Database Instance is not bound with Model Class");
+        }
+
         $this->fill($attributes);
         $this->syncOriginal();
         $this->exists = $exists;
+    }
+
+
+    public static function setDatabase(Database $db): void
+    {
+        static::$database = $db;
+    }
+
+
+    public static function getDatabase(): Database
+    {
+        return static::$database;
+    }
+
+
+    public static function tableName(): string
+    {
+        return static::$tableName;
     }
 
 
@@ -143,67 +169,23 @@ abstract class Model implements ArrayAccess, JsonSerializable
     }
 
 
-    public function find(int|string $id): ?static
-    {
-        $row = $this->db->table($this->table)
-            ->where($this->primaryKey, $id)
-            ->first();
-
-        return $row ? new static($this->db, $row, true) : null;
-    }
-
-
     public function all(): array
     {
-        $rows = $this->db->table($this->table)->get();
-        return array_map(fn($row) => new static($this->db, $row, true), $rows);
+        // let the hydration and query be handled by ModelQuery class.
+
+        $rows = static::query()->get();
+        return array_map(fn($row) => new static($row, true), $rows);
     }
 
 
-    public function create(array $attributes): static
+    public static function query(): ModelQuery
     {
-        $instance = new static($this->db, $attributes, false);
-        $id = $this->db->table($this->table)->insertGetId($attributes);
-
-        $instance->set($this->primaryKey, $id);
-        $instance->exists = true;
-        $instance->syncOriginal();
-
-        return $instance;
+        return new ModelQuery(static::getDatabase(), static::class);
     }
 
 
-    public function update(array $attributes = []): bool
+    public static function __callStatic($method, $args)
     {
-        if (!$this->exists) return false;
-
-        $this->fill($attributes);
-
-        if (!$this->isDirty()) {
-            return false;
-        }
-
-        $this->db->table($this->table)
-            ->where($this->primaryKey, $this->get($this->primaryKey))
-            ->update($this->getDirty());
-
-        $this->syncOriginal();
-        return true;
-    }
-
-
-    public function delete(): bool
-    {
-        if (!$this->exists) return false;
-
-        $deleted = $this->db->table($this->table)
-            ->where($this->primaryKey, $this->get($this->primaryKey))
-            ->delete();
-
-        if ($deleted) {
-            $this->exists = false;
-        }
-
-        return (bool) $deleted;
+        return static::query()->$method(...$args);
     }
 }

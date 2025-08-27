@@ -6,7 +6,7 @@ namespace Arbor\database;
 use Closure;
 use Arbor\database\PdoDb;
 use Arbor\database\query\Builder;
-use Arbor\database\Query;
+use Arbor\database\QueryBuilder;
 use Arbor\database\connection\Connection;
 use Arbor\database\connection\ConnectionPool;
 use Arbor\database\utility\GrammarResolver;
@@ -134,16 +134,16 @@ class Database
      * 
      * @param string|Closure|Builder|array $table Table name, subquery or expression
      * @param string|null $alias Optional table alias
-     * @return Query Returns the query builder instance for chaining
+     * @return QueryBuilder Returns the query builder instance for chaining
      */
     public function table(
         string|Closure|Builder|array $table,
         ?string $alias = null
-    ): Query {
+    ): QueryBuilder {
         $this->connection ?? $this->withConnection();
         $this->grammar ?? $this->withGrammar();
 
-        return (new Query($this->grammar, $this))->table($table, $alias);
+        return (new QueryBuilder($this))->table($table, $alias);
     }
 
     /**
@@ -200,5 +200,20 @@ class Database
         $pdoDb = $this->getPdoDb();
         $pdoDb->sql($sql)->prepareStatement()->bindValues($values)->execute();
         return $pdoDb;
+    }
+
+    /**
+     * Get the currently active SQL grammar instance
+     * 
+     * Returns the grammar object associated with the current database driver.
+     * Ensures that a grammar has been initialized before access. This method
+     * is typically used internally by builder-related classes
+     * 
+     * @return Grammar The active grammar instance for the current database driver
+     */
+    public function getGrammar(): Grammar
+    {
+        $this->grammar ?? $this->withGrammar();
+        return $this->grammar;
     }
 }

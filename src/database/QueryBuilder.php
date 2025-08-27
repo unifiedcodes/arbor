@@ -19,7 +19,7 @@ use InvalidArgumentException;
  * 
  * @package Arbor\database
  */
-class Query extends Builder
+class QueryBuilder extends Builder
 {
     /**
      * The database instance used for executing queries
@@ -66,9 +66,9 @@ class Query extends Builder
      * @param Grammar $grammar The SQL grammar instance for query building
      * @param Database $database The Database orchestrator instance
      */
-    public function __construct(Grammar $grammar, Database $database)
+    public function __construct(Database $database)
     {
-        parent::__construct($grammar);
+        parent::__construct($database->getGrammar());
         $this->database = $database;
     }
 

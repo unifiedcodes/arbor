@@ -10,6 +10,8 @@ use Exception;
  * Class Connection
  *
  * Wraps a PDO instance and manages connection lifecycle for a single database.
+ * Provides factory methods for creating connections from configuration or DSN strings,
+ * and handles connection management including establishing, closing, and health checking.
  *
  * @package Arbor\database\connection
  */
@@ -49,6 +51,20 @@ class Connection
     private const DEFAULT_HOST    = 'localhost';
 
 
+    /**
+     * Private constructor to enforce factory method usage.
+     *
+     * Initializes a new Connection instance with the provided database connection parameters.
+     * The constructor is private to ensure connections are created through the factory methods
+     * which provide proper validation and configuration.
+     *
+     * @param string $dsn The Data Source Name string
+     * @param string $username Database username
+     * @param string $password Database password  
+     * @param string $driver Database driver (mysql, pgsql, etc.)
+     * @param string $databaseName Name of the database
+     * @param array<int, mixed>|null $options Optional PDO options to override defaults
+     */
     private function __construct(
         string $dsn,
         string $username,
@@ -65,6 +81,21 @@ class Connection
         $this->options  = array_merge($this->defaultOptions(), $options ?? []);
     }
 
+    /**
+     * Creates a Connection instance from individual configuration parameters.
+     *
+     * Factory method that constructs a DSN string from the provided parameters
+     * and creates a new Connection instance. Uses sensible defaults for host and driver
+     * if not specified.
+     *
+     * @param string $username Database username
+     * @param string $password Database password
+     * @param string $databaseName Name of the database to connect to
+     * @param string|null $host Database host (defaults to 'localhost')
+     * @param string|null $driver Database driver (defaults to 'mysql')
+     * @param array<int, mixed>|null $options Optional PDO options to override defaults
+     * @return static New Connection instance
+     */
     public static function fromConfig(
         string $username,
         string $password,
@@ -89,6 +120,19 @@ class Connection
         );
     }
 
+    /**
+     * Creates a Connection instance from a DSN string.
+     *
+     * Factory method that accepts a complete DSN string and parses it to extract
+     * the driver and database name information needed for the Connection instance.
+     *
+     * @param string $dsn Complete Data Source Name string (e.g., 'mysql:host=localhost;dbname=test')
+     * @param string $username Database username
+     * @param string $password Database password
+     * @param array<int, mixed>|null $options Optional PDO options to override defaults
+     * @return static New Connection instance
+     * @throws Exception If the DSN string is invalid or cannot be parsed
+     */
     public static function fromDsn(
         string $dsn,
         string $username,
@@ -109,9 +153,14 @@ class Connection
 
 
     /**
-     * Parses the DSN string to extract the driver and dbName
+     * Parses the DSN string to extract the driver and database name.
      *
-     * @throws Exception if dbname is not present
+     * Uses regex pattern matching to extract the driver type and database name
+     * from a properly formatted DSN string. The DSN must contain a 'dbname' parameter.
+     *
+     * @param string $dsn The DSN string to parse
+     * @return array{0: string, 1: string} Array containing [driver, databaseName]
+     * @throws Exception If the DSN format is invalid or dbname parameter is missing
      */
     private static function parseDsn(string $dsn): array
     {
@@ -123,9 +172,16 @@ class Connection
     }
 
     /**
-     * default pdo connection options
+     * Returns the default PDO connection options.
      *
-     * @return array of default options
+     * Provides sensible default options for PDO connections including:
+     * - Exception mode for error handling
+     * - Associative array fetch mode
+     * - Disabled prepared statement emulation
+     * - Non-persistent connections
+     * - 30-second connection timeout
+     *
+     * @return array<int, mixed> Array of PDO option constants and their values
      */
     protected function defaultOptions(): array
     {
@@ -142,9 +198,14 @@ class Connection
     /**
      * Establishes the PDO connection if not already connected.
      *
+     * Creates a new PDO instance using the stored connection parameters and options.
+     * If a connection already exists, this method returns without creating a new one.
+     * Additional options can be provided to override the default configuration for this
+     * specific connection attempt.
+     *
      * @param array<int, mixed> $options Optional additional PDO options for this connect call
      * @return void
-     * @throws Exception If PDO instantiation fails
+     * @throws Exception If PDO instantiation fails, wrapping the original PDOException
      */
     public function connect(array $options = []): void
     {
@@ -169,6 +230,9 @@ class Connection
     /**
      * Closes the PDO connection.
      *
+     * Releases the PDO instance by setting it to null, which should trigger
+     * PHP's garbage collection to clean up the database connection resources.
+     *
      * @return void
      */
     public function close(): void
@@ -179,8 +243,11 @@ class Connection
     /**
      * Returns the underlying PDO instance.
      *
-     * @return PDO
-     * @throws Exception If `connect()` was not called first
+     * Provides access to the raw PDO object for direct database operations.
+     * The connection must be established via connect() before calling this method.
+     *
+     * @return PDO The active PDO instance
+     * @throws Exception If connect() was not called first or connection failed
      */
     public function getPdo(): PDO
     {
@@ -194,7 +261,10 @@ class Connection
     /**
      * Indicates whether the PDO connection is active.
      *
-     * @return bool True if connected
+     * Checks if a PDO instance exists, but does not verify if the connection
+     * is still valid or responsive. Use isAlive() for a more thorough check.
+     *
+     * @return bool True if a PDO instance exists, false otherwise
      */
     public function isConnected(): bool
     {
@@ -204,7 +274,10 @@ class Connection
     /**
      * Returns the configured PDO driver.
      *
-     * @return string
+     * Gets the database driver type (e.g., 'mysql', 'pgsql', 'sqlite') that was
+     * specified during connection creation.
+     *
+     * @return string The database driver name
      */
     public function getDriver(): string
     {
@@ -214,7 +287,10 @@ class Connection
     /**
      * Returns the DSN string in use.
      *
-     * @return string
+     * Gets the complete Data Source Name string that is used or will be used
+     * to establish the PDO connection.
+     *
+     * @return string The DSN connection string
      */
     public function getDsn(): string
     {
@@ -223,11 +299,15 @@ class Connection
 
 
     /**
-     * Checks if a connection is alive (not stale).
+     * Checks if a connection is alive and responsive.
      *
-     * @param string $name
-     * @return bool
-     * @throws Exception
+     * Performs an actual database query ('SELECT 1') to verify that the connection
+     * is not only established but also functional and able to communicate with
+     * the database server. This is more thorough than isConnected() which only
+     * checks if a PDO instance exists.
+     *
+     * @return bool True if the connection is active and responsive, false otherwise
+     * @throws Exception If there's an error getting the PDO instance
      */
     public function isAlive(): bool
     {

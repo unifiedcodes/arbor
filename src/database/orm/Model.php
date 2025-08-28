@@ -169,15 +169,6 @@ abstract class Model implements ArrayAccess, JsonSerializable
     }
 
 
-    public function all(): array
-    {
-        // let the hydration and query be handled by ModelQuery class.
-
-        $rows = static::query()->get();
-        return array_map(fn($row) => new static($row, true), $rows);
-    }
-
-
     public static function query(): ModelQuery
     {
         return new ModelQuery(static::getDatabase(), static::class);
@@ -187,5 +178,13 @@ abstract class Model implements ArrayAccess, JsonSerializable
     public static function __callStatic($method, $args)
     {
         return static::query()->$method(...$args);
+    }
+
+
+    public function all(): array
+    {
+        // let the hydration and query be handled by ModelQuery class.
+        $rows = static::query()->get();
+        return array_map(fn($row) => new static($row, true), $rows);
     }
 }

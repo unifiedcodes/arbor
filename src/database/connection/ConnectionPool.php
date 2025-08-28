@@ -2,93 +2,144 @@
 
 namespace Arbor\database\connection;
 
-
 use Exception;
+use InvalidArgumentException;
 use Arbor\attributes\ConfigValue;
 
 /**
  * Class ConnectionPool
  *
- * Manages a pool of named database connections with retry logic, idle tracking, and eviction.
+ * Manages a pool of named database connections with retry logic.
  * 
  * @package Arbor\database\connection
  * 
  */
 class ConnectionPool
 {
-    /** @var array<string, Connection> */
+    /** @var array<string, Connection> Active database connections indexed by name */
     protected array $connections = [];
 
-    /**
-     * @var array<string, array{isIdle: bool, maxRetries: int, retryDelay: int}>
-     */
-    protected array $attributes = [];
+    /** @var array<string, array<string, mixed>> Configuration arrays for lazy connection creation indexed by name */
+    protected array $configs = [];
 
-    protected int $defaultMaxConnections;
+    /** @var int Default maximum number of connection retry attempts */
     protected int $defaultMaxRetries;
+
+    /** @var int Default delay between retry attempts in milliseconds */
     protected int $defaultRetryDelay;
 
     /**
      * ConnectionPool constructor.
      *
-     * @param int|null $maxConnections
-     * @param int|null $maxRetries
-     * @param int|null $retryDelay
-     * @param array<string, array<string, mixed>>|null $dbConnections
+     * @param array|null $dbConnections Array of database connection configurations
+     * @param int|null $maxRetries Default maximum retry attempts for connections
+     * @param int|null $retryDelay Default retry delay in milliseconds
      */
     public function __construct(
-        #[ConfigValue('db.pool.maxConnections')]
-        ?int $maxConnections = null,
+        #[ConfigValue('db.connections')]
+        ?array $dbConnections = null,
 
-        #[ConfigValue('db.pool.maxRetries')]
+        #[ConfigValue('db.maxRetries')]
         ?int $maxRetries = null,
 
-        #[ConfigValue('db.pool.retryDelay')]
-        ?int $retryDelay = null,
-
-        #[ConfigValue('db.connections')]
-        ?array $dbConnections = null
+        #[ConfigValue('db.retryDelay')]
+        ?int $retryDelay = null
     ) {
-        $this->defaultMaxConnections = $maxConnections ?? 10;
-        $this->defaultMaxRetries     = $maxRetries     ?? 10;
-        $this->defaultRetryDelay     = $retryDelay     ?? 1000;
+        $this->defaultMaxRetries = $maxRetries ?? 3;
+        $this->defaultRetryDelay = $retryDelay ?? 1000;
 
-        $this->addConnectionsByConfig($dbConnections ?? []);
-    }
-
-    /**
-     * Adds multiple connections from configuration.
-     *
-     * @param array<string, array<string, mixed>> $dbConnections
-     * @return void
-     */
-    protected function addConnectionsByConfig(array $dbConnections): void
-    {
-        foreach ($dbConnections as $name => $config) {
-
-            $connection = $this->createConnectionObject($config);
-
-            $this->addConnection(
-                $name,
-                $connection,
-                $config['maxRetries'] ?? null,
-                $config['retryDelay'] ?? null
-            );
+        if ($dbConnections) {
+            foreach ($dbConnections as $name => $config) {
+                $this->addConfig($name, $config);
+            }
         }
     }
 
-
-    protected function createConnectionObject(array $config): Connection
+    /**
+     * Add connection config for lazy creation.
+     *
+     * @param string $name The name identifier for the connection
+     * @param array $config Configuration array containing connection parameters
+     * @return void
+     */
+    public function addConfig(string $name, array $config): void
     {
-        // required config keys.
-        $username = $config['username'] ?? throw new \InvalidArgumentException('Missing "username" in DB config.');
-        $password = $config['password'] ?? throw new \InvalidArgumentException('Missing "password" in DB config.');
-        $options  = $config['options']  ?? null;
+        $this->configs[$name] = $config;
+    }
 
+    /**
+     * Add a pre-made connection instance.
+     *
+     * @param string $name The name identifier for the connection
+     * @param Connection $connection Pre-existing connection instance
+     * @return void
+     */
+    public function addConnection(string $name, Connection $connection): void
+    {
+        $this->connections[$name] = $connection;
+    }
 
-        // has dsn string
+    /**
+     * Acquire a database connection by name, creating it if necessary with retry logic.
+     *
+     * @param string $name The name of the connection to acquire
+     * @return Connection The requested database connection
+     * @throws Exception If no configuration is found or connection fails after max retries
+     */
+    public function acquireConnection(string $name): Connection
+    {
+        // Return existing connection
+        if (isset($this->connections[$name])) {
+            return $this->connections[$name];
+        }
+
+        // Make sure config exists
+        if (!isset($this->configs[$name])) {
+            throw new Exception("No configuration found for connection '{$name}'");
+        }
+
+        $config = $this->configs[$name];
+        $maxRetries = $config['maxRetries'] ?? $this->defaultMaxRetries;
+        $retryDelay = $config['retryDelay'] ?? $this->defaultRetryDelay;
+
+        $connection = $this->createConnection($config);
+
+        $attempt = 0;
+        while (!$connection->isConnected()) {
+            try {
+                $connection->connect();
+            } catch (\Throwable $e) {
+                $attempt++;
+                if ($attempt >= $maxRetries) {
+                    throw new Exception(
+                        "Failed to connect to '{$name}' after {$maxRetries} attempts",
+                        0,
+                        $e
+                    );
+                }
+                usleep($retryDelay * 1000); // convert ms to microseconds
+            }
+        }
+
+        $this->connections[$name] = $connection;
+
+        return $connection;
+    }
+
+    /**
+     * Create a new Connection instance from configuration array.
+     *
+     * @param array $config Configuration array containing connection parameters
+     * @return Connection New connection instance
+     * @throws InvalidArgumentException If required configuration parameters are missing
+     */
+    protected function createConnection(array $config): Connection
+    {
+        $username = $config['username'] ?? throw new InvalidArgumentException('Missing "username"');
+        $password = $config['password'] ?? throw new InvalidArgumentException('Missing "password"');
+        $options  = $config['options'] ?? null;
+
         if (!empty($config['dsn'])) {
-            // Use DSN directly
             return Connection::fromDsn(
                 dsn: $config['dsn'],
                 username: $username,
@@ -97,11 +148,8 @@ class ConnectionPool
             );
         }
 
-        // making db name key mandatory when dsn is provided.
-        $databaseName = $config['databaseName'] ?? throw new \InvalidArgumentException('Missing "databaseName" in DB config.');
+        $databaseName = $config['databaseName'] ?? throw new InvalidArgumentException('Missing "databaseName"');
 
-
-        // building with config.
         return Connection::fromConfig(
             username: $username,
             password: $password,
@@ -113,153 +161,25 @@ class ConnectionPool
     }
 
     /**
-     * Adds a connection to the pool.
+     * Execute a callback with a specific database connection.
      *
-     * @param string $name
-     * @param Connection $connection
-     * @param int|null $maxRetries
-     * @param int|null $retryDelay
-     * @return void
-     * @throws Exception
-     */
-    public function addConnection(
-        string $name,
-        Connection $connection,
-        ?int $maxRetries = null,
-        ?int $retryDelay = null
-    ): void {
-
-        if (count($this->connections) >= $this->defaultMaxConnections) {
-            $this->evictIdleConnections();
-
-            if (count($this->connections) >= $this->defaultMaxConnections) {
-                throw new Exception("Connection pool is full, couldn't add connection {$name} in pool");
-            }
-        }
-
-        if (isset($this->connections[$name])) {
-            throw new Exception("Connection with name '$name' already exists");
-        }
-
-        $this->connections[$name] = $connection;
-
-        $this->attributes[$name] = [
-            'isIdle' => true,
-            'maxRetries' => $maxRetries ?? $this->defaultMaxRetries,
-            'retryDelay' => $retryDelay ?? $this->defaultRetryDelay,
-        ];
-    }
-
-    /**
-     * Retrieves a connection from the pool without acquiring it.
-     *
-     * @param string $name
-     * @return Connection
-     * @throws Exception
-     */
-    public function getConnection(string $name): Connection
-    {
-        if (!isset($this->connections[$name])) {
-            throw new Exception("Connection '$name' does not exist in the pool");
-        }
-
-        return $this->connections[$name];
-    }
-
-    /**
-     * Acquires a connection (sets it as non-idle) and attempts connection with retries.
-     *
-     * @param string $name
-     * @return Connection
-     * @throws Exception
-     */
-    public function acquireConnection(string $name): Connection
-    {
-        if (!isset($this->connections[$name])) {
-            throw new Exception("Connection '$name' does not exist in the pool");
-        }
-
-        $connection = $this->connections[$name];
-        $this->attributes[$name]['isIdle'] = false;
-
-        $maxRetries = $this->attributes[$name]['maxRetries'];
-        $retryDelay = $this->attributes[$name]['retryDelay'];
-
-        $attempt = 0;
-
-        while (!$connection->isConnected()) {
-            try {
-                $connection->connect();
-            } catch (\Throwable $e) {
-                $attempt++;
-                if ($attempt >= $maxRetries) {
-                    throw new Exception("Failed to connect to '$name' after {$maxRetries} attempts", 0, $e);
-                }
-                usleep($retryDelay);
-            }
-        }
-
-        return $connection;
-    }
-
-    /**
-     * Marks a connection as idle.
-     *
-     * @param string $name
-     * @return void
-     * @throws Exception
-     */
-    public function releaseConnection(string $name): void
-    {
-        if (!isset($this->connections[$name])) {
-            throw new Exception("Connection '$name' does not exist in the pool");
-        }
-
-        $this->attributes[$name]['isIdle'] = true;
-    }
-
-    /**
-     * Executes a callback with an acquired connection.
-     *
-     * @param string $name
-     * @param callable(Connection): mixed $callback
-     * @return mixed
-     * @throws Exception
+     * @param string $name The name of the connection to use
+     * @param callable $callback The callback function to execute with the connection
+     * @return mixed The return value of the callback function
+     * @throws Exception If the connection cannot be acquired
      */
     public function withConnection(string $name, callable $callback): mixed
     {
         $connection = $this->acquireConnection($name);
-
-        try {
-            return $callback($connection);
-        } finally {
-            $this->releaseConnection($name);
-        }
+        return $callback($connection);
     }
 
     /**
-     * Evicts the first idle connection from the pool.
+     * Destroy a specific connection by name, closing it and removing from the pool.
      *
-     * @return bool True if a connection was evicted.
-     */
-    public function evictIdleConnections(): bool
-    {
-        foreach ($this->connections as $name => $connection) {
-            if ($this->attributes[$name]['isIdle'] === true) {
-                $this->destroyConnection($name);
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * Removes a connection from the pool and closes it.
-     *
-     * @param string $name
+     * @param string $name The name of the connection to destroy
      * @return void
-     * @throws Exception
+     * @throws Exception If the connection does not exist in the pool
      */
     public function destroyConnection(string $name): void
     {
@@ -268,14 +188,14 @@ class ConnectionPool
         }
 
         $this->connections[$name]->close();
-        unset($this->connections[$name], $this->attributes[$name]);
+        unset($this->connections[$name]);
     }
 
     /**
-     * Checks if the connection with the given name exists in the pool.
+     * Check if a connection exists in the pool (regardless of its state).
      *
-     * @param string $name
-     * @return bool
+     * @param string $name The name of the connection to check
+     * @return bool True if the connection exists in the pool, false otherwise
      */
     public function hasConnection(string $name): bool
     {
@@ -283,33 +203,7 @@ class ConnectionPool
     }
 
     /**
-     * Checks whether a given connection is idle.
-     *
-     * @param string $name
-     * @return bool
-     * @throws Exception
-     */
-    public function isConnectionIdle(string $name): bool
-    {
-        if (!isset($this->attributes[$name])) {
-            throw new Exception("Connection '$name' does not exist in the pool");
-        }
-
-        return $this->attributes[$name]['isIdle'];
-    }
-
-    /**
-     * Gets the total number of connections in the pool.
-     *
-     * @return int
-     */
-    public function getConnectionCount(): int
-    {
-        return count($this->connections);
-    }
-
-    /**
-     * Closes all connections and clears the pool.
+     * Close all active connections and clear the connection pool.
      *
      * @return void
      */
@@ -322,13 +216,12 @@ class ConnectionPool
         }
 
         $this->connections = [];
-        $this->attributes = [];
     }
 
     /**
-     * Returns all connection names in the pool.
+     * Get an array of all connection names currently in the pool.
      *
-     * @return string[]
+     * @return array Array of connection names (string keys)
      */
     public function getConnectionNames(): array
     {
@@ -336,15 +229,19 @@ class ConnectionPool
     }
 
     /**
-     * Checks if a connection is alive (not stale).
+     * Check if a specific connection is alive and responsive.
      *
-     * @param string $name
-     * @return bool
-     * @throws Exception
+     * @param string $name The name of the connection to check
+     * @return bool True if the connection is alive, false otherwise
+     * @throws Exception If the connection is not found in the pool
      */
     public function isConnectionAlive(string $name): bool
     {
-        $connection = $this->getConnection($name);
+        if (!isset($this->connections[$name])) {
+            throw new Exception("Connection '$name' not found");
+        }
+
+        $connection = $this->connections[$name];
         return $connection->isAlive();
     }
 }

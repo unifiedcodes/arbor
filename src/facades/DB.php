@@ -3,6 +3,7 @@
 namespace Arbor\facades;
 
 use Arbor\facades\Facade;
+use Arbor\database\Database;
 
 /**
  * Facade for the Arbor Database service.
@@ -28,6 +29,21 @@ class DB extends Facade
      */
     protected static function getAccessor(): string|object
     {
-        return 'Arbor\\database\\Database';
+        return 'Arbor\\database\\DatabaseResolver';
+    }
+
+
+    public static function on(string $name): Database
+    {
+        /** @var DatabaseResolver $resolver */
+        $instance = static::resolveInstance();
+        return $instance->get($name);
+    }
+
+
+    public static function __callStatic($method, $args)
+    {
+        $db = static::on('default');
+        return $db->$method(...$args);
     }
 }

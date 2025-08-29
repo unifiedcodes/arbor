@@ -60,11 +60,11 @@ class Database
     /**
      * Constructor for Database class
      * 
-     * Initializes a new Database orchestrator with an optional connection pool.
+     * Initializes a new Database orchestrator with connection pool.
      * 
-     * @param ConnectionPool|null $connectionPool Optional connection pool manager
+     * @param ConnectionPool $connectionPool connection pool manager
      */
-    public function __construct(ConnectionPool|null $connectionPool = null)
+    public function __construct(ConnectionPool $connectionPool)
     {
         $this->connectionPool = $connectionPool;
 
@@ -167,7 +167,7 @@ class Database
     }
 
 
-    // =========== EXECUTION METHODS ============
+    // =========== PDO METHODS ============
 
     /**
      * Get a configured PDO database wrapper instance

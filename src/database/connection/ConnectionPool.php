@@ -36,13 +36,13 @@ class ConnectionPool
      * @param int|null $retryDelay Default retry delay in milliseconds
      */
     public function __construct(
-        #[ConfigValue('db.connections')]
+        #[ConfigValue('database.connections')]
         ?array $dbConnections = null,
 
-        #[ConfigValue('db.maxRetries')]
+        #[ConfigValue('database.maxRetries')]
         ?int $maxRetries = null,
 
-        #[ConfigValue('db.retryDelay')]
+        #[ConfigValue('database.retryDelay')]
         ?int $retryDelay = null
     ) {
         $this->defaultMaxRetries = $maxRetries ?? 3;
@@ -50,7 +50,7 @@ class ConnectionPool
 
         if ($dbConnections) {
             foreach ($dbConnections as $name => $config) {
-                $this->addConfig($name, $config);
+                $this->registerConnection($name, $config);
             }
         }
     }
@@ -62,7 +62,7 @@ class ConnectionPool
      * @param array $config Configuration array containing connection parameters
      * @return void
      */
-    public function addConfig(string $name, array $config): void
+    public function registerConnection(string $name, array $config): void
     {
         $this->configs[$name] = $config;
     }
@@ -199,7 +199,7 @@ class ConnectionPool
      */
     public function hasConnection(string $name): bool
     {
-        return isset($this->connections[$name]);
+        return isset($this->configs[$name]);
     }
 
     /**
@@ -219,13 +219,13 @@ class ConnectionPool
     }
 
     /**
-     * Get an array of all connection names currently in the pool.
+     * Get an array of all connection names that can be made available by pool.
      *
      * @return array Array of connection names (string keys)
      */
     public function getConnectionNames(): array
     {
-        return array_keys($this->connections);
+        return array_keys($this->configs);
     }
 
     /**

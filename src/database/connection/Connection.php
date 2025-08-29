@@ -5,6 +5,7 @@ namespace Arbor\database\connection;
 use PDO;
 use PDOException;
 use Exception;
+use Throwable;
 
 /**
  * Class Connection
@@ -320,7 +321,7 @@ class Connection
             $pdo = $this->getPdo();
             $pdo->query('SELECT 1');
             return true;
-        } catch (\Throwable) {
+        } catch (Throwable) {
             return false;
         }
     }

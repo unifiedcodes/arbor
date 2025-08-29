@@ -9,7 +9,7 @@ use Arbor\database\QueryBuilder;
 
 class ModelQuery
 {
-    protected $builder;
+    protected QueryBuilder $builder;
     protected $modelClass;
     protected $database;
 

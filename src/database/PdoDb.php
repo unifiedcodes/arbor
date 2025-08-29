@@ -112,7 +112,12 @@ class PdoDb
             'b'       => PDO::PARAM_BOOL,
         ];
 
-        return $dataTypesMap[strtolower($type)] ?? $dataTypesMap['default'];
+        if ($type === null) {
+            return $dataTypesMap['default'];
+        }
+
+        $key = strtolower($type);
+        return $dataTypesMap[$key] ?? $dataTypesMap['default'];
     }
 
     //--- SQL TRANSACTION METHODS

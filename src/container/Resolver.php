@@ -15,7 +15,7 @@ use ReflectionFunctionAbstract;
 
 use Arbor\container\Registry;
 use Arbor\container\ServiceContainer;
-
+use Arbor\contracts\Container\ContainerInterface;
 
 /**
  * Class Resolver
@@ -284,12 +284,12 @@ class Resolver
             return $this->resolvePrimitiveParameter($parameter, $type);
         }
 
-        if ($type === ServiceContainer::class) {
+        if ($type === ServiceContainer::class || $type === ContainerInterface::class) {
             return $this->container;
         }
 
         if (interface_exists($type) || class_exists($type)) {
-            $reflection = new \ReflectionClass($type);
+            $reflection = new ReflectionClass($type);
 
             if ($reflection->isInterface() || $reflection->isAbstract()) {
                 if ($this->registry->has($type)) {

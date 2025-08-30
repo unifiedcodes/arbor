@@ -10,8 +10,8 @@ use Arbor\database\QueryBuilder;
 class ModelQuery
 {
     protected QueryBuilder $builder;
-    protected $modelClass;
-    protected $database;
+    protected Database $database;
+    protected string $modelClass;
 
 
     public function __construct(Database $database, string $modelClass)
@@ -22,10 +22,21 @@ class ModelQuery
     }
 
 
+    public function create(array $attributes)
+    {
+        // insert into table, get back auto-id
+        $id = $this->builder->insert($attributes);
+
+        $attributes = array_merge($attributes, ['id' => $id]);
+
+        return $this->hydrate($attributes);
+    }
+
+
     protected function hydrate(array $attributes)
     {
         $class = $this->modelClass;
-        return new $class($this->database, $attributes, true);
+        return new $class($attributes, true);
     }
 
 
@@ -37,11 +48,7 @@ class ModelQuery
 
         $result = $this->builder->$method(...$arguments);
 
-        // If the builder returns itself (for chaining), we return $this
+        // If the builder returns itself (for chaining), we return ModelQuery
         return $result === $this->builder ? $this : $result;
     }
-
-    // override result returning methods of $builder class.
-    // add a magic call method with mixins, keep chain alive to Model when method returns $builder instance.
-    // add a hydrate to $modelClass method.
 }

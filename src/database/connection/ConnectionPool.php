@@ -2,6 +2,7 @@
 
 namespace Arbor\database\connection;
 
+use Throwable;
 use Exception;
 use InvalidArgumentException;
 use Arbor\attributes\ConfigValue;
@@ -108,7 +109,7 @@ class ConnectionPool
         while (!$connection->isConnected()) {
             try {
                 $connection->connect();
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 $attempt++;
                 if ($attempt >= $maxRetries) {
                     throw new Exception(

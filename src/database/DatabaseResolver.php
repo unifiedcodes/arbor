@@ -39,6 +39,12 @@ class DatabaseResolver
     protected array $instances = [];
 
     /**
+     * The default database alias to use when no explicit alias is provided.
+     */
+    protected ?string $default = null;
+
+
+    /**
      * Initialize the DatabaseResolver with a connection pool.
      * 
      * @param ConnectionPool $pool The connection pool to use for managing database connections
@@ -46,6 +52,33 @@ class DatabaseResolver
     public function __construct(ConnectionPool $pool)
     {
         $this->pool = $pool;
+    }
+
+    /**
+     * Set the global default database alias.
+     *
+     * @param string $name The registered alias name
+     * @return void
+     *
+     * @throws InvalidArgumentException If alias not registered
+     */
+    public function setDefault(string $name): void
+    {
+        if (!isset($this->registry[$name])) {
+            throw new InvalidArgumentException("Cannot set default: alias [$name] not registered.");
+        }
+
+        $this->default = $name;
+    }
+
+    /**
+     * Get the global default database alias.
+     *
+     * @return string|null The default alias or null if not set
+     */
+    public function getDefault(): ?string
+    {
+        return $this->default;
     }
 
     /**
@@ -112,8 +145,15 @@ class DatabaseResolver
      * 
      * @throws InvalidArgumentException If the database alias is not registered
      */
-    public function get(string $name): Database
+    public function get(?string $name = null): Database
     {
+
+        $name = $name ?? $this->getDefault();
+
+        if ($name === null) {
+            throw new InvalidArgumentException("No database alias specified and no default database configured.");
+        }
+
         // Already built?
         if (isset($this->instances[$name])) {
             return $this->instances[$name];

@@ -60,6 +60,14 @@ class PdoDb
     }
 
     /**
+     * Placeholders handler for query parameter binding
+     */
+    public function getPdo(): PDO
+    {
+        return $this->pdo;
+    }
+
+    /**
      * Reset the current statement, result, and SQL query
      * 
      * @return void

@@ -19,7 +19,9 @@ abstract class Model implements ArrayAccess, JsonSerializable
     private static ?DatabaseResolver $databaseResolver = null;
     protected static ?string $connection = null;
     protected static ?string $tableName = null;
+    protected static string $primaryKey = 'id';
     protected bool $exists = false;
+    protected array $relations = [];
 
 
     public function __construct(array $attributes = [], bool $exists = false)
@@ -55,7 +57,7 @@ abstract class Model implements ArrayAccess, JsonSerializable
     }
 
 
-    // set default connection for each model, usually set by a provider.
+    // Set default connection for each model, usually set by a provider.
     public static function setConnection($name)
     {
         static::$connection = $name;
@@ -68,7 +70,7 @@ abstract class Model implements ArrayAccess, JsonSerializable
     }
 
 
-    // syntatic sugar for getting scoped query.
+    // Syntatic sugar for getting scoped query.
     public static function on(?string $connectionName = null): ModelQuery
     {
         return static::query($connectionName);
@@ -86,6 +88,12 @@ abstract class Model implements ArrayAccess, JsonSerializable
     }
 
 
+    public static function getPrimaryKey(): string
+    {
+        return static::$primaryKey;
+    }
+
+
     public static function query(?string $connectionName = null): ModelQuery
     {
         return new ModelQuery(static::getDatabase($connectionName), static::class);
@@ -95,5 +103,107 @@ abstract class Model implements ArrayAccess, JsonSerializable
     public static function __callStatic($name, $arguments): mixed
     {
         return static::query()->$name(...$arguments);
+    }
+
+
+    public function save()
+    {
+        $query = static::query();
+        $primaryKey = static::getPrimaryKey();
+
+        if ($this->exists) {
+            // Get only dirty attributes
+            $dirty = $this->getDirty();
+
+            if (empty($dirty)) {
+                return true; // Nothing to update
+            }
+
+            // Run update query
+            $affected = $query->where($primaryKey, $this->getAttribute($primaryKey))
+                ->update($dirty);
+
+            if ($affected > 0) {
+                // Merge updated fields into original state
+                $this->syncOriginal();
+                return true;
+            }
+
+            return false;
+        }
+
+        // Otherwise -> INSERT
+        $id = $query->create($this->attributes)->getAttribute($primaryKey);
+
+        $this->setAttribute($primaryKey, $id);
+        $this->exists = true;
+        $this->syncOriginal();
+    }
+
+
+    public function delete()
+    {
+        if (!$this->exists) {
+            return false;
+        }
+
+        $primaryKey = static::getPrimaryKey();
+        $primaryValue = $this->getAttribute($primaryKey);
+
+        // Use ModelQuery to delete the row
+        $query = new ModelQuery(static::getDatabase(), static::class);
+        $affected = $query->where($primaryKey, $primaryValue)->delete();
+
+        if ($affected > 0) {
+            $this->exists = false;        // mark as deleted
+            $this->resetAttributes();     // emptying the model to prevent misuse.
+            return true;
+        }
+
+        return false;
+    }
+
+
+    // relationship methods.
+
+    public function hasMany(string $relativeModel, string $foreignKey, ?string $localKey = null)
+    {
+        $related = new $relativeModel;
+        $localKey = $localKey ?? $this->primaryKey;
+
+        return $related::query()->where($foreignKey, $this->{$localKey})->get();
+    }
+
+
+    public function hasOne(string $relativeModel, string $foreignKey, ?string $localKey = null)
+    {
+        $related = new $relativeModel;
+        $localKey = $localKey ?? $this->primaryKey;
+
+        return $related::query()->where($foreignKey, $this->{$localKey})->first();
+    }
+
+
+    public function belongsTo($related, string $foreignKey, $ownerKey = null)
+    {
+        $relatedInstance = new $related;
+
+        $ownerKey = $ownerKey ?? $relatedInstance->getPrimaryKey();
+
+        $value = $this->getAttribute($foreignKey);
+
+        return $related::query()->where($ownerKey, $value)->first();
+    }
+
+
+    public function belongsToMany($related, string $foreignKey, $ownerKey = null)
+    {
+        $relatedInstance = new $related;
+
+        $ownerKey = $ownerKey ?? $relatedInstance->getPrimaryKey();
+
+        $value = $this->getAttribute($foreignKey);
+
+        return $related::query()->where($ownerKey, $value)->get();
     }
 }

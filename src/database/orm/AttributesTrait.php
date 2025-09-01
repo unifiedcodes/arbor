@@ -2,6 +2,7 @@
 
 namespace Arbor\database\orm;
 
+use InvalidArgumentException;
 
 trait AttributesTrait
 {
@@ -16,13 +17,35 @@ trait AttributesTrait
         return $this;
     }
 
-    public function get(string $key, mixed $default = null): mixed
+    public function getAttribute(string $key, mixed $default = null): mixed
     {
-        return $this->attributes[$key] ?? $default;
+        if (array_key_exists($key, $this->attributes)) {
+            return $this->attributes[$key];
+        }
+
+        // check if there is a method for this key
+        if (method_exists($this, $key)) {
+
+            // Lazy load relationship and cache.
+            if (!isset($this->relations[$key])) {
+                $this->relations[$key] = $this->$key();
+            }
+
+            return $this->relations[$key];
+        }
+
+        throw new InvalidArgumentException("The attribute or relation '{$key}' is not defined for the model '" . static::class . "'.");
     }
 
 
-    public function set(string $key, mixed $value): void
+    public function resetAttributes(): void
+    {
+        $this->attributes = [];
+        $this->syncOriginal();
+    }
+
+
+    public function setAttribute(string $key, mixed $value): void
     {
         $this->attributes[$key] = $value;
     }
@@ -33,13 +56,13 @@ trait AttributesTrait
 
     public function __get(string $key)
     {
-        return $this->get($key);
+        return $this->getAttribute($key);
     }
 
 
     public function __set(string $key, mixed $value): void
     {
-        $this->set($key, $value);
+        $this->setAttribute($key, $value);
     }
 
 

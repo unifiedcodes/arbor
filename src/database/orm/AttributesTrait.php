@@ -3,11 +3,13 @@
 namespace Arbor\database\orm;
 
 use InvalidArgumentException;
+use Arbor\database\orm\relations\Relationship;
 
 trait AttributesTrait
 {
     protected array $attributes = [];
     protected array $original = [];
+
 
     public function fill(array $attributes): static
     {
@@ -17,24 +19,40 @@ trait AttributesTrait
         return $this;
     }
 
+
     public function getAttribute(string $key, mixed $default = null): mixed
     {
+        // Direct attribute exists
         if (array_key_exists($key, $this->attributes)) {
             return $this->attributes[$key];
         }
 
-        // check if there is a method for this key
+        // Check if a method exists for this key (relationship)
         if (method_exists($this, $key)) {
 
-            // Lazy load relationship and cache.
+            // Lazy load relationship
             if (!isset($this->relations[$key])) {
-                $this->relations[$key] = $this->$key();
+                $relation = $this->$key();
+
+                // Auto-resolve if it is a Relationship
+                if ($relation instanceof Relationship) {
+                    $relation = $relation->resolve();
+                }
+
+                $this->relations[$key] = $relation;
             }
 
             return $this->relations[$key];
         }
 
-        throw new InvalidArgumentException("The attribute or relation '{$key}' is not defined for the model '" . static::class . "'.");
+        // Fallback to default value if provided
+        if (func_num_args() === 2) {
+            return $default;
+        }
+
+        throw new InvalidArgumentException(
+            "The attribute or relation '{$key}' is not defined for the model '" . static::class . "'."
+        );
     }
 
 

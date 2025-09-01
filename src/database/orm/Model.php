@@ -9,6 +9,12 @@ use RuntimeException;
 use Arbor\database\Database;
 use Arbor\database\DatabaseResolver;
 use Arbor\database\orm\AttributesTrait;
+use Arbor\database\orm\relations\BelongsTo;
+use Arbor\database\orm\relations\Relationship;
+use Arbor\database\orm\relations\HasOne;
+use Arbor\database\orm\relations\HasMany;
+use Arbor\database\orm\relations\MorphMany;
+use Arbor\database\orm\relations\MorphOne;
 
 
 abstract class Model implements ArrayAccess, JsonSerializable
@@ -94,6 +100,13 @@ abstract class Model implements ArrayAccess, JsonSerializable
     }
 
 
+    public function getPrimaryKeyValue()
+    {
+        $primaryKey = $this->getPrimaryKey();   // e.g. "id"
+        return $this->getAttribute($primaryKey);
+    }
+
+
     public static function query(?string $connectionName = null): ModelQuery
     {
         return new ModelQuery(static::getDatabase($connectionName), static::class);
@@ -166,44 +179,32 @@ abstract class Model implements ArrayAccess, JsonSerializable
 
     // relationship methods.
 
-    public function hasMany(string $relativeModel, string $foreignKey, ?string $localKey = null)
+    public function hasOne(string $related, string $foreignKey, ?string $localKey = null): Relationship
     {
-        $related = new $relativeModel;
-        $localKey = $localKey ?? $this->primaryKey;
-
-        return $related::query()->where($foreignKey, $this->{$localKey})->get();
+        return new HasOne($this, $related, $foreignKey, $localKey);
     }
 
 
-    public function hasOne(string $relativeModel, string $foreignKey, ?string $localKey = null)
+    public function hasMany(string $related, string $foreignKey, ?string $localKey = null): Relationship
     {
-        $related = new $relativeModel;
-        $localKey = $localKey ?? $this->primaryKey;
-
-        return $related::query()->where($foreignKey, $this->{$localKey})->first();
+        return new HasMany($this, $related, $foreignKey, $localKey);
     }
 
 
-    public function belongsTo($related, string $foreignKey, $ownerKey = null)
+    public function belongsTo(string $related, string $foreignKey, $ownerKey = null): Relationship
     {
-        $relatedInstance = new $related;
-
-        $ownerKey = $ownerKey ?? $relatedInstance->getPrimaryKey();
-
-        $value = $this->getAttribute($foreignKey);
-
-        return $related::query()->where($ownerKey, $value)->first();
+        return new BelongsTo($this, $related, $foreignKey, $ownerKey);
     }
 
 
-    public function belongsToMany($related, string $foreignKey, $ownerKey = null)
+    public function morphOne(string $related, string $foreignKey, string $typeKey): Relationship
     {
-        $relatedInstance = new $related;
+        return new MorphOne($this, $related, $foreignKey, $typeKey);
+    }
 
-        $ownerKey = $ownerKey ?? $relatedInstance->getPrimaryKey();
 
-        $value = $this->getAttribute($foreignKey);
-
-        return $related::query()->where($ownerKey, $value)->get();
+    public function morphMany(string $related, string $foreignKey, string $typeKey): Relationship
+    {
+        return new MorphMany($this, $related, $foreignKey, $typeKey);
     }
 }

@@ -96,7 +96,15 @@ class BelongsToMany extends Relationship
             $related = $this->related::hydrate($relatedData);
 
             // Hydrate pivot model
-            $pivot = new Junction($this->pivotTable);
+            $pivot = new Junction(
+                $this->pivotTable,
+                $this->parent::getTableName(),
+                $this->related::getTableName(),
+                $this->parentKey,
+                $this->relatedKey,
+                $this->pivotColumns
+            );
+
             $pivot->fill($pivotData);
             $pivot->exists(true);
 
@@ -107,5 +115,30 @@ class BelongsToMany extends Relationship
         }
 
         return $models;
+    }
+
+
+    public function detach($relatedIds = null): int
+    {
+        $pivotTable = $this->pivotTable;
+        $foreignKey = $this->foreignKey; // FK referencing parent
+        $relatedKey = $this->relatedKey; // FK referencing related
+        $parentId = $this->parent->getAttribute($this->parentKey);
+
+        // spawn a new builder
+        $builder = $this->parent::getDatabase()->table($pivotTable);
+
+        // If no IDs specified, remove all related rows for this parent
+        if (is_null($relatedIds)) {
+            $builder->where($foreignKey, $parentId);
+        } else {
+            $ids = is_array($relatedIds) ? $relatedIds : [$relatedIds];
+
+            $builder->where($foreignKey, $parentId)
+                ->whereIn($relatedKey, $ids);
+        }
+
+        // Execute delete
+        return $builder->delete();
     }
 }

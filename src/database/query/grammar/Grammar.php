@@ -437,14 +437,18 @@ abstract class Grammar
                 break;
 
             case 'between':
-
                 $sql  = "$left BETWEEN $from AND $to";
                 break;
 
             case 'exists':
                 $sql = 'EXISTS ' . $left;
                 break;
+
+            case 'in':
+                $sql = "$left IN $right";
+                break;
         }
+
 
         return $negate ? "NOT ($sql)" : $sql;
     }

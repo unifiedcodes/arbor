@@ -26,7 +26,7 @@ abstract class BaseModel implements ArrayAccess, JsonSerializable
     {
         $this->fill($attributes);
         $this->syncOriginal();
-        $this->exists = $exists;
+        $this->exists($exists);
     }
 
     // -----------------------
@@ -112,59 +112,9 @@ abstract class BaseModel implements ArrayAccess, JsonSerializable
         return $this->getAttribute(static::getPrimaryKey());
     }
 
-    // -----------------------
-    // Save / delete
-    // -----------------------
 
-    public function save()
+    public function exists(bool $is): void
     {
-        $query = static::query();
-        $primaryKey = static::getPrimaryKey();
-
-        if ($this->exists) {
-            $dirty = $this->getDirty();
-
-            if (empty($dirty)) {
-                return true;
-            }
-
-            $affected = $query->where($primaryKey, $this->getAttribute($primaryKey))
-                ->update($dirty);
-
-            if ($affected > 0) {
-                $this->syncOriginal();
-                return true;
-            }
-
-            return false;
-        }
-
-        $id = $query->create($this->attributes)->getAttribute($primaryKey);
-
-        $this->setAttribute($primaryKey, $id);
-        $this->exists = true;
-        $this->syncOriginal();
-    }
-
-
-    public function delete()
-    {
-        if (!$this->exists) {
-            return false;
-        }
-
-        $primaryKey = static::getPrimaryKey();
-        $primaryValue = $this->getAttribute($primaryKey);
-
-        $query = static::query();
-        $affected = $query->where($primaryKey, $primaryValue)->delete();
-
-        if ($affected > 0) {
-            $this->exists = false;
-            $this->resetAttributes();
-            return true;
-        }
-
-        return false;
+        $this->exists = $is;
     }
 }

@@ -98,6 +98,12 @@ class QueryBuilder extends Builder
         return !empty($this->groups);
     }
 
+
+    protected function hasSelect(): bool
+    {
+        return !empty($this->select);
+    }
+
     /**
      * Clear all ORDER BY clauses from the query
      * 
@@ -372,7 +378,10 @@ class QueryBuilder extends Builder
      */
     public function get(?array $columns = null)
     {
-        parent::select($columns);
+        if (!$this->hasSelect()) {
+            parent::select($columns);
+        }
+
         return $this->execute()->fetchAll();
     }
 

@@ -29,7 +29,7 @@ class ModelQuery
     }
 
 
-    protected function hydrate(array $attributes)
+    public function hydrate(array $attributes)
     {
         $class = $this->model;
         return new $class($attributes, true);

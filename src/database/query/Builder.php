@@ -469,8 +469,11 @@ class Builder
      */
     public function selectRaw(string $expression): static
     {
+        $this->type = 'select';
+
         $this->select[] = [
             'column' => new Expression($expression),
+            'alias' => ''
         ];
         return $this;
     }

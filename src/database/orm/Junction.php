@@ -19,18 +19,18 @@ class Junction extends BaseModel
 
     public function __construct(
         string $junctionTable,
-        string $parentTable,
-        string $relatedTable,
-        string $parentKey,
-        string $relatedKey,
-        array $pivotAttributes = []
+        // string $parentTable,
+        // string $relatedTable,
+        // string $parentKey,
+        // string $relatedKey,
+        // array $pivotAttributes = []
     ) {
-        parent::__construct($pivotAttributes);
+        parent::__construct();
 
-        $this->junctionTable = $junctionTable;
-        $this->parentTable = $parentTable;
-        $this->relatedTable = $relatedTable;
-        $this->parentKey = $parentKey;
-        $this->relatedKey = $relatedKey;
+        // $this->junctionTable = $junctionTable;
+        // $this->parentTable = $parentTable;
+        // $this->relatedTable = $relatedTable;
+        // $this->parentKey = $parentKey;
+        // $this->relatedKey = $relatedKey;
     }
 }

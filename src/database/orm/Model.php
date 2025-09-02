@@ -30,6 +30,12 @@ abstract class Model extends BaseModel
         return $this;
     }
 
+
+    public function hasRelation(string $key)
+    {
+        return isset($this->relations[$key]);
+    }
+
     /**
      * Get a specific relation if it is set.
      *
@@ -60,22 +66,26 @@ abstract class Model extends BaseModel
             return $this->attributes[$key];
         }
 
+        // if relationship exists.
+        if ($this->hasRelation($key)) {
+            return $this->getRelation($key);
+        }
+
         // Check if a method exists for this key (relationship)
         if (method_exists($this, $key)) {
+            $called = $this->$key();
 
-            // Lazy load relationship
-            if (!isset($this->relations[$key])) {
-                $relation = $this->$key();
+            // cache and return if it is Relationship.
+            if ($called instanceof Relationship) {
 
-                // Auto-resolve if it is a Relationship
-                if ($relation instanceof Relationship) {
-                    $relation = $relation->resolve();
-                }
+                $resolved = $called->resolve();
 
-                $this->relations[$key] = $relation;
+                $this->setRelation($key, $resolved);
+
+                return $resolved;
             }
 
-            return $this->relations[$key];
+            return $called;
         }
 
         // Fallback to default value if provided

@@ -12,6 +12,7 @@ abstract class Relationship
     protected Model $parent;
     protected ModelQuery $query;
 
+
     public function __construct(Model $parent, ModelQuery $query)
     {
         $this->parent = $parent;

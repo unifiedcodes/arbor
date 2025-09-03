@@ -6,7 +6,7 @@ namespace Arbor\database\orm\relations;
 use Arbor\database\orm\Model;
 use Arbor\database\orm\ModelQuery;
 use Arbor\database\query\Expression;
-use Arbor\database\orm\Junction;
+use Arbor\database\orm\Pivot;
 
 
 class BelongsToMany extends Relationship
@@ -37,6 +37,7 @@ class BelongsToMany extends Relationship
         $this->parentKey = $parent::getPrimaryKey();
         $this->relatedPrimary = $related::getPrimaryKey();
 
+        $this->parent = $parent;
 
         $query = $this->makeJoin($parent);
 
@@ -44,14 +45,24 @@ class BelongsToMany extends Relationship
     }
 
 
-    protected function makeJoin($parent): ModelQuery
+    protected function pivotConditions(): array
+    {
+        return [
+            "{$this->pivotTable}.{$this->foreignKey}" => $this->parent->getAttribute($this->parentKey)
+        ];
+    }
+
+
+    protected function getSelectColumns(array $columns = []): array
     {
         $relatedTable = $this->related::getTableName();
-        $pivot = $this->pivotTable;
 
-        $parentId = $parent->getAttribute($this->parentKey);
 
-        $selects = [new Expression("{$relatedTable}.*")];
+        if (empty($columns)) {
+            $columns = [
+                new Expression("{$relatedTable}.*")
+            ];
+        }
 
         // auto-alias pivot cols
         $pivotCols = array_merge(
@@ -59,18 +70,31 @@ class BelongsToMany extends Relationship
             [$this->foreignKey, $this->relatedKey]
         );
 
+
         foreach ($pivotCols as $col) {
-            $selects[] = new Expression("{$pivot}.{$col} AS pivot_{$col}");
+            $selects[] = new Expression("{$this->pivotTable}.{$col} AS pivot_{$col}");
         }
 
+        return $columns;
+    }
+
+
+    protected function makeJoin(): ModelQuery
+    {
+        $relatedTable = $this->related::getTableName();
+        $pivot = $this->pivotTable;
+
+
+        $columns = $this->getSelectColumns();
+
         return $this->related::query()
-            ->select($selects)
+            ->select($columns)
             ->join(
                 $pivot,
                 "{$relatedTable}.{$this->relatedPrimary}",
                 new Expression("{$pivot}.{$this->relatedKey}")
             )
-            ->where("{$pivot}.{$this->foreignKey}", $parentId);
+            ->where($this->pivotConditions());
     }
 
 
@@ -96,7 +120,7 @@ class BelongsToMany extends Relationship
             $related = $this->related::hydrate($relatedData);
 
             // Hydrate pivot model
-            $pivot = new Junction(
+            $pivot = new Pivot(
                 $this->pivotTable,
                 $this->parent::getTableName(),
                 $this->related::getTableName(),
@@ -121,24 +145,74 @@ class BelongsToMany extends Relationship
     public function detach($relatedIds = null): int
     {
         $pivotTable = $this->pivotTable;
-        $foreignKey = $this->foreignKey; // FK referencing parent
-        $relatedKey = $this->relatedKey; // FK referencing related
-        $parentId = $this->parent->getAttribute($this->parentKey);
+        $relatedKey = $this->relatedKey;
 
         // spawn a new builder
         $builder = $this->parent::getDatabase()->table($pivotTable);
 
-        // If no IDs specified, remove all related rows for this parent
-        if (is_null($relatedIds)) {
-            $builder->where($foreignKey, $parentId);
-        } else {
-            $ids = is_array($relatedIds) ? $relatedIds : [$relatedIds];
+        // Apply base pivot conditions
+        $builder->where($this->pivotConditions());
 
-            $builder->where($foreignKey, $parentId)
-                ->whereIn($relatedKey, $ids);
+        // If IDs specified, also constrain on relatedKey
+        if (!is_null($relatedIds)) {
+            $ids = is_array($relatedIds) ? $relatedIds : [$relatedIds];
+            $builder->whereIn($relatedKey, $ids);
         }
 
         // Execute delete
         return $builder->delete();
+    }
+
+
+    public function attach($relatedIds, array $extra = []): void
+    {
+        $pivotTable = $this->pivotTable;
+        $foreignKey = $this->foreignKey;
+        $relatedKey = $this->relatedKey;
+        $parentId   = $this->parent->getAttribute($this->parentKey);
+
+        $ids = is_array($relatedIds) ? $relatedIds : [$relatedIds];
+
+        $rows = [];
+        foreach ($ids as $id) {
+            $rows[] = array_merge(
+                [
+                    $foreignKey => $parentId,
+                    $relatedKey => $id,
+                ],
+                $extra
+            );
+        }
+
+        // spawn a new builder for the pivot table
+        $builder = $this->parent::getDatabase()->table($pivotTable);
+        $builder->insertMany($rows);
+    }
+
+
+    public function sync($relatedIds, array $extra = []): void
+    {
+        $pivotTable = $this->pivotTable;
+        $relatedKey = $this->relatedKey;
+
+        $ids = is_array($relatedIds) ? $relatedIds : [$relatedIds];
+
+        // Get current related IDs from pivot
+        $builder = $this->parent::getDatabase()->table($pivotTable);
+
+        $currentIds = $builder->where($this->pivotConditions())
+            ->pluck($relatedKey); // assume pluck() returns a flat array
+
+        // Determine what to detach and what to attach
+        $toDetach = array_diff($currentIds, $ids);
+        $toAttach = array_diff($ids, $currentIds);
+
+        if (!empty($toDetach)) {
+            $this->detach($toDetach);
+        }
+
+        if (!empty($toAttach)) {
+            $this->attach($toAttach, $extra);
+        }
     }
 }

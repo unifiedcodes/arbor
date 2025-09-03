@@ -4,7 +4,7 @@ namespace Arbor\database\orm;
 
 
 
-class Junction extends BaseModel
+class Pivot extends BaseModel
 {
     // Extra pivot columns
     protected array $pivotAttributes = [];

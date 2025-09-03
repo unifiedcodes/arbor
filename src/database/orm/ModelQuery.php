@@ -12,6 +12,7 @@ class ModelQuery
     protected QueryBuilder $builder;
     protected Database $database;
     protected string $model;
+    protected array $withRelations = [];
 
 
     public function __construct(Database $database, string $model)
@@ -26,6 +27,13 @@ class ModelQuery
     {
         $this->builder = $this->database->table($this->model::getTableName());
         return $this->builder;
+    }
+
+
+    public function with(array|string $related): static
+    {
+        $this->withRelations = is_array($related) ? $related : [$related];
+        return $this;
     }
 
 

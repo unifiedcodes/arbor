@@ -2,6 +2,8 @@
 
 namespace Arbor\database\orm;
 
+
+use RuntimeException;
 use BadMethodCallException;
 use Arbor\database\Database;
 use Arbor\database\QueryBuilder;
@@ -96,6 +98,8 @@ class ModelQuery
             $models[] = $this->hydrate($record);
         }
 
+        $this->eagerRelations($models);
+
         return $models;
     }
 
@@ -109,5 +113,39 @@ class ModelQuery
         return $record
             ? $this->hydrate($record)
             : null;
+    }
+
+
+    protected function eagerRelations(array $models): array
+    {
+        if (empty($this->withRelations)) {
+            return $models;
+        }
+
+        foreach ($this->withRelations as $relation) {
+            $this->loadRelation($relation, $models);
+        }
+
+        return $models;
+    }
+
+
+    protected function loadRelation(string $relation, array $models)
+    {
+        if (empty($models)) {
+            return;
+        }
+
+        $first = reset($models);
+
+        if (!method_exists($first, $relation)) {
+            throw new RuntimeException("Relation {$relation} is not defined on model " . get_class($first));
+        }
+
+        $relationObj = $first->$relation();
+        $related = $relationObj->eagerLoad($relation, $models);
+
+
+        return $related;
     }
 }

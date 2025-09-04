@@ -35,6 +35,12 @@ abstract class Relationship
     }
 
 
+    public function getModelKeys(array $models, string $key): array
+    {
+        return array_unique(array_map(fn($m) => $m->{$key}, $models));
+    }
+
+
     public function __call($method, $arguments)
     {
         if (method_exists($this->query, $method)) {

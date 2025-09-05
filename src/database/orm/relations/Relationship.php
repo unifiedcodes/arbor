@@ -21,6 +21,8 @@ abstract class Relationship
 
 
     abstract public function resolve(); // default resolution
+    abstract public function eagerLoad(string $relationName, array $models): array;
+    abstract public function match(string $relationName, array $models, array $related): array;
 
 
     public function getQuery(): ModelQuery

@@ -50,6 +50,7 @@ class Connection
     // defaults.
     private const DEFAULT_DRIVER  = 'mysql';
     private const DEFAULT_HOST    = 'localhost';
+    private const SUPPORTED_DRIVERS = ['mysql'];
 
 
     /**
@@ -109,6 +110,8 @@ class Connection
         $driver = $driver ?? self::DEFAULT_DRIVER;
         $host   = $host   ?? self::DEFAULT_HOST;
 
+        self::validateDriver($driver);
+
         $dsn = sprintf('%s:host=%s;dbname=%s', $driver, $host, $databaseName);
 
         return new static(
@@ -142,6 +145,8 @@ class Connection
     ): static {
         [$driver, $databaseName] = self::parseDsn($dsn);
 
+        self::validateDriver($driver);
+
         return new static(
             dsn: $dsn,
             username: $username,
@@ -170,6 +175,23 @@ class Connection
         }
 
         return [$matches[1], $matches[2]];
+    }
+
+
+    /**
+     * Validates that the given driver is supported.
+     *
+     * @param string $driver
+     * @throws Exception if the driver is not supported
+     * @return void
+     */
+    private static function validateDriver(string $driver): void
+    {
+        if (!in_array($driver, self::SUPPORTED_DRIVERS, true)) {
+            throw new Exception(
+                "Unsupported driver '{$driver}'. Supported: " . implode(', ', self::SUPPORTED_DRIVERS)
+            );
+        }
     }
 
     /**

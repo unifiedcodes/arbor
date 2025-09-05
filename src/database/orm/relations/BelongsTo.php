@@ -35,7 +35,7 @@ class BelongsTo extends Relationship
     }
 
 
-    public function eagerLoad(string $relationName, array $models)
+    public function eagerLoad(string $relationName, array $models): array
     {
         if (empty($models)) {
             return [];

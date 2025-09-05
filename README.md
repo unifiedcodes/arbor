@@ -24,29 +24,35 @@ Arbor is a lightweight, highly modular PHP micro‑framework designed to give yo
 - Centralized entry point via `Arbor\bootstrap\App`
 - Fluent API to configure app, load environment-specific configs, and boot services
 - Isolated app modules (e.g., `admin/`, `web/`) with independent routes, configs, uploads, providers
+- URL resolution and environment-aware bootstrapping
 
 ### 🧠 Dependency Injection & Container
 
-- Fast and flexible DI container
-- Attribute injection supported
-- Provider system for lazy-loaded services
-- Will support contextual resolution in the future
+- Fast and flexible DI container with `ServiceContainer`
+- Attribute injection supported via `ConfigValue` attribute
+- Provider system for lazy-loaded services with `Providers` and `Registry`
+- Service resolution with `Resolver` and `ServiceBond`
+- Contextual resolution support
 
 ### 🔄 Configuration System
 
-- Environment-aware config loading from PHP files
+- Environment-aware config loading from PHP files via `Configurator`
 - Supports app-specific overrides and merged configs
+- Attribute-based configuration injection
 
 ### 🔌 Service Contracts
 
 - All critical services (HTTP, Router, Container, etc.) are abstracted with interfaces
 - Easy to swap implementations or mock in testing
+- Comprehensive contract system covering containers, handlers, HTTP, metadata, sessions, and validation
 
 ### 🌐 HTTP Lifecycle
 
 - Fully-featured HTTP stack inspired by PSR standards
 - `Request`, `ServerRequest`, `Response`, `UploadedFile`, `Streams`, `Cookies`, `Headers`
 - RequestContext, RequestStack, and SubKernel support for advanced routing scenarios
+- HTTP client for external API communication
+- Response factory for streamlined response creation
 
 ### 🧭 Fragment System
 
@@ -57,77 +63,130 @@ Arbor is a lightweight, highly modular PHP micro‑framework designed to give yo
 - Efficient trie-based router for dynamic routes
 - Static routes matched via flat arrays for speed
 - Route groups, attributes, error routing, and sub-request handling
+- URL building and route method management
+- Advanced route dispatching and metadata handling
 
 ### 🧵 Middleware Pipeline
 
 - General-purpose pipeline class
 - Used in HTTP kernel and route dispatcher for global and route-specific middlewares
 - Extensible and reusable for other application pipelines
+- Pipeline factory for creating configured pipelines
 
 ### 🧱 File Uploads
 
 - Secure file uploader with MIME type checking and extension mapping
-- Pluggable processor system per file type
+- Pluggable processor system per file type (e.g., `ImageProcessor`)
+- Contract-based file processing interface
 
 ### 🖼️ View & Template System
 
-- Newly added View module consisting of:
+- Comprehensive View module consisting of:
   - **Builder**: manages HTML head, metadata, scripts, styles, and body content
   - **Renderer**: renders plain PHP templates, deferred components, and controller-rendered components
   - **ViewFactory**: supports configurable view presets and default setup
-- Templates remain simple `.php` files, staying true to Arbor’s micro‑framework philosophy of simplicity and minimal abstraction
+- Templates remain simple `.php` files, staying true to Arbor's micro‑framework philosophy
 - Supports both dumb components (simple includes) and dynamic controller-rendered components
-- Developers keep full responsibility for template's structure and cleanliness
+
+### 💨 Flash Messaging System
+
+- Complete flash messaging system with `Flasher`, `Message`, and `View` components
+- Session-based message persistence across requests
+- Flexible message formatting and display
+
+### 🔍 Filtering & Pipeline System
+
+- Advanced filtering system with `Filters`, `Registry`, and `StageList`
+- Contract-based stage interfaces for extensible filtering
+- Multi-stage filtering pipeline support
+
+### ✅ Validation System
+
+- Comprehensive validation framework with:
+  - `Validator` and `ValidatorFactory` for validation orchestration
+  - `Definition` and `Parser` for validation rule definition
+  - `Evaluator` for rule execution
+  - `ErrorsFormatter` for user-friendly error messages
+  - `RuleList` and `Registry` for rule management
+- Contract-based rule interface for custom validation rules
+- Detailed validation exception handling
 
 ### 🧰 Helpers
 
 - Auto-loaded utility functions to ease development
+- URL helpers and common utility functions
 
 ### 📚 Autoloader
 
 - PSR-compliant autoloader
 - Supports multiple root directories
+- Integrated with bootstrap system
 
-### 📦 Database Layer (Implemented)
+### 📦 Database Layer & ORM
 
-- SQL-dialect agnostic query builder
-- Tree-structured `QueryNode` system
-- `Grammar` & `Compiler` for MySQL (PostgreSQL & SQLite support planned)
-- Safe value bindings with placeholder parsing
-- Connection pool and transformer pipeline
+- **Complete ORM Implementation**:
+
+  - `BaseModel` and `Model` classes for Active Record pattern
+  - `ModelQuery` for eloquent-style query building
+  - `AttributesTrait` for model attribute management
+  - `Pivot` model for many-to-many relationships
+
+- **Full Relationship Support**:
+
+  - `HasOne` - One-to-one relationships
+  - `HasMany` - One-to-many relationships
+  - `BelongsTo` - Inverse one-to-many relationships
+  - `BelongsToMany` - Many-to-many relationships
+  - `MorphOne` - Polymorphic one-to-one relationships
+  - `MorphMany` - Polymorphic one-to-many relationships
+  - `MorphToMany` - Polymorphic many-to-many relationships
+
+- **Query System**:
+  - SQL-dialect agnostic query builder
+  - `Grammar` & `Compiler` for MySQL (PostgreSQL & SQLite support coming soon)
+  - Safe value bindings with `PlaceholderParser`
+  - Connection pool and transformer pipeline
+  - Database resolver for multiple connection management
 
 ### 🧼 Exception Handling
 
 - Central exception handler
-- Graceful error output planned for future versions
+- Validation-specific exception handling
+- Graceful error output and formatting
 
-### 🔐 Auth & JWT (Under Development)
-- Modular Auth system to handle token-based authentication
-- Includes:
-  - `Auth`: high-level auth manager
+### 🔐 Authentication & JWT
+
+- Complete Auth system with:
+  - `Auth`: high-level authentication manager
+  - `Guard`: authentication guard system
   - `JWT`: JSON Web Token encoder/decoder
   - `TokenRefresher`: utility to manage token renewal
   - `SslKeysGenerator`: helper to generate secure SSL keys for signing tokens
 - Designed for stateless APIs and easy integration
-- Will support middleware integration and user context binding
+- Middleware integration and user context binding
 
----
+### 🎭 Session Management
 
-## 🚧 Upcoming Features
+- Full session handling with `Session` class
+- Contract-based session interface for custom implementations
+- Integrated with flash messaging and authentication systems
 
-These features are planned for upcoming releases of Arbor:
+### 🛡️ Role-Based Access Control (RBAC)
 
-### 📦 ORM & Data Modeling
+- Route-based permission mapping with `RoutePermissionMap`
+- Integration with authentication system
+- Fine-grained access control
 
-- Active Record-style base `Model` class
-- Relationship types:
-  - `HasMany`
-  - `BelongsTo`
+### 🎯 Facade System
 
-### 🛠️ Database Migration & Seeder
-
-- Schema versioning
-- Migration and seeder tools for development and deployment environments
+- facades for major components:
+  - `Config` - Configuration access
+  - `Container` - Dependency injection container
+  - `DB` - Database operations
+  - `Route` - Routing operations
+  - `Session` - Session management
+  - `Flash` - Flash messaging
+- Simplified static access to framework services
 
 ---
 
@@ -144,12 +203,11 @@ cd arbor
 Point your web server document root to the `public/` directory.
 
 ```php
-use Arbor\Autoloader;
 use Arbor\bootstrap\App;
 
-require_once '../Arbor/Autoloader.php';
-$autoloader = new Autoloader('../');
+require_once '../vendor/autoload.php';
 
+$autoloader = new Autoloader('../src/');
 
 $app = (new App())
     ->withConfig('../configs/')
@@ -163,113 +221,170 @@ $response->send();
 ## Directory Structure
 
 ```
-Arbor/                  # Core framework code
-├── attributes/         # PHP 8+ attribute handlers (e.g., ConfigValue)
-├── bootstrap/          # App bootstrap and environment logic
-│   ├── App
-│   └── AppConfigScope
-├── config/             # Configuration loader
-│   └── Config
-├── container/          # Dependency Injection Container
-│   ├── Container
-│   ├── Registry
-│   ├── Resolver
-│   ├── Providers
-│   └── ServiceBond
-├── contracts/          # Service and component contracts
+src/                    # Core framework code
+├── attributes/         # PHP 8+ attribute handlers
+│   └── ConfigValue.php
+├── auth/              # Authentication and JWT system
+│   ├── Auth.php
+│   ├── Guard.php
+│   ├── JWT.php
+│   ├── SslKeysGenerator.php
+│   └── TokenRefresher.php
+├── bootstrap/         # App bootstrap and environment logic
+│   ├── App.php
+│   ├── AppConfigScope.php
+│   ├── Autoloader.php
+│   └── URLResolver.php
+├── config/           # Configuration system
+│   └── Configurator.php
+├── container/        # Dependency Injection Container
+│   ├── Providers.php
+│   ├── Registry.php
+│   ├── Resolver.php
+│   ├── ServiceBond.php
+│   └── ServiceContainer.php
+├── contracts/        # Service and component contracts
 │   ├── container/
-│   │   ├── ContainerInterface
-│   │   └── ServiceProvider
-│   ├── metadata/
-│   │   └── AttributeInterface
+│   │   ├── ContainerInterface.php
+│   │   └── ServiceProvider.php
+│   ├── file/
+│   │   └── FileProcessorInterface.php
+│   ├── filters/
+│   │   ├── StageInterface.php
+│   │   └── StageListInterface.php
 │   ├── handlers/
-│   │   ├── ControllerInterface
-│   │   └── MiddlewareInterface
-│   └── http/
-│       ├── RequestStackRO
-│       └── RequestStackWR
-├── database/           # Database abstraction and ORM
+│   │   ├── Controller.php
+│   │   ├── ControllerInterface.php
+│   │   └── MiddlewareInterface.php
+│   ├── http/
+│   │   ├── RequestStackRO.php
+│   │   └── RequestStackWR.php
+│   ├── metadata/
+│   │   └── AttributeInterface.php
+│   ├── session/
+│   │   └── SessionInterface.php
+│   └── validation/
+│       ├── RuleInterface.php
+│       └── RuleListInterface.php
+├── database/         # Database abstraction and ORM
 │   ├── connection/
-│   │   ├── Connection
-│   │   └── ConnectionPool
+│   │   ├── Connection.php
+│   │   └── ConnectionPool.php
 │   ├── orm/
-│   │   ├── Model
-│   │   └── relationships/
+│   │   ├── AttributesTrait.php
+│   │   ├── BaseModel.php
+│   │   ├── Model.php
+│   │   ├── ModelQuery.php
+│   │   ├── Pivot.php
+│   │   └── relations/
+│   │       ├── BelongsTo.php
+│   │       ├── BelongsToMany.php
+│   │       ├── HasMany.php
+│   │       ├── HasOne.php
+│   │       ├── MorphMany.php
+│   │       ├── MorphOne.php
+│   │       ├── MorphToMany.php
+│   │       └── Relationship.php
 │   ├── query/
-│   │   ├── Builder
-│   │   ├── Expression
+│   │   ├── Builder.php
+│   │   ├── Expression.php
 │   │   ├── Placeholder.php
 │   │   ├── grammar/
-│   │   │   ├── Grammar
-│   │   │   └── MysqlGrammar
+│   │   │   ├── Grammar.php
+│   │   │   └── MysqlGrammar.php
 │   │   └── helpers/
-│   │       ├── WhereTrait
-│   │       ├── JoinTrait
-│   │       └── HelpersTrait
+│   │       ├── HelpersTrait.php
+│   │       ├── JoinTrait.php
+│   │       └── WhereTrait.php
+│   ├── schema/
 │   ├── utility/
-│   │   ├── GrammarResolver
-│   │   └── Placeholders
-│   ├── Database
-│   ├── PdoDb
-│   ├── Migrator
-│   └── Seeder
-├── facade/             # Facade access layer
-│   ├── Facade
-│   ├── DB
-│   └── Route
-│   └── Config
-│   └── Container
-├── file/               # File upload system
-│   └── Uploader
-├── fragment/           # Template fragment and view component system
-│   └── Fragment
-├── http/               # HTTP request/response, context, and kernel
+│   │   ├── GrammarResolver.php
+│   │   └── PlaceholderParser.php
+│   ├── Database.php
+│   ├── DatabaseResolver.php
+│   ├── PdoDb.php
+│   └── QueryBuilder.php
+├── facades/          # Facade access layer
+│   ├── Config.php
+│   ├── Container.php
+│   ├── DB.php
+│   ├── Facade.php
+│   ├── Flash.php
+│   ├── Route.php
+│   └── Session.php
+├── file/             # File upload system
+│   ├── processors/
+│   │   └── ImageProcessor.php
+│   └── Uploader.php
+├── filters/          # Advanced filtering system
+│   ├── Filters.php
+│   ├── Registry.php
+│   └── StageList.php
+├── flash/           # Flash messaging system
+│   ├── Flasher.php
+│   ├── Message.php
+│   └── View.php
+├── fragment/        # Template fragment system
+│   └── Fragment.php
+├── http/           # HTTP request/response and kernel
+│   ├── client/
+│   │   └── Client.php
 │   ├── components/
-│   │   ├── Attributes
-│   │   ├── Cookies
-│   │   ├── Headers
-│   │   ├── Stream
-│   │   ├── UploadedFile
-│   │   └── Uri
-│   ├── traits/
-│   │   ├── BodyTrait
-│   │   ├── HeaderTrait
-│   │   └── ResponseNormalizerTrait
+│   │   ├── Attributes.php
+│   │   ├── Cookies.php
+│   │   ├── Headers.php
+│   │   ├── Stream.php
+│   │   ├── UploadedFile.php
+│   │   └── Uri.php
 │   ├── context/
-│   │   ├── RequestContext
-│   │   └── RequestStack
-│   ├── HttpKernel
-│   ├── HttpSubKernel
-│   ├── Request
-│   ├── RequestFactory
-│   ├── Response
-│   └── ServerRequest
-├── pipeline/           # Middleware pipeline system
-│   ├── Pipeline
-│   └── PipelineFactory
-├── router/             # Routing system
-│   ├── Router
-│   ├── Group
-│   ├── Meta
-│   ├── Node
-│   ├── Registry
-│   ├── Dispatcher
-│   └── URLBuilder
-├── support/            # Framework helper utilities
-│   ├── Helpers
-│   └── helpers/
-│       └── common.php
-├── view/               # Lightweight View system
-│   ├── Builder
-│   ├── Renderer
-│   └── ViewFactory
-├── auth/               # Authentication and JWT system
-│   ├── Auth
-│   ├── JWT
-│   ├── SslKeysGenerator
-│   └── TokenRefresher
-└── Autoloader.php      # PSR-4-style autoloader
-
+│   │   ├── RequestContext.php
+│   │   └── RequestStack.php
+│   ├── traits/
+│   │   ├── BodyTrait.php
+│   │   ├── HeaderTrait.php
+│   │   └── ResponseNormalizerTrait.php
+│   ├── HttpKernel.php
+│   ├── HttpSubKernel.php
+│   ├── Request.php
+│   ├── RequestFactory.php
+│   ├── Response.php
+│   ├── ResponseFactory.php
+│   └── ServerRequest.php
+├── pipeline/        # Middleware pipeline system
+│   ├── Pipeline.php
+│   └── PipelineFactory.php
+├── rbac/           # Role-Based Access Control
+│   └── RoutePermissionMap.php
+├── router/         # Routing system
+│   ├── Dispatcher.php
+│   ├── Group.php
+│   ├── Meta.php
+│   ├── Node.php
+│   ├── Registry.php
+│   ├── RouteMethods.php
+│   ├── Router.php
+│   └── URLBuilder.php
+├── session/        # Session management
+│   └── Session.php
+├── support/        # Framework helper utilities
+│   ├── helpers/
+│   │   ├── common.php
+│   │   └── url.php
+│   └── Helpers.php
+├── validation/     # Comprehensive validation system
+│   ├── Definition.php
+│   ├── ErrorsFormatter.php
+│   ├── Evaluator.php
+│   ├── Parser.php
+│   ├── Registry.php
+│   ├── RuleList.php
+│   ├── ValidationException.php
+│   ├── Validator.php
+│   └── ValidatorFactory.php
+└── view/          # View and template system
+    ├── Builder.php
+    ├── Renderer.php
+    └── ViewFactory.php
 ```
 
 ## Contributing
@@ -284,8 +399,8 @@ Bug reports and improvements are welcome via GitHub [Issues](https://github.com/
 
 ## Support
 
-- email - info.unifiedcodes@gmail.com
-- Whatsapp - +91 - 75 808 908 75
+- Email - info.unifiedcodes@gmail.com
+- WhatsApp - +91 75 808 908 75
 
 ## License
 

@@ -1,6 +1,6 @@
 # Arbor
 
-A modular PHP micro‑framework for fast, modern application development.
+A modular PHP framework for fast, modern application development.
 
 ## Table of Contents
 
@@ -15,7 +15,7 @@ A modular PHP micro‑framework for fast, modern application development.
 
 ## Introduction
 
-Arbor is a lightweight, highly modular PHP micro‑framework designed to give you full control over HTTP routing, middleware, dependency injection, configuration and more—while remaining fast and easy to extend.
+Arbor is a lightweight, highly modular PHP framework designed to give you full control over HTTP routing, middleware, dependency injection, configuration and more—while remaining fast and easy to extend.
 
 ## Features
 

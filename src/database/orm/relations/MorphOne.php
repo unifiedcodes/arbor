@@ -4,7 +4,7 @@ namespace Arbor\database\orm\relations;
 
 use Arbor\database\orm\Model;
 
-class MorphMany extends Relationship
+class MorphOne extends Relationship
 {
 
     protected $foreignKey;
@@ -32,7 +32,7 @@ class MorphMany extends Relationship
 
     public function resolve()
     {
-        return $this->query->get();
+        return $this->query->first();
     }
 
 
@@ -61,22 +61,17 @@ class MorphMany extends Relationship
 
     public function match(string $relationName, array $models, array $related): array
     {
-        // Build dictionary: foreignKey => [related models]
         $dictionary = [];
         foreach ($related as $rel) {
             $key = $rel->getAttribute($this->foreignKey);
-            $dictionary[$key][] = $rel;
+            $dictionary[$key] = $rel; // single instance, not array
         }
 
-        // Attach to each parent model
         foreach ($models as $model) {
             $localValue = $model->getAttribute($this->localKey);
-            $children = $dictionary[$localValue] ?? [];
+            $child = $dictionary[$localValue] ?? null;
 
-            $model->setRelation(
-                $relationName,
-                $children
-            );
+            $model->setRelation($relationName, $child);
         }
 
         return $models;

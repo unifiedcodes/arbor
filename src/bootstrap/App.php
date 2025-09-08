@@ -13,7 +13,7 @@ use Arbor\http\Response;
 use Arbor\router\Router;
 use Arbor\http\ServerRequest;
 use Arbor\support\Helpers;
-use Arbor\facades\Container;
+use Arbor\facades\Facade;
 
 /**
  * Class App
@@ -259,10 +259,10 @@ class App
         // load helper functions.
         Helpers::load();
 
-        // since facades share only on instance of container
-        // set cotnainer instance to any one facade,
+        // since facades share only one instance of container
+        // set cotnainer instance to facade,
         // and every facade will be able to access container.
-        Container::setContainer($this->container);
+        Facade::setContainer($this->container);
 
         // load environment specific global configuration
         $this->loadConfig();

@@ -22,8 +22,9 @@ class Evaluator
     /** @var Registry Registry instance containing validation rule definitions */
     protected Registry $registry;
 
+
     /** @var bool Flag to enable early return optimization when first valid group is found */
-    protected bool $earlyBreak = false;
+    protected bool $earlyBreak = true;
 
     /**
      * Constructor initializes the evaluator with a validation registry.

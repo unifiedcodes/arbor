@@ -2,6 +2,8 @@
 
 namespace Arbor\validation;
 
+
+use Exception;
 use Arbor\validation\Parser;
 use Arbor\validation\Registry;
 use Arbor\validation\Evaluator;
@@ -47,9 +49,9 @@ class Validator
     /**
      * Definition instance for handling batch validation definitions
      * 
-     * @var Definition
+     * @var Definition|null
      */
-    protected Definition $definition;
+    protected ?Definition $definition = null;
 
     /**
      * ErrorsFormatter instance for handling formatting of error messages
@@ -72,28 +74,29 @@ class Validator
      */
     protected array $errors = [];
 
+    protected bool $definitionEarlyBreak = true;
+
     /**
      * Constructor - Initialize validator with required dependencies
      * 
      * Facade class to delegate and orchestrate validation operations across
      * different components (registry, parser, evaluator, definition).
      * 
-     * @param Registry $registry Rule registry for managing validation rules
-     * @param Parser $parser DSL and definition parser
-     * @param Evaluator $evaluator Validation logic evaluator
-     * @param Definition $definition Batch validation definition handler
+     * @param Registry $registry Rule registry for managing validation rules.
+     * @param Parser $parser DSL and definition parser.
+     * @param Evaluator $evaluator Validation logic evaluator.
+     * @param ErrorsFormatter $errorsFormatter for formatting errors in readable format.
+     * 
      */
     public function __construct(
         Registry $registry,
         Parser $parser,
         Evaluator $evaluator,
-        Definition $definition,
         ErrorsFormatter $errorsFormatter
     ) {
         $this->registry = $registry;
         $this->parser = $parser;
         $this->evaluator = $evaluator;
-        $this->definition = $definition;
         $this->errorsFormatter = $errorsFormatter;
     }
 
@@ -106,7 +109,7 @@ class Validator
      * @param bool $is Whether to keep errors across validations
      * @return void
      */
-    public function keepErrors(bool $is)
+    public function keepErrors(bool $is): void
     {
         $this->keepErrors = $is;
     }
@@ -170,6 +173,13 @@ class Validator
         return $result['validated'];
     }
 
+
+    protected function buildDefinition(): void
+    {
+        $this->definition = new Definition($this->evaluator);
+        $this->definition->setEarlyBreak($this->definitionEarlyBreak);
+    }
+
     /**
      * Validate multiple inputs against a batch definition
      * 
@@ -180,8 +190,12 @@ class Validator
      * @param array $definition Validation definition structure
      * @return bool True if all batch validations pass, false otherwise
      */
-    public function validateBatch(array $inputs, array $definition)
+    public function validateBatch(array $inputs, array $definition): bool
     {
+        if ($this->definition === null) {
+            $this->buildDefinition();
+        }
+
         // Clear errors for batch operation
         $this->errors = [];
 
@@ -211,8 +225,29 @@ class Validator
      */
     public function define(array $definition)
     {
+        if ($this->definition === null) {
+            $this->buildDefinition();
+        }
+
+
         $parsedDefinition = $this->parser->parseDefinition($definition);
         $this->definition->define($parsedDefinition);
+    }
+
+
+    public function validateDefinition(array $inputs): bool
+    {
+        if ($this->definition === null || !$this->definition->hasDefinition()) {
+            throw new Exception("Definition is not set, need to call define() before calling validateDefinition()");
+        }
+
+        $this->errors = [];
+
+        $result = $this->definition->validate($inputs);
+
+        $this->errors = $result['errors'];
+
+        return $result['validated'];
     }
 
     /**
@@ -279,5 +314,17 @@ class Validator
     public function getFormattedErrors(): array
     {
         return $this->errorsFormatter->format($this->errors);
+    }
+
+
+    public function earlyEvaluate($is): void
+    {
+        $this->evaluator->setEarlyBreak($is);
+    }
+
+
+    public function definitionEarlyBreak($is)
+    {
+        $this->definitionEarlyBreak = $is;
     }
 }

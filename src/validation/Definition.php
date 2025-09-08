@@ -78,6 +78,12 @@ class Definition
         return $this;
     }
 
+
+    public function hasDefinition(): bool
+    {
+        return empty($this->definition);
+    }
+
     /**
      * Validate a set of inputs against a definition array.
      *

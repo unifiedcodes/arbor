@@ -355,7 +355,7 @@ class RuleList implements RuleListInterface
     public function json($input): bool
     {
         if (!is_string($input)) {
-            throw new ValidationException('must be a string');
+            throw new ValidationException('must be a valid JSON');
         }
 
         json_decode($input);

@@ -2,189 +2,266 @@
 
 namespace Arbor\validation;
 
+use Closure;
+use Exception;
 use Arbor\validation\Parser;
 use Arbor\validation\Registry;
-use Arbor\validation\RuleList;
 use Arbor\validation\Evaluator;
-use Arbor\validation\Definition;
 use Arbor\validation\ErrorsFormatter;
-use Arbor\contracts\validation\RuleInterface;
-use Arbor\contracts\validation\RuleListInterface;
 
 /**
- * ValidatorFactory - Factory class for creating Validator instances
+ * ValidatorFactory - A factory class for creating and managing Validator instances
  * 
- * This factory class provides a fluent interface for configuring and creating
- * Validator instances with custom rules and dependencies. It follows the factory
- * design pattern to encapsulate the creation logic of complex Validator objects.
- * 
- * The factory manages three core dependencies:
- * - Registry: Stores and manages validation rules
- * - Parser: Parses validation rule definitions
- * - Evaluator: Executes validation logic against data
+ * This class provides a fluent interface for configuring and building validators
+ * with different rule sets and configurations. It maintains a registry of
+ * validator configurations and allows for reusable validator creation.
  * 
  * @package Arbor\validation
+ * 
  */
 class ValidatorFactory
 {
     /**
-     * Registry instance for storing validation rules
+     * Configuration map storing validator configurations indexed by key
      * 
-     * @var Registry
+     * Each entry contains:
+     * - 'registry': Registry instance with validation rules
+     * - 'closure': Optional closure for additional validator configuration
+     * 
+     * @var array<string, array{registry: Registry|null, closure: Closure|null}>
      */
-    protected Registry $registry;
+    protected array $configMap = [];
 
     /**
-     * Parser instance for parsing rule definitions
+     * The key of the currently active configuration being built
+     * 
+     * @var string|null
+     */
+    protected ?string $lastKey = null;
+
+    /**
+     * The registry instance for the currently active configuration
+     * 
+     * @var Registry|null
+     */
+    protected ?Registry $lastRegistry = null;
+
+    /**
+     * Parser instance for parsing validation rules
      * 
      * @var Parser
      */
     protected Parser $parser;
 
     /**
-     * Evaluator instance for evaluating validation dsl or rule
-     * 
-     * @var Evaluator
-     */
-    protected Evaluator $evaluator;
-
-    /**
-     * Definition instance for filtering and validating input definition
-     * 
-     * @var Definition
-     */
-    protected Definition $definition;
-
-    protected bool $keepErrors = true;
-
-    /**
-     * ErrorsFormatter instance for filtering and validating input definition
+     * Formatter for validation error messages
      * 
      * @var ErrorsFormatter
      */
     protected ErrorsFormatter $errorsFormatter;
 
     /**
-     * Constructor - Initialize the factory with required dependencies
+     * Initialize the ValidatorFactory with required dependencies
      * 
-     * @param Registry $registry The rule registry for storing validation rules
-     * @param Parser $parser The parser for processing rule definitions
+     * Sets up the errors formatter and parser instances that will be used
+     * by all validators created by this factory.
      */
-    public function __construct(
-        Registry $registry,
-        Parser $parser,
-    ) {
-        $this->registry = $registry;
-        $this->parser = $parser;
-        $this->evaluator = new Evaluator($this->registry);
-        $this->definition = new Definition($this->evaluator);
+    public function __construct()
+    {
         $this->errorsFormatter = new ErrorsFormatter();
+        $this->parser = new Parser();
     }
 
     /**
-     * Register base validation rules
+     * Start configuration for a new validator with the given key
      * 
-     * Adds the default set of validation rules to the registry by instantiating
-     * and registering a new RuleList. This method provides a fluent interface
-     * by returning the factory instance.
+     * This method begins the fluent interface chain for configuring a validator.
+     * The key must be unique - attempting to use an existing key will throw an exception.
      * 
-     * @return self Returns the factory instance for method chaining
+     * @param string $key Unique identifier for this validator configuration
+     * 
+     * @return self Returns this instance for method chaining
+     * 
+     * @throws Exception If a configuration with the given key already exists
      */
-    public function withBaseRules(): self
+    public function for(string $key): self
     {
-        // registering base rules.
-        $this->registry->register(new RuleList());
+        if (isset($this->configMap[$key])) {
+            throw new Exception("Entry already exists with the key: '{$key}'");
+        }
 
-        return $this;
-    }
+        $this->configMap[$key] = [
+            'registry' => null,
+            'closure' => null
+        ];
 
-
-    /**
-     * Register custom validation rules
-     * 
-     * Allows registration of custom validation rules by accepting either a single
-     * rule (RuleInterface) or a collection of rules (RuleListInterface).
-     * 
-     * @param RuleInterface|RuleListInterface $class The rule or rule list to register
-     * @return void
-     */
-    public function registerRule(RuleInterface|RuleListInterface $class)
-    {
-        $this->registry->register($class);
-    }
-
-    /**
-     * Configure early break behavior for validation
-     * 
-     * Sets whether validation should stop on the first error encountered (early break)
-     * or continue validating all rules. This affects both the evaluator and definition
-     * components. Provides a fluent interface for method chaining.
-     * 
-     * @param bool $is True to enable early break, false to validate all rules
-     * @return self Returns the factory instance for method chaining
-     */
-    public function setEarlyBreak(bool $is): self
-    {
-        $this->evaluator->setEarlyBreak($is);
-        $this->definition->setEarlyBreak($is);
+        $this->lastKey = $key;
+        $this->lastRegistry = null;
 
         return $this;
     }
 
     /**
-     * Configure error retention behavior
+     * Check if a configuration exists for the given key
      * 
-     * Sets whether the validator should keep errors from every subsequent validation
-     * or reset them. This setting is applied to new validator instances and resets
-     * to default (true) after each validator creation.
+     * @param string $key The configuration key to check
+     * @param bool $throw Whether to throw an exception if the key doesn't exist
      * 
-     * @param bool $is True to keep errors across validations, false to reset them
-     * @return void
+     * @return bool True if the configuration exists, false otherwise
+     * 
+     * @throws Exception If $throw is true and the configuration doesn't exist
      */
-    public function keepErrors(bool $is)
+    public function hasConfig(string $key, bool $throw = false): bool
     {
-        // set if validator can keep errors from every subsequent validation or not.
-        // resets on new validator creations to default.
-        $this->keepErrors = $is;
+        $exists = isset($this->configMap[$key]);
+
+        if (!$exists && $throw) {
+            throw new Exception("Entry does not exist with key: '{$key}'");
+        }
+
+        return $exists;
     }
 
     /**
-     * Create a new Validator instance
+     * Get the Registry instance for a given configuration key
      * 
-     * Instantiates and returns a new Validator object configured with the
-     * factory's registry, parser, and evaluator dependencies.
+     * @param string $key The configuration key
      * 
-     * @return Validator A configured validator instance
+     * @return Registry The registry instance containing validation rules
+     * 
+     * @throws Exception If the configuration doesn't exist or registry is not initialized
      */
-    public function create(): Validator
+    public function getRegistry(string $key): Registry
     {
+        $this->hasConfig($key, true);
 
-        $validator = new Validator(
-            $this->registry,
-            $this->parser,
-            $this->evaluator,
-            $this->definition,
-            $this->errorsFormatter
+        $registry = $this->configMap[$key]['registry'];
+
+        if (!$registry instanceof Registry) {
+            throw new Exception("Registry not initialized for key: '{$key}'");
+        }
+
+        return $registry;
+    }
+
+    /**
+     * Define validation rules for the current configuration
+     * 
+     * This method accepts either:
+     * 1. A string key referencing an existing configuration's registry
+     * 2. A closure that receives a Registry instance to define rules
+     * 
+     * @param Closure|string $key Either a configuration key or a closure for defining rules
+     * 
+     * @return self Returns this instance for method chaining
+     * 
+     * @throws Exception If called without first calling for() method
+     */
+    public function rules(Closure|string $key): self
+    {
+        if ($this->lastKey === null) {
+            throw new Exception("Cannot call rules() without calling for(\$key) first.");
+        }
+
+        if (is_string($key)) {
+            $this->lastRegistry = $this->getRegistry($key);
+        }
+
+        if ($key instanceof Closure) {
+            $this->lastRegistry = new Registry();
+
+            // letting closure mutate $registry.
+            $key($this->lastRegistry);
+        }
+
+        // persisit in configMap.
+        $this->configMap[$this->lastKey]['registry'] = $this->lastRegistry;
+
+        return $this;
+    }
+
+    /**
+     * Complete the current validator configuration
+     * 
+     * Finalizes the current configuration with an optional closure for
+     * additional validator setup. This closure will be called when
+     * the validator is retrieved via get().
+     * 
+     * @param Closure|null $closure Optional closure for additional validator configuration
+     * 
+     * @return void
+     * 
+     * @throws Exception If called without proper initialization (missing key or registry)
+     */
+    public function make(Closure|null $closure): void
+    {
+        if ($this->lastKey === null || $this->lastRegistry === null) {
+            throw new Exception("Cannot call make() without initializing key and registry. Call for() and rules() first.");
+        }
+
+        $this->configMap[$this->lastKey]['closure'] = $closure;
+
+        $this->reset();
+    }
+
+    /**
+     * Get a configured Validator instance
+     * 
+     * Builds and returns a Validator instance using the configuration
+     * associated with the given key. If a closure was provided during
+     * configuration, it will be called with the validator instance.
+     * 
+     * @param string $key The configuration key
+     * 
+     * @return Validator A fully configured validator instance
+     * 
+     * @throws Exception If the configuration doesn't exist
+     */
+    public function get($key): Validator
+    {
+        $validator = $this->buildValidator(
+            $this->getRegistry($key)
         );
 
-        $validator->keepErrors($this->keepErrors);
+        $closure = $this->configMap[$key]['closure'];
 
-        // reset to default.
-        $this->keepErrors = true;
+        if ($closure instanceof Closure) {
+            $closure($validator);
+        }
 
         return $validator;
     }
 
     /**
-     * Magic method to create Validator instance when factory is invoked as function
+     * Build a Validator instance with the given registry
      * 
-     * Provides a convenient shorthand for creating validators by making the factory
-     * instance callable. This delegates to the create() method.
+     * Creates a new Validator with all necessary dependencies injected.
      * 
-     * @return Validator A configured validator instance
+     * @param Registry $registry The registry containing validation rules
+     * 
+     * @return Validator A new validator instance
      */
-    public function __invoke(): Validator
+    protected function buildValidator(Registry $registry): Validator
     {
-        return $this->create();
+        return new Validator(
+            registry: $registry,
+            parser: $this->parser,
+            evaluator: new Evaluator($registry),
+            errorsFormatter: $this->errorsFormatter
+        );
+    }
+
+    /**
+     * Reset the internal state for the next configuration
+     * 
+     * Clears the last key and registry references to prepare for
+     * configuring a new validator.
+     * 
+     * @return void
+     */
+    protected function reset()
+    {
+        $this->lastKey = null;
+        $this->lastRegistry = null;
     }
 }

@@ -52,12 +52,20 @@ class HttpKernel
         $this->isDebug = $isDebug ?: false;
     }
 
+
+    public function useMiddlewares(array $middlewares)
+    {
+        foreach ($middlewares as $middleware) {
+            $this->addMiddleware($middleware);
+        }
+    }
+
     /**
      * Add a global middleware to be executed for every request.
      *
      * @param MiddlewareInterface $middleware
      */
-    public function addMiddleware(MiddlewareInterface $middleware): void
+    public function addMiddleware(MiddlewareInterface|string $middleware): void
     {
         $this->globalMiddlewareStack[] = $middleware;
     }
@@ -108,6 +116,11 @@ class HttpKernel
             // Return the normalized response
             return $this->ensureValidResponse($response);
         } catch (Throwable $error) {
+
+            if ($this->isDebug) {
+                throw $error;
+            }
+
             // Clean output buffer in case of errors
             while (ob_get_level() > $initialLevel) {
                 ob_end_clean();

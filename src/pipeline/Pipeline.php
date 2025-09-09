@@ -3,6 +3,7 @@
 namespace Arbor\pipeline;
 
 
+use InvalidArgumentException;
 use Arbor\container\ServiceContainer;
 
 /**
@@ -144,7 +145,7 @@ class Pipeline
             };
         }
 
-        throw new \InvalidArgumentException('Invalid stage format.');
+        throw new InvalidArgumentException('Invalid stage format.');
     }
 
     /**

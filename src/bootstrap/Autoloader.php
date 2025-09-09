@@ -14,7 +14,7 @@ use Exception;
  * It maps namespace prefixes to one or more base directories, and uses a fallback root directory
  * when no mapping is found.
  *
- * @package Arbor
+ * @package Arbor\bootstrap
  * 
  */
 class Autoloader

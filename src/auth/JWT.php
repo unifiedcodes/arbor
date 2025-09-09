@@ -14,8 +14,6 @@ use InvalidArgumentException;
  * JWT claims and provides utilities for token expiration checking.
  * 
  * @package Arbor\auth
- * @author Your Name
- * @version 1.0.0
  */
 class JWT
 {

@@ -158,15 +158,20 @@ class Pipeline
     {
         $reversedStages = array_reverse($this->stages);
 
-        return array_reduce(
+        $pipeline = array_reduce(
             $reversedStages,
-            function ($next, $stage) {
-                $stageCallable = $this->normalizeStage($stage); // normalize each stage
+            function ($next, $stage = null) {
+                $stageCallable = $this->normalizeStage($stage);
                 return function ($input) use ($stageCallable, $next) {
                     return $stageCallable($input, $next);
                 };
             },
             $destination
         );
+
+        // Wrap pipeline so it can be called with just 1 argument
+        return function ($input) use ($pipeline) {
+            return $pipeline($input, fn($i) => $i);
+        };
     }
 }

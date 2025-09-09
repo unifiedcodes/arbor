@@ -4,13 +4,62 @@ namespace Arbor\auth;
 
 use Exception;
 
+/**
+ * SSL Key Pair Generator
+ * 
+ * This class handles the generation of RSA public/private key pairs for SSL/TLS operations.
+ * It provides automatic OpenSSL configuration detection across different platforms and 
+ * environments (Windows XAMPP/WAMP/MAMP, Linux, macOS).
+ * 
+ * Features:
+ * - Automatic OpenSSL configuration file detection
+ * - Cross-platform compatibility (Windows, Linux, macOS)
+ * - Configurable key size (default 2048 bits)
+ * - Proper file permissions setting
+ * - Comprehensive error handling with detailed OpenSSL error reporting
+ * 
+ * @package Arbor\auth
+ */
 class SslKeysGenerator
 {
+    /**
+     * RSA key size in bits
+     * 
+     * @var int Default is 2048 bits for good security/performance balance
+     */
     private int $keySize = 2048;
+
+    /**
+     * File system path where the private key will be saved
+     * 
+     * @var string Absolute or relative path to private key file
+     */
     private string $privateKeyPath;
+
+    /**
+     * File system path where the public key will be saved
+     * 
+     * @var string Absolute or relative path to public key file
+     */
     private string $publicKeyPath;
+
+    /**
+     * Path to OpenSSL configuration file
+     * 
+     * @var string|null Null if no config file is found or specified
+     */
     private ?string $opensslConfigPath = null;
 
+    /**
+     * Constructor - Initialize the SSL key generator
+     * 
+     * @param string $privateKeyPath Path where private key will be saved
+     * @param string $publicKeyPath Path where public key will be saved
+     * @param int $keySize RSA key size in bits (default: 2048)
+     * @param string|null $opensslConfigPath Custom OpenSSL config path (auto-detected if null)
+     * 
+     * @throws Exception If paths are invalid or inaccessible
+     */
     public function __construct(string $privateKeyPath, string $publicKeyPath, int $keySize = 2048, ?string $opensslConfigPath = null)
     {
         $this->privateKeyPath = $privateKeyPath;
@@ -19,6 +68,21 @@ class SslKeysGenerator
         $this->opensslConfigPath = $opensslConfigPath ?? $this->detectDefaultConfig();
     }
 
+    /**
+     * Generate and save RSA key pair to specified file paths
+     * 
+     * This method performs the complete key generation workflow:
+     * 1. Creates necessary directories
+     * 2. Clears OpenSSL error queue
+     * 3. Sets up OpenSSL configuration
+     * 4. Generates RSA key pair
+     * 5. Exports private key
+     * 6. Extracts public key
+     * 7. Saves both keys with appropriate file permissions
+     * 
+     * @return void
+     * @throws Exception If key generation fails at any step
+     */
     public function generate(): void
     {
         // Ensure the directories exist
@@ -74,6 +138,15 @@ class SslKeysGenerator
         $this->saveKey($this->publicKeyPath, $publicKey, 0644);
     }
 
+    /**
+     * Generate RSA key pair without OpenSSL configuration file
+     * 
+     * This method temporarily unsets the OPENSSL_CONF environment variable
+     * to allow key generation when no valid configuration file is available.
+     * Falls back to minimal OpenSSL configuration.
+     * 
+     * @return resource|false OpenSSL key resource on success, false on failure
+     */
     private function generateWithoutConfig()
     {
         // Try to generate without config file by using minimal configuration
@@ -96,6 +169,15 @@ class SslKeysGenerator
         return $res;
     }
 
+    /**
+     * Ensure a directory exists, create it if necessary
+     * 
+     * Creates directory structure recursively with 0755 permissions.
+     * 
+     * @param string $directory Directory path to create
+     * @return void
+     * @throws Exception If directory cannot be created
+     */
     private function ensureDirectoryExists(string $directory): void
     {
         if (!is_dir($directory)) {
@@ -105,6 +187,15 @@ class SslKeysGenerator
         }
     }
 
+    /**
+     * Save cryptographic key to file with specified permissions
+     * 
+     * @param string $path File path where key will be saved
+     * @param string $key Key content (PEM format)
+     * @param int $permissions Octal file permissions (e.g., 0600 for private, 0644 for public)
+     * @return void
+     * @throws Exception If file cannot be written
+     */
     private function saveKey(string $path, string $key, int $permissions): void
     {
         if (file_put_contents($path, $key) === false) {
@@ -113,6 +204,19 @@ class SslKeysGenerator
         chmod($path, $permissions);
     }
 
+    /**
+     * Auto-detect OpenSSL configuration file location
+     * 
+     * Searches for OpenSSL configuration files in common locations across different platforms:
+     * - Environment variable (OPENSSL_CONF)
+     * - Windows development environments (XAMPP, WAMP, MAMP)
+     * - Windows system installations
+     * - Linux/Unix standard locations
+     * - macOS system and package manager locations
+     * - Command line tool detection (where/which openssl)
+     * 
+     * @return string|null Path to OpenSSL config file, null if not found
+     */
     private function detectDefaultConfig(): ?string
     {
         // First, try to get from environment
@@ -173,6 +277,14 @@ class SslKeysGenerator
         return null; // Return null instead of throwing exception
     }
 
+    /**
+     * Collect all OpenSSL error messages from the error queue
+     * 
+     * OpenSSL maintains an internal error queue that accumulates error messages.
+     * This method drains the queue and formats all errors into a readable string.
+     * 
+     * @return string Formatted error messages, one per line
+     */
     private function collectOpenSSLErrors(): string
     {
         $errors = '';
@@ -184,7 +296,17 @@ class SslKeysGenerator
         return $errors ?: 'No detailed OpenSSL errors available.';
     }
 
-    // Method to test if OpenSSL is working
+    /**
+     * Get OpenSSL configuration and environment information
+     * 
+     * Useful for debugging OpenSSL configuration issues. Returns information about:
+     * - OpenSSL version
+     * - Configuration file path (detected or specified)
+     * - Configuration file existence
+     * - Environment variable settings
+     * 
+     * @return array Associative array with configuration details
+     */
     public function checkConfig(): array
     {
         $info = [

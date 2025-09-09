@@ -435,8 +435,8 @@ class App
         // Override with configuration if set, otherwise use the default.
         $isDebug = $this->configurator->get('root.is_debug', $isDebug);
 
-        // Environment override: true if not in production.
-        return $this->environment !== 'production' ? true : $isDebug;
+        // Environment override: false if production.
+        return $this->environment == 'production' ? false : $isDebug;
     }
 
     /**

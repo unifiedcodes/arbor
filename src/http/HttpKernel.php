@@ -126,7 +126,9 @@ class HttpKernel
                 ob_end_clean();
             }
 
-            return $this->createErrorResponse($error);
+            // returning a vague error when debug is false.
+            $vagueError = new Exception('Something went wrong !');
+            return $this->createErrorResponse($vagueError);
         } finally {
             // Sub-requests should be removed from stack after handling
             if ($isSubRequest === true) {

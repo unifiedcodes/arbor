@@ -3,6 +3,7 @@
 namespace Arbor\auth;
 
 use Exception;
+use Arbor\attributes\ConfigValue;
 
 /**
  * SSL Key Pair Generator
@@ -60,8 +61,19 @@ class SslKeysGenerator
      * 
      * @throws Exception If paths are invalid or inaccessible
      */
-    public function __construct(string $privateKeyPath, string $publicKeyPath, int $keySize = 2048, ?string $opensslConfigPath = null)
-    {
+    public function __construct(
+        #[ConfigValue('auth.jwt.private_key')]
+        string $privateKeyPath,
+
+        #[ConfigValue('auth.jwt.public_key')]
+        string $publicKeyPath,
+
+        #[ConfigValue('auth.jwt.key_size')]
+        int $keySize = 2048,
+
+        #[ConfigValue('auth.jwt.openssl_config_path')]
+        ?string $opensslConfigPath = null
+    ) {
         $this->privateKeyPath = $privateKeyPath;
         $this->publicKeyPath = $publicKeyPath;
         $this->keySize = $keySize;

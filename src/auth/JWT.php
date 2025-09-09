@@ -2,12 +2,47 @@
 
 namespace Arbor\auth;
 
+
+use Exception;
+use InvalidArgumentException;
+
+/**
+ * JSON Web Token (JWT) implementation for PHP
+ * 
+ * This class provides functionality to create, validate, and decode JWT tokens
+ * using RS256 (RSA Signature with SHA-256) algorithm. It supports standard
+ * JWT claims and provides utilities for token expiration checking.
+ * 
+ * @package Arbor\auth
+ * @author Your Name
+ * @version 1.0.0
+ */
 class JWT
 {
+    /**
+     * Private key resource for signing tokens
+     */
     private $privateKey;
+
+    /**
+     * Public key resource for verifying tokens
+     */
     private $publicKey;
+
+    /**
+     * Algorithm used for signing (currently supports RS256)
+     * @var string
+     */
     private $algorithm = 'RS256';
 
+    /**
+     * Constructor - Initialize JWT with optional key file paths
+     * 
+     * @param string|null $privateKeyPath Path to private key file for signing tokens
+     * @param string|null $publicKeyPath Path to public key file for verifying tokens
+     * 
+     * @throws Exception If key files exist but cannot be read or are invalid
+     */
     public function __construct($privateKeyPath = null, $publicKeyPath = null)
     {
         if ($privateKeyPath && file_exists($privateKeyPath)) {
@@ -21,6 +56,10 @@ class JWT
 
     /**
      * Set the private key for signing tokens
+     * 
+     * @param string $privateKey Private key as string or OpenSSL key resource
+     * 
+     * @throws InvalidArgumentException If the provided key is invalid
      */
     public function setPrivateKey($privateKey)
     {
@@ -31,12 +70,16 @@ class JWT
         }
 
         if (!$this->privateKey) {
-            throw new \InvalidArgumentException('Invalid private key');
+            throw new InvalidArgumentException('Invalid private key');
         }
     }
 
     /**
      * Set the public key for verifying tokens
+     * 
+     * @param string $publicKey Public key as string or OpenSSL key resource
+     * 
+     * @throws InvalidArgumentException If the provided key is invalid
      */
     public function setPublicKey($publicKey)
     {
@@ -47,12 +90,28 @@ class JWT
         }
 
         if (!$this->publicKey) {
-            throw new \InvalidArgumentException('Invalid public key');
+            throw new InvalidArgumentException('Invalid public key');
         }
     }
 
     /**
      * Create a JWT token
+     * 
+     * Generates a signed JWT token with the provided payload. Automatically adds
+     * standard claims (iat, exp, nbf) if not present in the payload.
+     * 
+     * @param array $payload The claims to include in the token
+     * @param int $expiresIn Token expiration time in seconds (default: 3600 = 1 hour)
+     *                       Set to 0 or negative to create non-expiring token
+     * 
+     * @return string The complete JWT token (header.payload.signature)
+     * 
+     * @throws \RuntimeException If private key is not set or signing fails
+     * 
+     * Standard claims that are automatically added:
+     * - iat (issued at): Current timestamp
+     * - exp (expires): Current timestamp + expiresIn (if expiresIn > 0)
+     * - nbf (not before): Current timestamp
      */
     public function create(array $payload, $expiresIn = 3600)
     {
@@ -94,6 +153,18 @@ class JWT
 
     /**
      * Validate and decode a JWT token
+     * 
+     * Performs complete validation including signature verification and
+     * claim validation (exp, nbf). Returns the decoded payload if valid.
+     * 
+     * @param string $token The JWT token to validate
+     * 
+     * @return array The decoded payload claims
+     * 
+     * @throws \RuntimeException If public key is not set
+     * @throws InvalidArgumentException If token format is invalid, signature is invalid,
+     *                                   algorithm doesn't match, token is expired,
+     *                                   or token is not yet valid
      */
     public function validate($token)
     {
@@ -103,7 +174,7 @@ class JWT
 
         $parts = explode('.', $token);
         if (count($parts) !== 3) {
-            throw new \InvalidArgumentException('Invalid token format');
+            throw new InvalidArgumentException('Invalid token format');
         }
 
         list($headerEncoded, $payloadEncoded, $signatureEncoded) = $parts;
@@ -111,7 +182,7 @@ class JWT
         // Decode header
         $header = json_decode($this->base64UrlDecode($headerEncoded), true);
         if (!$header || $header['alg'] !== $this->algorithm) {
-            throw new \InvalidArgumentException('Invalid algorithm or header');
+            throw new InvalidArgumentException('Invalid algorithm or header');
         }
 
         // Verify signature
@@ -119,23 +190,23 @@ class JWT
         $signature = $this->base64UrlDecode($signatureEncoded);
 
         if (!openssl_verify($signatureInput, $signature, $this->publicKey, OPENSSL_ALGO_SHA256)) {
-            throw new \InvalidArgumentException('Invalid signature');
+            throw new InvalidArgumentException('Invalid signature');
         }
 
         // Decode payload
         $payload = json_decode($this->base64UrlDecode($payloadEncoded), true);
         if (!$payload) {
-            throw new \InvalidArgumentException('Invalid payload');
+            throw new InvalidArgumentException('Invalid payload');
         }
 
         // Check expiration
         if (isset($payload['exp']) && $payload['exp'] < time()) {
-            throw new \InvalidArgumentException('Token has expired');
+            throw new InvalidArgumentException('Token has expired');
         }
 
         // Check not before
         if (isset($payload['nbf']) && $payload['nbf'] > time()) {
-            throw new \InvalidArgumentException('Token not yet valid');
+            throw new InvalidArgumentException('Token not yet valid');
         }
 
         return $payload;
@@ -143,12 +214,22 @@ class JWT
 
     /**
      * Decode a token without validation (useful for debugging)
+     * 
+     * Decodes the JWT token structure without performing signature verification
+     * or claim validation. Use this method only for debugging purposes or when
+     * you need to inspect token contents without validation.
+     * 
+     * @param string $token The JWT token to decode
+     * 
+     * @return array Associative array with 'header' and 'payload' keys
+     * 
+     * @throws InvalidArgumentException If token format is invalid
      */
     public function decode($token)
     {
         $parts = explode('.', $token);
         if (count($parts) !== 3) {
-            throw new \InvalidArgumentException('Invalid token format');
+            throw new InvalidArgumentException('Invalid token format');
         }
 
         $header = json_decode($this->base64UrlDecode($parts[0]), true);
@@ -162,6 +243,14 @@ class JWT
 
     /**
      * Check if a token is expired
+     * 
+     * Determines if a token has expired based on the 'exp' claim.
+     * Does not perform signature validation.
+     * 
+     * @param string $token The JWT token to check
+     * 
+     * @return bool True if token is expired or invalid, false if still valid
+     *              Returns false if token has no expiration claim
      */
     public function isExpired($token)
     {
@@ -171,13 +260,22 @@ class JWT
                 return $decoded['payload']['exp'] < time();
             }
             return false; // No expiration claim
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return true; // Invalid token is considered expired
         }
     }
 
     /**
      * Get the remaining time before token expires (in seconds)
+     * 
+     * Calculates how many seconds remain before the token expires.
+     * Does not perform signature validation.
+     * 
+     * @param string $token The JWT token to check
+     * 
+     * @return int|null Seconds until expiration (0 if expired),
+     *                  null if token has no expiration claim,
+     *                  0 if token is invalid
      */
     public function getTimeToExpiration($token)
     {
@@ -187,13 +285,21 @@ class JWT
                 return max(0, $decoded['payload']['exp'] - time());
             }
             return null; // No expiration claim
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return 0; // Invalid token
         }
     }
 
     /**
      * Base64 URL encode
+     * 
+     * Encodes data using base64url encoding as specified in RFC 4648.
+     * This is URL-safe base64 encoding that replaces '+' with '-',
+     * '/' with '_', and removes padding '=' characters.
+     * 
+     * @param string $data Data to encode
+     * 
+     * @return string Base64url encoded string
      */
     private function base64UrlEncode($data)
     {
@@ -202,6 +308,14 @@ class JWT
 
     /**
      * Base64 URL decode
+     * 
+     * Decodes base64url encoded data as specified in RFC 4648.
+     * Converts URL-safe characters back to standard base64 and
+     * adds necessary padding before decoding.
+     * 
+     * @param string $data Base64url encoded string to decode
+     * 
+     * @return string Decoded data
      */
     private function base64UrlDecode($data)
     {

@@ -485,6 +485,8 @@ class App
             ]
         );
 
+        $kernel->useMiddlewares($this->getConfig('middlewares', []));
+
         // Process the request through the Kernel and return the response.
         return $kernel->handle($this->request);
     }

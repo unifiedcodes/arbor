@@ -127,7 +127,7 @@ class HttpKernel
             }
 
             // returning a vague error when debug is false.
-            $vagueError = new Exception('Something went wrong !');
+            $vagueError = new Exception('something went wrong !');
             return $this->createErrorResponse($vagueError);
         } finally {
             // Sub-requests should be removed from stack after handling

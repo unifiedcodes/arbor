@@ -190,7 +190,7 @@ class ResponseFactory
      * @param array<string,string|string[]>|Headers $headers Additional response headers
      * @return Response The created error Response object with JSON content type
      */
-    public static function abortJson(
+    public static function errorJson(
         int $statusCode = 400,
         string $reasonPhrase = '',
         array|Headers $headers = [],
@@ -213,7 +213,7 @@ class ResponseFactory
      * @param array<string,string|string[]>|Headers $headers Additional response headers
      * @return Response The created error Response object with HTML content
      */
-    public static function abortTemplate(
+    public static function errorTemplate(
         int $statusCode = 404,
         string $templateContent = '',
         array|Headers $headers = []
@@ -223,6 +223,30 @@ class ResponseFactory
 
         return new Response(
             body: $templateContent,
+            statusCode: $statusCode,
+            headers: $headers
+        );
+    }
+
+    /**
+     * Creates a generic error response with customizable content
+     *
+     * @param int $statusCode The HTTP error status code
+     * @param string|null $body The error message body (null will use default reason phrase)
+     * @param array<string,string|string[]>|Headers $headers Additional response headers
+     * @return Response The created error Response object
+     */
+    public function error(
+        int $statusCode = 500,
+        ?string $body = null,
+        array|Headers $headers = []
+    ): Response {
+        $headers = self::ensureHeaderIsArray($headers);
+        $headers['Content-Type'] ??= 'text/plain; charset=utf-8';
+
+        // If body is null, Response will automatically fallback to its phrase map
+        return new Response(
+            body: $body,
             statusCode: $statusCode,
             headers: $headers
         );

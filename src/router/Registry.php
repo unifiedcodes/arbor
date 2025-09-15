@@ -76,17 +76,21 @@ class Registry
 
         // Break path into segments.
         $segments = $this->getSegments($path);
+        $segment_count = count($segments);
 
         // Start from the route tree root.
         $currentNode = $this->routeTree;
 
         // Traverse the route tree.
-        foreach ($segments as $segment) {
+        foreach ($segments as $i => $segment) {
+            $isLast = ($i === $segment_count - 1);
+
             if ($currentNode->getChild($segment)) {
                 $currentNode = $currentNode->getChild($segment);
                 continue;
             }
-            $currentNode = $this->registerNode($currentNode, $segment);
+
+            $currentNode = $this->registerNode($currentNode, $segment, $isLast);
         }
 
         // Set group ID and meta data for the final node.
@@ -154,12 +158,13 @@ class Registry
      *
      * @param Node   $currentNode The current node in the route tree.
      * @param string $segment     The segment name to register.
+     * @param bool $isLast     tells if this is the last segment to register.
      *
      * @return Node The newly registered node.
      *
      * @throws Exception If multiple parameter nodes are detected for the same endpoint.
      */
-    protected function registerNode(Node $currentNode, string $segment): Node
+    protected function registerNode(Node $currentNode, string $segment, bool $isLast = false): Node
     {
         $newNode = new Node($segment);
 
@@ -170,6 +175,12 @@ class Registry
             if ($currentNode->hasParameterChild()) {
                 throw new Exception('Multiple Parameters on same endpoint are not allowed.');
             }
+
+            // Enforce greedy parameter only in end of the path
+            if (!$isLast && $parameter['isGreedy']) {
+                throw new Exception('Greedy Parameter is only allowed as the last segment of a path');
+            }
+
             // Flag current node as having a parameter child.
             $currentNode->setParameterChild($segment);
             $newNode->setParameter($parameter['name'], $parameter['isOptional'], $parameter['isGreedy']);
@@ -206,9 +217,11 @@ class Registry
     protected function filterVerb(string $verb): string
     {
         $verb = strtoupper($verb);
+
         if (!in_array($verb, $this->allowedVerbs, true)) {
             throw new Exception("Invalid HTTP verb: $verb");
         }
+
         return $verb;
     }
 

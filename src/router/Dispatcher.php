@@ -51,10 +51,13 @@ class Dispatcher
     {
         ['handler' => $controller, 'middlewares' => $middlewares, 'parameters' => $parameters] = $foundMatch;
 
+        // setting route parameters to request context.
+        $request->setRouteParams($parameters);
+
         $pipeline = $this->pipelineFactory;
 
         return $pipeline()->send($request)
             ->through($middlewares)
-            ->then($controller);
+            ->then($controller, $parameters);
     }
 }

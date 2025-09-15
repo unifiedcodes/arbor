@@ -8,7 +8,6 @@ use Arbor\http\Response;
 use Arbor\fragment\Fragment;
 use InvalidArgumentException;
 use Arbor\attributes\ConfigValue;
-use Arbor\contracts\handlers\ControllerInterface;
 
 /**
  * HTML Renderer Class
@@ -230,10 +229,7 @@ class Renderer
     public function renderComponent(string $component): string
     {
         // Check if component is a controller class
-        if (
-            class_exists($component)
-            && is_subclass_of($component, ControllerInterface::class)
-        ) {
+        if (class_exists($component)) {
             return $this->renderController($component);
         }
 
@@ -270,6 +266,7 @@ class Renderer
 
         // Validate content type
         $contentType = $controllerResponse->getHeaderLine('Content-Type');
+
         if (!str_starts_with(strtolower($contentType), 'text/html')) {
             throw new InvalidArgumentException('Component Controller "' . $controller . '" must return an HTML response, instead found: "' . $contentType . '"');
         }

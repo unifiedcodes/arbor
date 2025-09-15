@@ -1,20 +1,21 @@
 <?php
 
-namespace Arbor\contracts\handlers;
+namespace Arbor\contracts\middleware;
 
 
 use Arbor\http\Response;
 use Arbor\http\context\RequestContext;
 
 /**
- * Interface MiddlewareInterface
+ * Interface StageInterface
  *
- * Defines a contract for middleware classes that process an incoming HTTP request,
- * optionally delegating further processing to the next middleware in the pipeline.
+ * Defines a contract for pipeline stage classes that process an incoming request,
+ * optionally delegating further processing to the next stage in the pipeline.
  *
- * @package Arbor\contracts
+ * @package Arbor\contracts\pipeline
+ * 
  */
-interface MiddlewareInterface
+interface StageInterface
 {
     /**
      * Processes an incoming HTTP request and returns an HTTP response.

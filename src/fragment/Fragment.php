@@ -10,7 +10,6 @@ use Arbor\http\HttpSubKernel;
 use InvalidArgumentException;
 use Arbor\http\components\Uri;
 use Arbor\container\ServiceContainer;
-use Arbor\contracts\handlers\ControllerInterface;
 use Arbor\http\traits\ResponseNormalizerTrait;
 
 /**
@@ -89,7 +88,7 @@ class Fragment
     /**
      * Generate a fragment by executing a controller.
      * 
-     * @param ControllerInterface|string|array<int,string|object> $controller The controller to execute, either:
+     * @param callable|string|array<int,string|object> $controller The controller to execute, either:
      *                                                                 - A ControllerInterface instance
      *                                                                 - An array of [ControllerClass::class, 'methodName']
      *                                                                 - A string of Controller FQN
@@ -99,15 +98,15 @@ class Fragment
      * 
      * @throws InvalidArgumentException If the controller is not properly specified.
      */
-    public function controller(ControllerInterface|array|string $controller, array $parameters = []): Response
+    public function controller(callable|array|string $controller, array $parameters = []): Response
     {
         if (is_string($controller)) {
             return $this->fromController($controller, 'process', $parameters);
         }
 
-        if ($controller instanceof ControllerInterface) {
-            return $this->fromController($controller::class, 'process', $parameters);
-        }
+        // if (is_callable($controller)) {
+        //     return $this->fromController($controller::class, 'process', $parameters);
+        // }
 
         if (is_array($controller) && count($controller) === 2) {
             [$class, $method] = $controller;

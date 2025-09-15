@@ -5,7 +5,7 @@ namespace Arbor\http;
 use Arbor\router\Router;
 use Arbor\attributes\ConfigValue;
 use Arbor\pipeline\PipelineFactory;
-use Arbor\contracts\handlers\MiddlewareInterface;
+use Arbor\contracts\middleware\StageInterface;
 use Arbor\http\Response;
 use Arbor\http\Request;
 use Arbor\http\context\RequestContext;
@@ -63,9 +63,9 @@ class HttpKernel
     /**
      * Add a global middleware to be executed for every request.
      *
-     * @param MiddlewareInterface $middleware
+     * @param StageInterface $middleware
      */
-    public function addMiddleware(MiddlewareInterface|string $middleware): void
+    public function addMiddleware(StageInterface|string $middleware): void
     {
         $this->globalMiddlewareStack[] = $middleware;
     }
@@ -151,7 +151,7 @@ class HttpKernel
         $context = $pipeline
             ->send($requestContext)
             ->through($this->globalMiddlewareStack)
-            ->then(fn($request) => $request);
+            ->then(fn($input) => $input);
 
         return $context;
     }

@@ -276,6 +276,12 @@ class App
         // load service providers
         $this->loadProviders();
 
+        // set debug status
+        $this->configurator->set('root.is_debug', $this->isDebug());
+
+        // set environment
+        $this->configurator->set('root.environment', $this->environment);
+
         return $this;
     }
 
@@ -427,7 +433,7 @@ class App
      * }
      * ```
      */
-    public function isDebug(): bool
+    protected function isDebug(): bool
     {
         // Default is false.
         $isDebug = false;
@@ -473,15 +479,12 @@ class App
         // Auto Resolve a Router instance from the container.
         $router = $this->container->make(Router::class);
 
-        // is this debug environment ?
-        $isDebug = $this->isDebug();
-
         // Resolve the Kernel with the Router as a dependency.
         $kernel = $this->container->make(
             HttpKernel::class,
             [
                 'router' => $router,
-                'isDebug' => $isDebug
+                'isDebug' => $this->getConfig('root.is_debug')
             ]
         );
 

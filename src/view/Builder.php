@@ -6,7 +6,6 @@ use Exception;
 use Arbor\fragment\Fragment;
 use InvalidArgumentException;
 use Arbor\attributes\ConfigValue;
-use Arbor\contracts\handlers\ControllerInterface;
 
 /**
  * HTML Document Builder
@@ -611,7 +610,7 @@ class Builder
      * @param ControllerInterface|string|array<string, mixed> $content The content data
      * @param string                                          $type    The content type identifier
      */
-    public function setBody(ControllerInterface|string|array $content, string $type = 'html'): void
+    public function setBody(callable|string|array $content, string $type = 'html'): void
     {
         $this->body = ['type' => $type, 'content' => $content];
     }

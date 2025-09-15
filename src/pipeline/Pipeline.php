@@ -12,6 +12,20 @@ use Arbor\container\ServiceContainer;
  * A lightweight pipeline system that allows passing data through a sequence of stages/middlewares.
  * Each stage can process the input and pass it to the next stage.
  *
+ * The Pipeline class follows a fluent interface pattern allowing method chaining for configuration.
+ * It supports various types of middleware stages including callables, class names, and arrays.
+ * The pipeline resolves dependencies through a service container and can customize method names
+ * and parameters for each stage.
+ *
+ * Example usage:
+ * ```php
+ * $result = $pipeline
+ *     ->send($data)
+ *     ->through([Stage1::class, Stage2::class])
+ *     ->via('handle')
+ *     ->then(FinalStage::class);
+ * ```
+ *
  * @package Arbor\pipeline
  * 
  */
@@ -92,56 +106,77 @@ class Pipeline
     }
 
     /**
-     * Execute the pipeline and return the final result.
+     * Execute the pipeline with the specified destination (final stage).
      *
-     * @param callable|string|array $destination The final callable that receives the processed input.
-     * @return mixed The result of executing the pipeline.
+     * This method builds and executes the complete pipeline, passing the input data
+     * through all configured stages and finally to the destination. The destination
+     * can be a callable, class name, or array format [class, method].
+     *
+     * @param callable|string|array $destination The final destination for the pipeline.
+     *                                          Can be:
+     *                                          - A callable function/closure
+     *                                          - A class name string (will use configured method or __invoke)
+     *                                          - An array [class, method] format
+     * @param array $customParams Additional parameters to pass to the destination stage.
+     * @return mixed The result from executing the complete pipeline.
+     * @throws InvalidArgumentException If the destination format is invalid.
      */
-    public function then(callable|string|array $destination): mixed
+    public function then(callable|string|array $destination, array $customParams = []): mixed
     {
-        $destination = $this->normalizeStage($destination);
+        $destination = $this->normalizeStage($destination, $customParams, true);
         $pipeline = $this->buildPipeline($destination);
         return $pipeline($this->input);
     }
 
-
     /**
-     * Prepares the Stage Callable.
+     * Normalize a stage into a consistent callable format.
      *
-     * This method ensures that the final handler in the pipeline is always a callable.
-     * It supports:
-     * - A closure or function (passed directly).
-     * - A class name (resolved via the container and calls `handle()` method).
-     * - An array `[ClassName::class, 'methodName']` to call a specific method.
+     * This method converts various stage formats (callable, class name, array) into
+     * a standardized callable that can be executed within the pipeline. It handles
+     * dependency injection through the service container and manages parameter passing.
      *
-     * @param callable|string|array $destination The final stage of the pipeline.
-     * @return callable A callable that can be used in the pipeline.
+     * @param callable|string|array $stage The stage to normalize. Can be:
+     *                                    - A callable function/closure
+     *                                    - A class name string
+     *                                    - An array [class, method] format
+     * @param array $customParams Custom parameters to merge with standard parameters.
+     * @param bool $isFinal Whether this is the final stage (affects parameter building).
+     * @return callable A normalized callable that accepts ($input, $next) parameters.
+     * @throws InvalidArgumentException If the stage format is not supported.
      */
-    protected function normalizeStage(callable|string|array $stage): callable
+    protected function normalizeStage(callable|string|array $stage, array $customParams = [], bool $isFinal = false): callable
     {
-        // Callable → already fine
+        // Always return a closure (uniform API)
         if (is_callable($stage)) {
-            return $stage;
-        }
+            return function ($input, $next) use ($stage, $customParams, $isFinal) {
 
+                $parameters = $this->buildParameters($input, $next, $customParams, $isFinal);
 
-        // Class name → resolve and call default method
-        if (is_string($stage)) {
-            return function ($input, $next) use ($stage) {
-                return $this->container->call([$stage, $this->methodName], [
-                    'input' => $input,
-                    'next'  => $next
-                ]);
+                return $this->container->call($stage, $parameters);
             };
         }
 
-        // [ClassName, method] → resolve and call specific method
+        if (is_string($stage) && class_exists($stage)) {
+            return function ($input, $next) use ($stage, $customParams, $isFinal) {
+
+                $parameters = $this->buildParameters($input, $next, $customParams, $isFinal);
+
+                $methodName = $this->methodName;
+
+                if (method_exists($stage, '__invoke')) {
+                    $methodName = '__invoke';
+                }
+
+                return $this->container->call([$stage, $methodName], $parameters);
+            };
+        }
+
         if (is_array($stage) && count($stage) === 2) {
-            return function ($input, $next) use ($stage) {
-                return $this->container->call([$stage[0], $stage[1]], [
-                    'input' => $input,
-                    'next'  => $next
-                ]);
+            return function ($input, $next) use ($stage, $customParams, $isFinal) {
+
+                $parameters = $this->buildParameters($input, $next, $customParams, $isFinal);
+
+                return $this->container->call([$stage[0], $stage[1]], $parameters);
             };
         }
 
@@ -149,29 +184,56 @@ class Pipeline
     }
 
     /**
-     * Build the pipeline as a series of nested closures.
+     * Build the parameter array for stage execution.
      *
-     * @param callable $destination The final callable that receives the processed input.
-     * @return callable The composed pipeline function.
+     * Creates a standardized parameter array that includes the input data,
+     * optional next callback (for non-final stages), and any custom parameters.
+     * The parameters are used by the service container for dependency injection.
+     *
+     * @param mixed $input The input data being processed through the pipeline.
+     * @param callable $next The next callable in the pipeline chain.
+     * @param array $customParams Additional custom parameters to include.
+     * @param bool $isFinal Whether this is the final stage (excludes 'next' parameter).
+     * @return array The built parameter array with keys for dependency injection.
+     */
+    private function buildParameters($input, $next, array $customParams, bool $isFinal): array
+    {
+        $parameters = array_merge(['input' => $input], $customParams);
+        if (!$isFinal) $parameters['next'] = $next;
+        return $parameters;
+    }
+
+    /**
+     * Build the complete pipeline execution chain.
+     *
+     * This method constructs the pipeline by wrapping each stage around the next,
+     * starting from the destination and working backwards through the stages.
+     * It creates a nested structure of callables where each stage can process
+     * the input and decide whether to pass it to the next stage.
+     *
+     * The pipeline is built in reverse order (last to first) to ensure proper
+     * execution flow when called.
+     *
+     * @param callable $destination The final destination callable for the pipeline.
+     * @return callable A callable that executes the complete pipeline when invoked with input.
      */
     protected function buildPipeline(callable $destination): callable
     {
-        $reversedStages = array_reverse($this->stages);
+        $pipeline = $destination;
 
-        $pipeline = array_reduce(
-            $reversedStages,
-            function ($next, $stage = null) {
-                $stageCallable = $this->normalizeStage($stage);
-                return function ($input) use ($stageCallable, $next) {
-                    return $stageCallable($input, $next);
-                };
-            },
-            $destination
-        );
+        // Wrap from last to first stage
+        foreach (array_reverse($this->stages) as $stage) {
 
-        // Wrap pipeline so it can be called with just 1 argument
-        return function ($input) use ($pipeline) {
-            return $pipeline($input, fn($i) => $i);
-        };
+            $stageCallable = $this->normalizeStage($stage);
+
+            $next = $pipeline;
+
+            $pipeline = function ($input) use ($stageCallable, $next) {
+                return $stageCallable($input, $next);
+            };
+        }
+
+        // Final callable only needs input
+        return fn($input) => $pipeline($input, fn($i) => $i);
     }
 }

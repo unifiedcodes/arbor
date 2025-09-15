@@ -28,6 +28,7 @@ class RequestContext
     protected Request|ServerRequest $request;
     protected string $baseURI = '';
     protected string $basePath = '';
+    protected array $routeParameters = [];
 
     /**
      * Creates a new RequestContext instance.
@@ -205,5 +206,16 @@ class RequestContext
         }
 
         return $requestedPath; // fallback to full path if no match
+    }
+
+
+    public function routeParams(): array
+    {
+        return $this->routeParameters;
+    }
+
+    public function setRouteParams(array $parameters): void
+    {
+        $this->routeParameters = $parameters;
     }
 }

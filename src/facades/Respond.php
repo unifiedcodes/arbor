@@ -5,7 +5,7 @@ namespace Arbor\facades;
 use Arbor\facades\Facade;
 
 
-class Response extends Facade
+class Respond extends Facade
 {
     /**
      * Get the service accessor string used to resolve the instance from the container.

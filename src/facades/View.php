@@ -5,7 +5,7 @@ namespace Arbor\facades;
 use Arbor\facades\Facade;
 
 
-class Flash extends Facade
+class View extends Facade
 {
     /**
      * Get the service accessor string used to resolve the instance from the container.
@@ -14,6 +14,6 @@ class Flash extends Facade
      */
     protected static function getAccessor(): string|object
     {
-        return 'Arbor\\flash\\Flasher';
+        return 'Arbor\\view\\ViewFactory';
     }
 }

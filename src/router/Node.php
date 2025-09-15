@@ -37,6 +37,13 @@ class Node
     public bool $isOptional = false;
 
     /**
+     * Indicates whether the parameter is greedy.
+     *
+     * @var bool
+     */
+    public bool $isGreedy = false;
+
+    /**
      * The segment name of the child that is a parameter, if any.
      *
      * @var string|null
@@ -115,13 +122,15 @@ class Node
      *
      * @param string|null $parameterName The name of the parameter.
      * @param bool        $isOptional    Whether the parameter is optional.
+     * @param bool        $isGreedy      Whether the parameter is greedy.
      *
      * @return self
      */
-    public function setParameter(?string $parameterName = null, bool $isOptional = false): self
+    public function setParameter(?string $parameterName = null, bool $isOptional = false, bool $isGreedy = false): self
     {
         $this->parameterName = $parameterName;
         $this->isOptional = $isOptional;
+        $this->isGreedy = $isGreedy;
         return $this;
     }
 
@@ -250,5 +259,10 @@ class Node
     public function getFullPath(): string
     {
         return '';
+    }
+
+    public function isGreedy(): bool
+    {
+        return $this->isGreedy;
     }
 }

@@ -54,9 +54,9 @@ class Dispatcher
         // setting route parameters to request context.
         $request->setRouteParams($parameters);
 
-        $pipeline = $this->pipelineFactory;
+        $pipeline = $this->pipelineFactory->create();
 
-        return $pipeline()->send($request)
+        return $pipeline->send($request)
             ->through($middlewares)
             ->then($controller, $parameters);
     }

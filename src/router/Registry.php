@@ -4,6 +4,7 @@ namespace Arbor\router;
 
 use Arbor\router\Node;
 use Exception;
+use InvalidArgumentException;
 
 /**
  * Class Registry
@@ -133,12 +134,15 @@ class Registry
      */
     protected function isParameterNode(string $segment): ?array
     {
-        if (preg_match('/^\{(\w+)(\?)?\}$/', $segment, $matches)) {
+        // Matches {id}, {id?}, {id*}
+        if (preg_match('/^\{(\w+)([?*])?\}$/', $segment, $matches)) {
             return [
                 'name' => $matches[1],
-                'isOptional' => isset($matches[2]) // '?' indicates optional
+                'isOptional' => isset($matches[2]) && $matches[2] === '?',
+                'isGreedy'   => isset($matches[2]) && $matches[2] === '*',
             ];
         }
+
         return null;
     }
 
@@ -168,7 +172,7 @@ class Registry
             }
             // Flag current node as having a parameter child.
             $currentNode->setParameterChild($segment);
-            $newNode->setParameter($parameter['name'], $parameter['isOptional']);
+            $newNode->setParameter($parameter['name'], $parameter['isOptional'], $parameter['isGreedy']);
         }
 
         return $currentNode->addChild($segment, $newNode);
@@ -220,7 +224,7 @@ class Registry
      *
      * @return void
      *
-     * @throws \InvalidArgumentException If any handler fails validation.
+     * @throws InvalidArgumentException If any handler fails validation.
      */
     public function setErrorPages(array $errorPages): void
     {
@@ -255,22 +259,41 @@ class Registry
         $parameters = [];
         $currentNode = $this->routeTree;
 
-        foreach ($segments as $segment) {
-            // Check for a static match.
+        $i = 0;
+        while ($i < count($segments)) {
+            $segment = $segments[$i];
+
+            // --- Static match ---
             if ($currentNode->getChild($segment)) {
                 $currentNode = $currentNode->getChild($segment);
+                $i++;
                 continue;
             }
-            // Check for a parameterized match.
+
+            // --- Parameterized match ---
             if ($paramChildKey = $currentNode->hasParameterChild()) {
-                $currentNode = $currentNode->getChild($paramChildKey);
-                $parameters[$currentNode->getParameterName()] = $segment;
+                $paramNode = $currentNode->getChild($paramChildKey);
+
+                // Handle Greedy param
+                if ($paramNode->isGreedy()) {
+                    $parameters[$paramNode->getParameterName()] = implode('/', array_slice($segments, $i));
+                    $currentNode = $paramNode;
+                    $i = count($segments); // consume the rest
+                    break;
+                }
+
+                // Normal param
+                $parameters[$paramNode->getParameterName()] = $segment;
+                $currentNode = $paramNode;
+                $i++;
                 continue;
             }
+
+            // No match
             return null;
         }
 
-        // Process any remaining optional parameter nodes.
+        // Handle optional params if present
         while ($paramChildName = $currentNode->hasParameterChild()) {
             $parameterChild = $currentNode->getChild($paramChildName);
             if (!$parameterChild->isParameterOptional()) {

@@ -258,9 +258,13 @@ class Resolver
 
         $parameters = $reflection->getParameters();
 
-        return array_map(function (ReflectionParameter $parameter) use ($customParams) {
-            return $this->resolveParameterDependency($parameter, $customParams);
-        }, $parameters);
+        $resolved = [];
+
+        foreach ($parameters as $index => $parameter) {
+            $resolved[] = $this->resolveParameterDependency($parameter, $customParams, $index);
+        }
+
+        return $resolved;
     }
 
     /**
@@ -268,26 +272,41 @@ class Resolver
      *
      * @param ReflectionParameter $parameter The parameter to resolve.
      * @param array $customParams Custom parameters provided by the user.
+     * @param int $position position of parameter.
      * @return mixed The resolved parameter value.
      * @throws Exception If the dependency cannot be resolved.
      */
-    protected function resolveParameterDependency(ReflectionParameter $parameter, array $customParams = [])
-    {
+    protected function resolveParameterDependency(
+        ReflectionParameter $parameter,
+        array $customParams = [],
+        int $position = 0
+    ) {
         $paramName = $parameter->getName();
-        $type = ($parameter->getType() instanceof ReflectionNamedType) ? $parameter->getType()->getName() : 'mixed';
+        $type = ($parameter->getType() instanceof ReflectionNamedType)
+            ? $parameter->getType()->getName()
+            : 'mixed';
 
+        // 1. Named parameter wins
         if (array_key_exists($paramName, $customParams)) {
             return $customParams[$paramName];
         }
 
+        // 2. Positional match by index
+        if (array_key_exists($position, $customParams)) {
+            return $customParams[$position];
+        }
+
+        // 3. Primitive resolution
         if (in_array($type, $this->primitive_types, true)) {
             return $this->resolvePrimitiveParameter($parameter, $type);
         }
 
+        // 4. Special case: container injection
         if ($type === ServiceContainer::class || $type === ContainerInterface::class) {
             return $this->container;
         }
 
+        // 5. Classes & interfaces
         if (interface_exists($type) || class_exists($type)) {
             $reflection = new ReflectionClass($type);
 
@@ -302,19 +321,14 @@ class Resolver
         }
 
         try {
-            $class = $this->get($type);
-            return $class;
+            return $this->get($type);
         } catch (Throwable $th) {
-
-            // refactor to use a stack based exception handler later.
             $message = "Failed to resolve parameter '{$paramName}' of type '{$type}'";
             $message .= ' ' . $th->getMessage();
-
-            throw new Exception($message);
-
-            throw $th;
+            throw new Exception($message, 0, $th);
         }
     }
+
 
     /**
      * Resolves a primitive parameter by checking for default values or attributes.

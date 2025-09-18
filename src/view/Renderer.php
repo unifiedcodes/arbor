@@ -289,6 +289,11 @@ class Renderer
      */
     protected function renderTemplate(string $templateName): string
     {
+        // ensure .php extension
+        if (!str_ends_with($templateName, '.php')) {
+            $templateName .= '.php';
+        }
+
         $template_file_path = normalizeFilePath($this->views_dir . $templateName);
 
         // Make variables available to template

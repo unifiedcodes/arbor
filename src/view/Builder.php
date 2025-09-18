@@ -176,10 +176,12 @@ class Builder
      * such as assets, meta tags, and other document-level configurations.
      * 
      * @param Builder $root The root builder instance to use for shared state
+     * @return static 
      */
-    public function setRoot(Builder $root): void
+    public function setRoot(Builder $root): static
     {
         $this->rootNode = $root;
+        return $this;
     }
 
     /**
@@ -207,12 +209,13 @@ class Builder
      * 
      * @param string $key   The variable key/name
      * @param mixed  $value The value to bind to the key
+     * @return static 
      */
-    public function set(string $key, mixed $value): void
+    public function set(string $key, mixed $value): static
     {
         if (!str_contains($key, '.')) {
             $this->bindings[$key] = $value;
-            return;
+            return $this;
         }
 
         $segments = explode('.', $key);
@@ -231,6 +234,8 @@ class Builder
         }
 
         $ref = $value;
+
+        return $this;
     }
 
 
@@ -273,10 +278,12 @@ class Builder
      * affect other parts of the application that depend on existing bindings.
      * 
      * @param array<string, mixed> $bindings New bindings to replace existing ones
+     * @return static
      */
-    public function replace(array $bindings): void
+    public function replace(array $bindings): static
     {
         $this->bindings = $bindings;
+        return $this;
     }
 
     // =========================================================================
@@ -290,10 +297,12 @@ class Builder
      * and social media platforms when sharing the page.
      * 
      * @param string $title The document title
+     * @return static
      */
-    public function setTitle(string $title): void
+    public function setTitle(string $title): static
     {
         $this->title = $title;
+        return $this;
     }
 
     /**
@@ -313,10 +322,12 @@ class Builder
      * UTF-8 is recommended for modern web applications.
      * 
      * @param string $charset The character encoding (e.g., 'utf-8', 'iso-8859-1')
+     * @return static
      */
-    public function setCharset(string $charset): void
+    public function setCharset(string $charset): static
     {
         $this->charset = $charset;
+        return $this;
     }
 
     /**
@@ -336,10 +347,12 @@ class Builder
      * Used by screen readers and translation tools.
      * 
      * @param string $lang The language code (e.g., 'en', 'fr', 'es', 'de')
+     * @return static
      */
-    public function setLang(string $lang): void
+    public function setLang(string $lang): static
     {
         $this->lang = $lang;
+        return $this;
     }
 
     /**
@@ -364,12 +377,15 @@ class Builder
      * 
      * @param string $name    The meta tag name attribute
      * @param string $content The meta tag content attribute
+     * @return static
      */
-    public function addMeta(string $name, string $content): void
+    public function addMeta(string $name, string $content): static
     {
         $metas = $this->getRoot()->getMetas();
         $metas[] = ['name' => $name, 'content' => $content];
         $this->getRoot()->setMetas($metas);
+
+        return $this;
     }
 
     /**
@@ -407,14 +423,17 @@ class Builder
      * @param array<string, string>     $attributes Additional attributes for the link element
      * 
      * @throws InvalidArgumentException When href is not a valid URL or path
+     * @return static
      */
-    public function addLink(string $rel, string $href, array $attributes = []): void
+    public function addLink(string $rel, string $href, array $attributes = []): static
     {
         $this->validateAssetURI($href);
 
         $links = $this->getRoot()->getLinks();
         $links[] = array_merge(['rel' => $rel, 'href' => $href], $attributes);
         $this->getRoot()->setLinks($links);
+
+        return $this;
     }
 
     /**
@@ -446,11 +465,13 @@ class Builder
      * @param string $href The base URL
      * 
      * @throws InvalidArgumentException When href is not a valid URL
+     * @return static
      */
-    public function addBaseLink(string $href): void
+    public function addBaseLink(string $href): static
     {
         $this->validateAssetURI($href);
         $this->addLink('base', $href);
+        return $this;
     }
 
     // =========================================================================
@@ -469,12 +490,15 @@ class Builder
      * 
      * @throws InvalidArgumentException When href is not a valid URL or path
      * @throws Exception                When fromPath variable is not bound
+     * @return static
      */
-    public function addStyle(string $href, string $media = 'all', string $fromPath = ''): void
+    public function addStyle(string $href, string $media = 'all', string $fromPath = ''): static
     {
         $href = $this->buildPath($href, $fromPath);
         $this->validateAssetURI($href);
         $this->addLink('stylesheet', $href, ['media' => $media]);
+
+        return $this;
     }
 
     /**
@@ -484,12 +508,16 @@ class Builder
      * Use sparingly as they can affect caching and performance.
      * 
      * @param string $style The CSS code to include inline
+     * @return static
+     * 
      */
-    public function inlineStyle(string $style): void
+    public function inlineStyle(string $style): static
     {
         $styles = $this->getRoot()->getInlineStyles();
         $styles[] = $style;
         $this->getRoot()->setInlineStyles($styles);
+
+        return $this;
     }
 
     /**
@@ -528,8 +556,9 @@ class Builder
      * 
      * @throws InvalidArgumentException When src is not a valid URL or path
      * @throws Exception                When fromPath variable is not bound
+     * @return static
      */
-    public function addScript(string $src, array $attributes = [], string $fromPath = ''): void
+    public function addScript(string $src, array $attributes = [], string $fromPath = ''): static
     {
         $src = $this->buildPath($src, $fromPath);
         $this->validateAssetURI($src);
@@ -537,6 +566,8 @@ class Builder
         $scripts = $this->getRoot()->getScripts();
         $scripts[] = array_merge(['src' => $src], $attributes);
         $this->getRoot()->setScripts($scripts);
+
+        return $this;
     }
 
     /**
@@ -566,12 +597,15 @@ class Builder
      * Use for small snippets of JavaScript that don't warrant separate files.
      * 
      * @param string $script The JavaScript code to include inline
+     * @return static
      */
-    public function inlineScript(string $script): void
+    public function inlineScript(string $script): static
     {
         $inlineScripts = $this->getRoot()->getInlineScripts();
         $inlineScripts[] = $script;
         $this->getRoot()->setInlineScripts($inlineScripts);
+
+        return $this;
     }
 
     /**
@@ -589,7 +623,7 @@ class Builder
      * 
      * @param array<int, string> $scripts Array of inline JavaScript code blocks
      */
-    protected function setInlineScripts(array $scripts): void
+    protected function setInlineScripts(array $scripts)
     {
         $this->inlineScripts = $scripts;
     }
@@ -609,10 +643,12 @@ class Builder
      * 
      * @param ControllerInterface|string|array<string, mixed> $content The content data
      * @param string                                          $type    The content type identifier
+     * @return static
      */
-    public function setBody(callable|string|array $content, string $type = 'html'): void
+    public function setBody(callable|string|array $content, string $type = 'html'): static
     {
         $this->body = ['type' => $type, 'content' => $content];
+        return $this;
     }
 
     /**
@@ -622,10 +658,12 @@ class Builder
      * The template will be processed with current bindings and data.
      * 
      * @param string $templateName The name/path of the template to render
+     * @return static
      */
-    public function setTemplate(string $templateName): void
+    public function setTemplate(string $templateName): static
     {
         $this->setBody($templateName, 'template');
+        return $this;
     }
 
     /**
@@ -635,10 +673,12 @@ class Builder
      * The HTML will be used as-is without additional processing.
      * 
      * @param string $html The HTML content to use for the body
+     * @return static
      */
-    public function setHTMLBody(string $html): void
+    public function setHTMLBody(string $html): static
     {
         $this->setBody($html, 'html');
+        return $this;
     }
 
     /**
@@ -648,10 +688,12 @@ class Builder
      * The controller will be instantiated and executed to generate the content.
      * 
      * @param string $controller The controller class name to use
+     * @return static
      */
-    public function useController(string $controller): void
+    public function useController(string $controller): static
     {
         $this->setBody($controller, 'controller');
+        return $this;
     }
 
     /**
@@ -661,10 +703,12 @@ class Builder
      * The text will be escaped if auto-escaping is enabled.
      * 
      * @param string $string The plain text content to use for the body
+     * @return static
      */
-    public function setStringBody(string $string): void
+    public function setStringBody(string $string): static
     {
         $this->setBody($string, 'string');
+        return $this;
     }
 
     /**
@@ -684,12 +728,14 @@ class Builder
      * Useful for dynamically adding scripts, analytics, or other content.
      * 
      * @param string $html The HTML content to append to the body
+     * @return static
      */
-    public function appendBodyContent(string $html): void
+    public function appendBodyContent(string $html): static
     {
         $chunks = $this->getRoot()->getToAppendBody();
         $chunks[] = $html;
         $this->getRoot()->setToAppendBody($chunks);
+        return $this;
     }
 
     /**
@@ -724,12 +770,14 @@ class Builder
      * 
      * @param string $key   The attribute name
      * @param string $value The attribute value
+     * @return static
      */
-    public function addBodyAttribute(string $key, string $value): void
+    public function addBodyAttribute(string $key, string $value): static
     {
         $attributes = $this->getRoot()->getBodyAttributes();
         $attributes[$key] = $value;
         $this->getRoot()->setBodyAttributes($attributes);
+        return $this;
     }
 
     /**
@@ -763,10 +811,12 @@ class Builder
      * This setting affects how templates and dynamic content are processed.
      * 
      * @param bool $enabled True to enable auto-escaping, false to disable
+     * @return static
      */
-    public function setAutoEscapeContent(bool $enabled): void
+    public function setAutoEscapeContent(bool $enabled): static
     {
         $this->getRoot()->autoEscapeContent = $enabled;
+        return $this;
     }
 
     /**
@@ -800,6 +850,82 @@ class Builder
             'autoEscape'     => $this->getAutoEscapeContent()
         ];
     }
+
+    /**
+     * Bind data to the builder using flexible argument patterns.
+     * 
+     * This method provides a fluent interface for data binding with two distinct modes:
+     * 
+     * **Single Argument Mode**: Replaces all current bindings with the provided array,
+     * while preserving any existing 'shared' binding to maintain cross-instance state.
+     * This is useful for bulk data replacement while maintaining shared context.
+     * 
+     * **Key-Value Mode**: Sets a single variable binding using the provided key and value.
+     * This delegates to the set() method and supports dot notation for nested bindings.
+     * 
+     * The method maintains backward compatibility and provides a convenient alternative
+     * to multiple set() calls or complete binding replacement operations.
+     * 
+     * @param array<string, mixed>|string $data  In single-arg mode: complete bindings array to replace current bindings
+     *                                           In key-value mode: the variable key/name to bind
+     * @param mixed                       $value The value to bind (only used in key-value mode)
+     * 
+     * @return static Returns the current builder instance for method chaining
+     * 
+     * @throws InvalidArgumentException When single-argument mode receives a non-array value
+     * @throws InvalidArgumentException When key-value mode receives a non-string key
+     * 
+     * @example
+     * // Single argument mode - replace all bindings while preserving 'shared'
+     * $builder->with(['title' => 'New Page', 'user' => $userData]);
+     * 
+     * @example
+     * // Key-value mode - set individual binding
+     * $builder->with('page.title', 'Dashboard');
+     * 
+     * @example
+     * // Method chaining
+     * $builder->with('user', $user)
+     *         ->with('theme', 'dark')
+     *         ->with(['extra' => 'data']);
+     * 
+     */
+    public function with(array|string $data, $value = null): static
+    {
+        $numArgs = func_num_args();
+
+        // Mode 1: single-argument call — replace bindings but keep existing 'shared'
+        if ($numArgs === 1) {
+            if (!is_array($data)) {
+                throw new InvalidArgumentException('with(): single-argument calls expects an array.');
+            }
+
+            $shared = $this->bindings['shared'] ?? null;
+
+            // Replace bindings with new data
+            $this->bindings = $data;
+
+            // Inject existing shared back (only if it existed before)
+            if ($shared !== null) {
+                $this->bindings['shared'] = $shared;
+            }
+
+            return $this;
+        }
+
+        // Mode 2: two+ arguments — treat as key => value (delegate to set)
+        if ($numArgs >= 2) {
+            if (!is_string($data)) {
+                throw new InvalidArgumentException('with(): when passing a value the first argument must be a string key.');
+            }
+
+            return $this->set($data, $value);
+        }
+
+        // Defensive: should not reach here
+        throw new InvalidArgumentException('with(): unexpected argument state.');
+    }
+
 
     // =========================================================================
     // UTILITY METHODS

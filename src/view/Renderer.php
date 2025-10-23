@@ -335,8 +335,11 @@ class Renderer
         }
 
         foreach ($this->builder->getMetas() as $meta) {
-            $html .= "<meta name=\"" . htmlspecialchars($meta['name'])
-                . "\" content=\"" . htmlspecialchars($meta['content']) . "\">\n";
+            if (isset($meta['name'])) {
+                $html .= '<meta name="' . htmlspecialchars($meta['name']) . '" content="' . htmlspecialchars($meta['content']) . '">' . "\n";
+            } elseif (isset($meta['property'])) {
+                $html .= '<meta property="' . htmlspecialchars($meta['property']) . '" content="' . htmlspecialchars($meta['content']) . '">' . "\n";
+            }
         }
 
         $html .= $this->buildLinks();

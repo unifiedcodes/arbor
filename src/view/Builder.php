@@ -388,6 +388,15 @@ class Builder
         return $this;
     }
 
+    public function addOG(string $name, string $content): static
+    {
+        $metas = $this->getRoot()->getMetas();
+        $metas[] = ['property' => $name, 'content' => $content];
+        $this->getRoot()->setMetas($metas);
+
+        return $this;
+    }
+
     /**
      * Get all configured meta tags.
      * 

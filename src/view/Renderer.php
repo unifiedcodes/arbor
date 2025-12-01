@@ -204,16 +204,25 @@ class Renderer
      */
     public function renderDeferredComponents(string $body): string
     {
-        $rendered_components = [];
+        while (!empty($this->deferredComponents)) {
 
-        foreach ($this->deferredComponents as $mount_id => $component) {
-            $mount = "<!--componentmount-{$mount_id}-->";
-            $rendered_components[$mount] = $this->renderComponent($component);
+            // grab & clear queue so nested calls create a new queue
+            $queue = $this->deferredComponents;
+            $this->deferredComponents = [];
+
+            $replacements = [];
+
+            foreach ($queue as $mount_id => $component) {
+                $mount = "<!--componentmount-{$mount_id}-->";
+                $replacements[$mount] = $this->renderComponent($component);
+            }
+
+            $body = strtr($body, $replacements);
         }
 
-        // Replace all mount points with rendered components
-        return strtr($body, $rendered_components);
+        return $body;
     }
+
 
     /**
      * Render a single component

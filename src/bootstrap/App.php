@@ -273,14 +273,14 @@ class App
         // load environment specific app configuration
         $this->scopeConfig();
 
-        // load service providers
-        $this->loadProviders();
-
         // set debug status
         $this->configurator->set('root.is_debug', $this->isDebug());
 
         // set environment
         $this->configurator->set('root.environment', $this->environment);
+
+        // load service providers
+        $this->loadProviders();
 
         return $this;
     }

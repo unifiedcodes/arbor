@@ -393,15 +393,15 @@ class Renderer
     {
         $html = '';
 
+        // Inline scripts
+        foreach ($this->builder->getInlineScripts() as $script) {
+            $html .= "<script type=\"text/javascript\">\n{$script}\n</script>\n";
+        }
+
         // External scripts
         foreach ($this->builder->getScripts() as $script) {
             $attrs = $this->buildAttributes($script ?? []);
             $html .= "<script{$attrs}></script>\n";
-        }
-
-        // Inline scripts
-        foreach ($this->builder->getInlineScripts() as $script) {
-            $html .= "<script type=\"text/javascript\">\n{$script}\n</script>\n";
         }
 
         return $html;

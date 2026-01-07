@@ -11,6 +11,7 @@ use Arbor\http\context\RequestContext;
 use Arbor\pipeline\PipelineFactory;
 use Arbor\router\RouteMethods;
 use Arbor\http\context\RequestStack;
+use Arbor\http\Response;
 use Exception;
 
 /**
@@ -297,14 +298,17 @@ class Router
      * @param RequestContext         $request         The HTTP request.
      * @param PipelineFactory $pipelineFactory The pipeline factory instance.
      *
-     * @return mixed The response returned by the dispatcher.
+     * @return Response The response returned by the dispatcher.
      * 
      */
-    public function dispatch(RequestContext $request, PipelineFactory $pipelineFactory): mixed
+    public function dispatch(RequestContext $request, PipelineFactory $pipelineFactory): Response
     {
-        $route = $this->resolve($request);
         $dispatcher = new Dispatcher($pipelineFactory);
-        return $dispatcher->dispatch($route, $request);
+
+        return $dispatcher->dispatch(
+            $this->resolve($request), //route
+            $request
+        );
     }
 
 

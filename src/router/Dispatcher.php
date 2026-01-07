@@ -3,6 +3,7 @@
 namespace Arbor\router;
 
 use Arbor\http\context\RequestContext;
+use Arbor\http\Response;
 use Arbor\pipeline\PipelineFactory;
 
 /**
@@ -45,11 +46,11 @@ class Dispatcher
      * @param array $foundmatch The match found from router. by router->resolve($request) method
      * @param RequestContext $request The incoming HTTP request.
      *
-     * @return mixed
+     * @return Response
      */
-    public function dispatch(array $foundMatch, RequestContext $request): mixed
+    public function dispatch(array $foundRoute, RequestContext $request): Response
     {
-        ['handler' => $controller, 'middlewares' => $middlewares, 'parameters' => $parameters] = $foundMatch;
+        ['handler' => $controller, 'middlewares' => $middlewares, 'parameters' => $parameters] = $foundRoute;
 
         // setting route parameters to request context.
         $request->setRouteParams($parameters);

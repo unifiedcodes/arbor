@@ -219,21 +219,26 @@ class Pipeline
      */
     protected function buildPipeline(callable $destination): callable
     {
-        $pipeline = $destination;
+        // Final handler: calls destination with ONLY input
+        $pipeline = function ($input) use ($destination) {
+            return $destination($input, null);
+        };
 
-        // Wrap from last to first stage
         foreach (array_reverse($this->stages) as $stage) {
 
             $stageCallable = $this->normalizeStage($stage);
-
             $next = $pipeline;
 
             $pipeline = function ($input) use ($stageCallable, $next) {
-                return $stageCallable($input, $next);
+                return $stageCallable(
+                    $input,
+                    function ($input) use ($next) {
+                        return $next($input); // MUST return Response
+                    }
+                );
             };
         }
 
-        // Final callable only needs input
-        return fn($input) => $pipeline($input, fn($i) => $i);
+        return fn($input) => $pipeline($input);
     }
 }

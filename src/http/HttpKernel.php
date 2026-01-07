@@ -98,13 +98,13 @@ class HttpKernel
                 ob_start();
             }
 
-            // Apply global middleware for main request only
-            if (!$isSubRequest) {
-                $requestContext = $this->executeGlobalMiddlewares($requestContext);
+            if ($isSubRequest) {
+                // Dispatch through router directly
+                $response = $this->routerDispatch($requestContext);
+            } else {
+                // Apply global middleware for main request only and dispatch.
+                $response = $this->executeGlobalMiddlewares($requestContext);
             }
-
-            // Dispatch through router
-            $response = $this->routerDispatch($requestContext);
 
             // Clean up output buffers
             if (!$this->isDebug) {
@@ -141,28 +141,27 @@ class HttpKernel
      * Execute the global middleware pipeline on the request context.
      *
      * @param RequestContext $requestContext
-     * @return RequestContext
+     * @return Response
      */
-    protected function executeGlobalMiddlewares(RequestContext $requestContext): RequestContext
+    protected function executeGlobalMiddlewares(RequestContext $requestContext): Response
     {
         $pipeline = $this->pipelineFactory->create();
 
-        /** @var RequestContext $context */
-        $context = $pipeline
+        return $pipeline
             ->send($requestContext)
             ->through($this->globalMiddlewareStack)
-            ->then(fn($input) => $input);
-
-        return $context;
+            ->then(function (RequestContext $input) {
+                return $this->routerDispatch($input);
+            });
     }
 
     /**
      * Dispatch the request context via the router.
      *
      * @param RequestContext $requestContext
-     * @return mixed The controller return value (to be normalized to Response)
+     * @return Response The controller return value (to be normalized to Response)
      */
-    protected function routerDispatch(RequestContext $requestContext): mixed
+    protected function routerDispatch(RequestContext $requestContext): Response
     {
         return $this->router->dispatch($requestContext, $this->pipelineFactory);
     }

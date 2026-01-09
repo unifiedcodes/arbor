@@ -348,6 +348,16 @@ class Router
         return $this;
     }
 
+
+    public function middlewares(array $middlewares): self
+    {
+        if (!empty($this->lastEntry['meta'])) {
+            $this->lastEntry['meta']->addMiddlewares($middlewares);
+        }
+
+        return $this;
+    }
+
     /**
      * Generates an absolute URL for a named route.
      *

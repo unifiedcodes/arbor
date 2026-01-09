@@ -163,6 +163,6 @@ class HttpKernel
      */
     protected function routerDispatch(RequestContext $requestContext): Response
     {
-        return $this->router->dispatch($requestContext, $this->pipelineFactory);
+        return $this->router->dispatch($requestContext);
     }
 }

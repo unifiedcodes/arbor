@@ -61,11 +61,11 @@ class Router
 
 
     /**
-     * Keeps last added path to store in urlbuilder if name method is chained.
+     * Keeps last added path, node, meta.
      *
-     * @var string
+     * @var array
      */
-    protected string $lastPath;
+    protected array $lastEntry;
 
     /**
      * requeststack instance.
@@ -75,13 +75,22 @@ class Router
     protected RequestStack $requestStack;
 
     /**
+     * PipelineFactory instance.
+     *
+     * @var Dispatcher
+     */
+    protected Dispatcher $dispatcher;
+
+
+    /**
      * Router constructor.
      *
      * Initializes the registry and group manager.
      */
-    public function __construct(RequestStack $requestStack)
+    public function __construct(RequestStack $requestStack, Dispatcher $dispatcher)
     {
         $this->requestStack = $requestStack;
+        $this->dispatcher = $dispatcher;
 
         $this->registry = new Registry();
         $this->group = new Group();
@@ -190,7 +199,7 @@ class Router
 
 
         // Push groupID to registry.
-        $this->registry->add(
+        $node = $this->registry->add(
             $path,
             $handler,
             $verb,
@@ -198,8 +207,11 @@ class Router
             isset($groupId) ? $groupId : null
         );
 
-
-        $this->lastPath = !empty($path) ? $path : '/';
+        $this->lastEntry = [
+            'path' => !empty($path) ? $path : '/',
+            'node' => $node,
+            'meta' => $node->getMeta($verb)
+        ];
 
         return $this;
     }
@@ -212,12 +224,12 @@ class Router
      *
      * @param RequestContext $request The incoming HTTP request.
      *
-     * @return array|null An associative array containing route details (node, handler, middlewares, parameters)
+     * @return RouteContext An associative array containing route details (node, handler, middlewares, parameters)
      *                    if a match is found; otherwise, null.
      *
      * @throws Exception If route matching fails.
      */
-    public function resolve(RequestContext $request): ?array
+    public function resolve(RequestContext $request): RouteContext
     {
         try {
             // Extract path and verb from the request.
@@ -225,36 +237,30 @@ class Router
             $verb = $request->getMethod();
 
             // Find a route match.
-            $foundMatch = $this->registry->matchPath($path, $verb);
+            $routeContext = $this->registry->matchPath($path, $verb);
 
-            $node = $foundMatch['node'];
-
-            // Aggregate group middlewares and combine with route middlewares.
-            $groupMiddlewares = [];
-
-            $groupId = $node->getGroupId();
+            $groupId = $routeContext->groupId();
 
             if ($groupId) {
-                $groupMiddlewares = $this->group->getMiddlewares($groupId);
+                // get group middlewares and combine with route middlewares.
+                $routeContext = $routeContext->withMergedMiddlewares(
+                    $this->group->getMiddlewares($groupId) ?? []
+                );
             }
 
-            $foundMatch['middlewares'] = array_unique(
-                array_merge($groupMiddlewares, $foundMatch['middlewares'])
-            );
-
-            return $foundMatch;
+            return $routeContext;
         } catch (Exception $e) {
 
             // Retrieve error page handler based on the exception code.
             $errorHandler = $this->registry->getErrorPage($e->getCode());
 
-            if ($errorHandler !== null) {
-                return [
-                    'node'         => null,
-                    'handler'      => $errorHandler,
-                    'middlewares'  => [],
-                    'parameters'   => []
-                ];
+            if ($errorHandler) {
+                return RouteContext::error(
+                    path: $request->getRelativePath(),
+                    verb: $request->getMethod(),
+                    statusCode: $e->getCode(),
+                    handler: $errorHandler,
+                );
             }
 
             throw $e;
@@ -301,11 +307,9 @@ class Router
      * @return Response The response returned by the dispatcher.
      * 
      */
-    public function dispatch(RequestContext $request, PipelineFactory $pipelineFactory): Response
+    public function dispatch(RequestContext $request): Response
     {
-        $dispatcher = new Dispatcher($pipelineFactory);
-
-        return $dispatcher->dispatch(
+        return $this->dispatcher->dispatch(
             $this->resolve($request), //route
             $request
         );
@@ -319,11 +323,29 @@ class Router
      * 
      * @return void
      */
-    public function name(string $name): void
+    public function name(string $name): self
     {
-        if ($this->lastPath) {
-            $this->URLBuilder->add($name, $this->lastPath);
+        if (!empty($this->lastEntry['path'])) {
+            $this->URLBuilder->add($name, $this->lastEntry['path']);
         }
+
+        return $this;
+    }
+
+    /**
+     * Adds named registry to URLBuilder.
+     * 
+     * @param string $name
+     * 
+     * @return void
+     */
+    public function attributes(array $attributes): self
+    {
+        if (!empty($this->lastEntry['meta'])) {
+            $this->lastEntry['meta']->setAttributes($attributes);
+        }
+
+        return $this;
     }
 
     /**

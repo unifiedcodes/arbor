@@ -28,7 +28,7 @@ class RequestContext
     protected Request|ServerRequest $request;
     protected string $baseURI = '';
     protected string $basePath = '';
-    protected array $routeParameters = [];
+    protected mixed $route = null;
 
     /**
      * Creates a new RequestContext instance.
@@ -91,51 +91,95 @@ class RequestContext
 
 
     // accessors
+    /**
+     * Gets the path from the request URI.
+     *
+     * @return string|null The request path, or null if not available
+     */
     public function getPath(): ?string
     {
         return method_exists($this->request, 'getUri') ? $this->request->getUri()->getPath() : null;
     }
 
+    /**
+     * Checks if the request is an AJAX request.
+     *
+     * @return bool True if the request has X-Requested-With header set to XMLHttpRequest
+     */
     public function isAjax(): bool
     {
         return strtolower($this->getHeader('X-Requested-With') ?? '') === 'xmlhttprequest';
     }
 
+    /**
+     * Checks if the request expects a JSON response.
+     *
+     * @return bool True if the Accept header contains application/json
+     */
     public function expectsJson(): bool
     {
         $accept = $this->getHeader('Accept');
         return str_contains($accept, 'application/json');
     }
 
+    /**
+     * Checks if the request is a form submission.
+     *
+     * @return bool True if the request method is POST/PUT/PATCH and content type is form-urlencoded
+     */
     public function isFormSubmission(): bool
     {
         return in_array($this->getMethod(), ['POST', 'PUT', 'PATCH']) &&
             str_starts_with($this->getHeader('Content-Type') ?? '', 'application/x-www-form-urlencoded');
     }
 
-    // if router binds data.
+    /**
+     * Gets the route name from request attributes.
+     *
+     * @return string|null The route name, or null if not set
+     */
     public function getRouteName(): ?string
     {
         return $this->getAttribute('route.name');
     }
 
+    /**
+     * Gets the controller action from request attributes.
+     *
+     * @return string|null The controller action, or null if not set
+     */
     public function getControllerAction(): ?string
     {
         return $this->getAttribute('controller.action');
     }
 
+    /**
+     * Gets the full URL including scheme, host, base URL, path, and query string.
+     *
+     * @return string The complete URL
+     */
     public function getFullUrl(): string
     {
         return $this->getScheme() . '://' . $this->getHost() . $this->getBaseUrl() . $this->getPathInfo() .
             ($this->getQueryString() ? '?' . $this->getQueryString() : '');
     }
 
+    /**
+     * Checks if the request is using HTTPS.
+     *
+     * @return bool True if the request scheme is HTTPS
+     */
     public function isSecure(): bool
     {
         return $this->getScheme() === 'https';
     }
 
-
+    /**
+     * Prepares and normalizes the base URI by adding scheme if missing.
+     *
+     * @param string|null $baseURI The base URI to prepare
+     * @return string The prepared base URI with scheme
+     */
     protected static function prepareBaseURI($baseURI)
     {
         $parseURI = parse_url($baseURI ?? '');
@@ -208,14 +252,24 @@ class RequestContext
         return $requestedPath; // fallback to full path if no match
     }
 
-
-    public function routeParams(): array
+    /**
+     * Sets the route information for the request.
+     *
+     * @param mixed $route The route data to store
+     * @return void
+     */
+    public function setRouteContext(mixed $route): void
     {
-        return $this->routeParameters;
+        $this->route = $route;
     }
 
-    public function setRouteParams(array $parameters): void
+    /**
+     * Gets the route information.
+     *
+     * @return mixed The route data
+     */
+    public function getRouteContext(): mixed
     {
-        $this->routeParameters = $parameters;
+        return $this->route;
     }
 }

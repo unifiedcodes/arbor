@@ -48,17 +48,20 @@ class Dispatcher
      *
      * @return Response
      */
-    public function dispatch(array $foundRoute, RequestContext $request): Response
+    public function dispatch(RouteContext $routeContext, RequestContext $request): Response
     {
-        ['handler' => $controller, 'middlewares' => $middlewares, 'parameters' => $parameters] = $foundRoute;
-
         // setting route parameters to request context.
-        $request->setRouteParams($parameters);
+        $request->setRouteContext($routeContext);
 
         $pipeline = $this->pipelineFactory->create();
 
         return $pipeline->send($request)
-            ->through($middlewares)
-            ->then($controller, $parameters);
+            ->through(
+                $routeContext->middlewares()
+            )
+            ->then(
+                $routeContext->handler(),
+                $routeContext->parameters()
+            );
     }
 }

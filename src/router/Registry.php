@@ -5,6 +5,7 @@ namespace Arbor\router;
 use Arbor\router\Node;
 use Exception;
 use InvalidArgumentException;
+use Arbor\router\RouteContext;
 
 /**
  * Class Registry
@@ -61,7 +62,7 @@ class Registry
      * @param array                     $middlewares  An array of middlewares.
      * @param string|null               $groupId      Optional group identifier.
      *
-     * @return void
+     * @return Node
      *
      * @throws Exception If the HTTP verb is invalid.
      */
@@ -71,7 +72,7 @@ class Registry
         string $verb = 'GET',
         array $middlewares = [],
         ?string $groupId = null
-    ): void {
+    ): Node {
         $this->validateHandler($handler);
 
         // Break path into segments.
@@ -102,6 +103,8 @@ class Registry
                 'middlewares' => $middlewares,
             ]
         );
+
+        return $currentNode;
     }
 
 
@@ -266,7 +269,7 @@ class Registry
      * @return array|null An associative array containing the 'node' and 'parameters'
      *                    if a matching node is found; otherwise, null.
      */
-    public function findNode(string $path): ?array
+    protected function findNode(string $path): ?array
     {
         $segments = $this->getSegments($path);
         $parameters = [];
@@ -332,11 +335,11 @@ class Registry
      * @param string $path The route path.
      * @param string $verb The HTTP verb.
      *
-     * @return array An associative array with keys: 'node', 'handler', 'middlewares', and 'parameters'.
+     * @return RouteContext An associative array with keys: 'node', 'handler', 'middlewares', and 'parameters'.
      *
      * @throws Exception If no matching route is found or the HTTP verb is not allowed.
      */
-    public function matchPath(string $path, string $verb): array
+    public function matchPath(string $path, string $verb): RouteContext
     {
         $verb = strtoupper($verb);
         $found = $this->findNode($path);
@@ -378,12 +381,16 @@ class Registry
 
         $middlewares = $meta->getMiddlewares();
 
-        return [
-            'node' => $node,
-            'handler' => $handler,
-            'middlewares' => $middlewares,
-            'parameters' => $parameters
-        ];
+        return new RouteContext(
+            path: $path,
+            verb: $verb,
+            node: $node,
+            meta: $meta,
+            parameters: $parameters,
+            handler: $handler,
+            middlewares: $middlewares,
+            statusCode: 200
+        );
     }
 
 

@@ -19,14 +19,16 @@ class Meta
      *
      * @var callable|string|array|null
      */
-    public mixed $handler = null;
+    protected mixed $handler = null;
 
     /**
      * An array of middlewares associated with the route.
      *
      * @var array
      */
-    public array $middlewares = [];
+    protected array $middlewares = [];
+
+    protected array $attributes = [];
 
     /**
      * Meta constructor.
@@ -62,6 +64,11 @@ class Meta
         return $this->handler;
     }
 
+    public function setAttributes($attributes): void
+    {
+        $this->attributes = $attributes;
+    }
+
     /**
      * Retrieves the route handler.
      *
@@ -80,5 +87,29 @@ class Meta
     public function getMiddlewares(): array
     {
         return $this->middlewares;
+    }
+
+    /**
+     * Determine if the given attribute exists.
+     */
+    public function hasAttribute(string $key): bool
+    {
+        return array_key_exists($key, $this->attributes);
+    }
+
+    /**
+     * Get a single attribute value.
+     */
+    public function getAttribute(string $key, mixed $default = null): mixed
+    {
+        return $this->attributes[$key] ?? $default;
+    }
+
+    /**
+     * Get all attributes (alias for getAttributes, optional).
+     */
+    public function attributes(): array
+    {
+        return $this->attributes;
     }
 }

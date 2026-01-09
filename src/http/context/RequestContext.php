@@ -258,7 +258,7 @@ class RequestContext
      * @param mixed $route The route data to store
      * @return void
      */
-    public function setRouteContext(mixed $route): void
+    public function setRoute(mixed $route): void
     {
         $this->route = $route;
     }
@@ -268,7 +268,7 @@ class RequestContext
      *
      * @return mixed The route data
      */
-    public function getRouteContext(): mixed
+    public function getRoute(): mixed
     {
         return $this->route;
     }

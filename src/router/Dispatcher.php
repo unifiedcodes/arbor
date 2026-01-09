@@ -51,7 +51,7 @@ class Dispatcher
     public function dispatch(RouteContext $routeContext, RequestContext $request): Response
     {
         // setting route parameters to request context.
-        $request->setRouteContext($routeContext);
+        $request->setRoute($routeContext);
 
         $pipeline = $this->pipelineFactory->create();
 

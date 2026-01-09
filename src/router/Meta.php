@@ -49,6 +49,12 @@ class Meta
         $this->middlewares = $options['middlewares'] ?? [];
     }
 
+
+    public function addMiddlewares(array $middlewares): void
+    {
+        $this->middlewares = array_merge($this->middlewares, $middlewares);
+    }
+
     /**
      * Sets the route handler.
      *

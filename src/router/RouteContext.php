@@ -142,7 +142,36 @@ final class RouteContext
      */
     public function middlewares(): array
     {
-        return $this->middlewares;
+        $normalized = $this->normalizeMiddlewares($this->middlewares);
+        asort($normalized, SORT_NUMERIC);
+
+        print_r($normalized);
+
+        return array_keys($normalized); // associative, ordered
+    }
+
+
+    public function middlewareStack(): array
+    {
+        return array_keys($this->middlewares);
+    }
+
+
+    private function normalizeMiddlewares(array $middlewares): array
+    {
+        $normalized = [];
+
+        foreach ($middlewares as $key => $value) {
+            if (is_int($key)) {
+                // ['AuthMiddleware']
+                $normalized[$value] = 0;
+            } else {
+                // ['AuthMiddleware' => 10]
+                $normalized[$key] = (int) $value;
+            }
+        }
+
+        return $normalized;
     }
 
     /**
@@ -156,15 +185,17 @@ final class RouteContext
      */
     public function withMergedMiddlewares(array $middlewares): self
     {
-        if (!$middlewares) {
-            return $this;
-        }
-
         $clone = clone $this;
 
-        $clone->middlewares = array_values(array_unique(
-            array_merge($middlewares, $this->middlewares)
-        ));
+        // Normalize BOTH sides first
+        $incoming = $this->normalizeMiddlewares($middlewares);
+        $existing = $this->normalizeMiddlewares($this->middlewares);
+
+        /**
+         * Incoming (route) overrides existing (group)
+         * Keys are middleware class names
+         */
+        $clone->middlewares = array_replace($existing, $incoming);
 
         return $clone;
     }

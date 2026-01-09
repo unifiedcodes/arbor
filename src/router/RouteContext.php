@@ -144,9 +144,6 @@ final class RouteContext
     {
         $normalized = $this->normalizeMiddlewares($this->middlewares);
         asort($normalized, SORT_NUMERIC);
-
-        print_r($normalized);
-
         return array_keys($normalized); // associative, ordered
     }
 

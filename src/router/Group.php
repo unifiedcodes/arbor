@@ -131,7 +131,7 @@ class Group
      */
     public function getMiddlewares(string $groupId): array
     {
-        return $this->groups[$groupId]['middlewares'];
+        return $this->groups[$groupId]['middlewares'] ?? [];
     }
 
 

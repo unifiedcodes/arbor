@@ -29,6 +29,7 @@ class RequestContext
     protected string $baseURI = '';
     protected string $basePath = '';
     protected mixed $route = null;
+    protected bool $isErrorRequest = false;
 
     /**
      * Creates a new RequestContext instance.
@@ -271,5 +272,15 @@ class RequestContext
     public function getRoute(): mixed
     {
         return $this->route;
+    }
+
+    public function markErrorRequest(): void
+    {
+        $this->isErrorRequest = true;
+    }
+
+    public function isErrorRequest(): bool
+    {
+        return $this->isErrorRequest;
     }
 }

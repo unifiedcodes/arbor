@@ -90,7 +90,7 @@ class HttpKernel
             throw new Exception("Infinite sub-request detected for route: " . $request->getUri());
         }
 
-        $initialLevel = ob_get_level();
+        $initialOBLevel = ob_get_level();
 
         try {
             // Start output buffering in non-debug environments
@@ -108,27 +108,15 @@ class HttpKernel
 
             // Clean up output buffers
             if (!$this->isDebug) {
-                while (ob_get_level() > $initialLevel) {
+                while (ob_get_level() > $initialOBLevel) {
                     ob_end_clean();
                 }
             }
 
-            // Return the normalized response
-            return $this->ensureValidResponse($response);
+            return $response;
         } catch (Throwable $error) {
 
-            if ($this->isDebug) {
-                throw $error;
-            }
-
-            // Clean output buffer in case of errors
-            while (ob_get_level() > $initialLevel) {
-                ob_end_clean();
-            }
-
-            // returning a vague error when debug is false.
-            $vagueError = new Exception('something went wrong !');
-            return $this->createErrorResponse($vagueError);
+            return $this->handleException($error, $requestContext, $initialOBLevel);
         } finally {
             // Sub-requests should be removed from stack after handling
             if ($isSubRequest === true) {
@@ -164,5 +152,44 @@ class HttpKernel
     protected function routerDispatch(RequestContext $requestContext): Response
     {
         return $this->router->dispatch($requestContext);
+    }
+
+
+    protected function handleException($error, $requestContext, $initialOBLevel)
+    {
+        if ($this->isDebug) {
+            throw $error;
+        }
+
+        // Clean output buffer in case of errors
+        while (ob_get_level() > $initialOBLevel) {
+            ob_end_clean();
+        }
+
+        // recursion guard
+        if ($requestContext->isErrorRequest()) {
+            return $this->createErrorResponse(
+                new Exception('Internal Server Error', 500)
+            );
+        }
+
+        // marking request is already handling Error.
+        $requestContext->markErrorRequest();
+
+        // dispatching error page or outputting a response.
+        $routeContext = $this->router->resolveErrorPage($error, $requestContext);
+
+        if ($routeContext) {
+            return $this->router->dispatchRoute(
+                $routeContext,
+                $requestContext
+            );
+        }
+        // returning with a vague error response in production.
+        else {
+            return $this->createErrorResponse(
+                new Exception('Internal Server Error', 500)
+            );
+        }
     }
 }

@@ -13,6 +13,7 @@ use Arbor\router\RouteMethods;
 use Arbor\http\context\RequestStack;
 use Arbor\http\Response;
 use Exception;
+use Throwable;
 
 /**
  * Class Router (Router Facade)
@@ -256,20 +257,32 @@ class Router
             return $routeContext;
         } catch (Exception $e) {
 
-            // Retrieve error page handler based on the exception code.
-            $errorHandler = $this->registry->getErrorPage($e->getCode());
+            $routeContext = $this->resolveErrorPage($e, $request);
 
-            if ($errorHandler) {
-                return RouteContext::error(
-                    path: $request->getRelativePath(),
-                    verb: $request->getMethod(),
-                    statusCode: $e->getCode(),
-                    handler: $errorHandler,
-                );
+            if ($routeContext) {
+                return $routeContext;
             }
 
             throw $e;
         }
+    }
+
+
+    public function resolveErrorPage(Throwable $error, $request): ?RouteContext
+    {
+        // Retrieve error page handler based on the exception code.
+        $errorHandler = $this->registry->getErrorPage($error->getCode());
+
+        if ($errorHandler) {
+            return RouteContext::error(
+                path: $request->getRelativePath(),
+                verb: $request->getMethod(),
+                statusCode: $error->getCode(),
+                handler: $errorHandler,
+            );
+        }
+
+        return null;
     }
 
 
@@ -318,6 +331,12 @@ class Router
             $this->resolve($request), //route
             $request
         );
+    }
+
+
+    public function dispatchRoute(RouteContext $route, RequestContext $request)
+    {
+        return $this->dispatcher->dispatch($route, $request);
     }
 
 

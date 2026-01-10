@@ -281,6 +281,36 @@ final class RouteContext
         return $this->meta?->hasAttribute($key) ?? false;
     }
 
+    /**
+     * Creates a new instance with merged attributes.
+     * 
+     * Merges the provided attributes with existing ones, maintaining uniqueness.
+     * existing attributes override the incoming attributes.
+     * 
+     * @param array $attributes Additional attributes to merge
+     * @return self
+     */
+    public function withMergedAttributes(array $attributes): self
+    {
+        $clone = clone $this;
+
+        $existing = $this->attributes();
+        $incoming = $attributes;
+
+        /**
+         * Merge rule:
+         * incoming < existing
+         */
+        $merged = array_replace($incoming, $existing);
+
+        // Meta may be null on error routes
+        if ($clone->meta) {
+            $clone->meta->setAttributes($merged);
+        }
+
+        return $clone;
+    }
+
     /* -----------------------------------------------------------------
      | Node & grouping
      |-----------------------------------------------------------------*/

@@ -47,6 +47,7 @@ class Group
             'prefix'      => $options['prefix'] ?? '',
             'namespace'   => $options['namespace'] ?? '',
             'middlewares' => $options['middlewares'] ?? [],
+            'attributes'  => $options['attributes'] ?? []
         ];
 
         // Push the entire options array (including group_id) onto the stack.
@@ -132,6 +133,12 @@ class Group
     public function getMiddlewares(string $groupId): array
     {
         return $this->groups[$groupId]['middlewares'] ?? [];
+    }
+
+
+    public function getAttributes(string $groupId): array
+    {
+        return $this->groups[$groupId]['attributes'] ?? [];
     }
 
 

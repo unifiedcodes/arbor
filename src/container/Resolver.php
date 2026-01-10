@@ -14,8 +14,6 @@ use ReflectionParameter;
 use ReflectionFunctionAbstract;
 
 use Arbor\container\Registry;
-use Arbor\container\ServiceContainer;
-use Arbor\contracts\Container\ContainerInterface;
 
 /**
  * Class Resolver
@@ -27,16 +25,6 @@ use Arbor\contracts\Container\ContainerInterface;
  */
 class Resolver
 {
-    /**
-     * @var Registry The dependency registry instance.
-     */
-    private Registry $registry;
-
-    /**
-     * @var  ServiceContainer instance.
-     */
-    private ServiceContainer $container;
-
     /**
      * @var array List of keys currently being resolved to detect circular dependencies.
      */
@@ -50,13 +38,8 @@ class Resolver
     /**
      * Resolver constructor.
      *
-     * @param ServiceContainer $registry The dependency registry instance.
      */
-    public function __construct(ServiceContainer $container)
-    {
-        $this->container = $container;
-        $this->registry = $this->container->getRegistry();
-    }
+    public function __construct(protected Registry $registry) {}
 
     /**
      * Retrieve an instance of the given key.
@@ -299,11 +282,6 @@ class Resolver
         // 3. Primitive resolution
         if (in_array($type, $this->primitive_types, true)) {
             return $this->resolvePrimitiveParameter($parameter, $type);
-        }
-
-        // 4. Special case: container injection
-        if ($type === ServiceContainer::class || $type === ContainerInterface::class) {
-            return $this->container;
         }
 
         // 5. Classes & interfaces

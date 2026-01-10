@@ -20,14 +20,10 @@ use Arbor\attributes\ConfigValue;
  */
 class RequestFactory
 {
-    protected $baseURI;
-
     public function __construct(
         #[ConfigValue('root.uri')]
-        string $baseURI
-    ) {
-        $this->baseURI = $baseURI;
-    }
+        protected string $baseURI
+    ) {}
 
     /**
      * Creates a ServerRequest instance from PHP global variables

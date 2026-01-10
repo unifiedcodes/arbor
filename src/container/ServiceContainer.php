@@ -32,8 +32,8 @@ class ServiceContainer implements ContainerInterface
     public function __construct()
     {
         $this->registry = new Registry();
-        $this->resolver = new Resolver($this);
-        $this->providers = new Providers($this);
+        $this->resolver = new Resolver($this->registry);
+        $this->providers = new Providers($this->registry, $this->resolver);
     }
 
     /**

@@ -3,6 +3,8 @@
 namespace Arbor\router;
 
 use Exception;
+use Arbor\attributes\ConfigValue;
+
 
 /**
  * URLBuilder handles dynamic URL construction with parameter replacement
@@ -11,6 +13,11 @@ use Exception;
  */
 final class URLBuilder
 {
+    public function __construct(
+        #[ConfigValue('root.uri')]
+        protected string $baseURI
+    ) {}
+
     /**
      * @var array<string, string> Named route registry
      */
@@ -55,8 +62,6 @@ final class URLBuilder
      * relative path generated from the named route. It handles edge cases like empty
      * paths and ensures proper URL concatenation without duplicate slashes.
      *
-     * @param string $baseURL The base URL of the application (e.g., "https://example.com").
-     *                       Trailing slashes are automatically handled.
      * @param string $routeName The name of the registered route to generate the path for.
      * @param array<string|int, mixed> $parameters Optional parameters to replace route placeholders.
      * 
@@ -70,17 +75,17 @@ final class URLBuilder
      *   echo $builder->getAbsoluteURL('https://example.com', 'product', ['id' => 42]);
      *   // Output: "https://example.com/products/42"
      */
-    public function getAbsoluteURL(string $baseURL, string $routeName, array $parameters = []): string
+    public function getAbsoluteURL(string $routeName, array $parameters = []): string
     {
         $relativeUrl = $this->getRelativeURL($routeName, $parameters);
-        $baseURL = rtrim($baseURL, '/');
+        $baseURI = rtrim($this->baseURI, '/');
         $relativeUrl = ltrim($relativeUrl, '/');
 
         if ($relativeUrl === '') {
-            return $baseURL ?: '/';
+            return $baseURI ?: '/';
         }
 
-        return $baseURL . '/' . $relativeUrl;
+        return $baseURI . '/' . $relativeUrl;
     }
 
     /**

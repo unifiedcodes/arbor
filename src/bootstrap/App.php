@@ -267,7 +267,7 @@ class App
         // load environment specific global configuration
         $this->loadConfig();
 
-        // detect baseURI and insert in config.
+        // detect Root URI and insert in config.
         $this->setRootURI();
 
         // load environment specific app configuration

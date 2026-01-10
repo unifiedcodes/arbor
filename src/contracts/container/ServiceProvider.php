@@ -29,11 +29,9 @@ abstract class ServiceProvider
      *
      * This method should bind any services or perform any registration logic needed.
      *
-     * @param ContainerInterface $container The container instance.
-     *
      * @return void
      */
-    abstract public function register(ContainerInterface $container): void;
+    abstract public function register(): void;
 
     /**
      * Boot services after all providers have been registered.
@@ -41,11 +39,10 @@ abstract class ServiceProvider
      * Override this method to perform any initialization that must occur after all providers
      * have been registered. The default implementation is empty.
      *
-     * @param ContainerInterface $container The container instance.
      *
      * @return void
      */
-    public function boot(ContainerInterface $container): void
+    public function boot(): void
     {
         // Optional boot logic.
     }

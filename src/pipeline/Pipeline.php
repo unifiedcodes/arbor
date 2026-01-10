@@ -4,7 +4,7 @@ namespace Arbor\pipeline;
 
 
 use InvalidArgumentException;
-use Arbor\container\ServiceContainer;
+use Arbor\facades\Container;
 
 /**
  * Class Pipeline
@@ -32,13 +32,6 @@ use Arbor\container\ServiceContainer;
 class Pipeline
 {
     /**
-     * The service container used for resolving dependencies.
-     *
-     * @var ServiceContainer
-     */
-    protected ServiceContainer $container;
-
-    /**
      * The input data that will be processed by the pipeline.
      *
      * @var mixed
@@ -58,16 +51,6 @@ class Pipeline
      * @var string
      */
     protected string $methodName = 'process';
-
-    /**
-     * Pipeline constructor.
-     *
-     * @param ServiceContainer $container The service container for resolving dependencies.
-     */
-    public function __construct(ServiceContainer $container)
-    {
-        $this->container = $container;
-    }
 
     /**
      * Set the input data to be processed.
@@ -152,7 +135,7 @@ class Pipeline
 
                 $parameters = $this->buildParameters($input, $next, $customParams, $isFinal);
 
-                return $this->container->call($stage, $parameters);
+                return Container::call($stage, $parameters);
             };
         }
 
@@ -167,7 +150,7 @@ class Pipeline
                     $methodName = '__invoke';
                 }
 
-                return $this->container->call([$stage, $methodName], $parameters);
+                return Container::call([$stage, $methodName], $parameters);
             };
         }
 
@@ -176,7 +159,7 @@ class Pipeline
 
                 $parameters = $this->buildParameters($input, $next, $customParams, $isFinal);
 
-                return $this->container->call([$stage[0], $stage[1]], $parameters);
+                return Container::call([$stage[0], $stage[1]], $parameters);
             };
         }
 

@@ -6,6 +6,8 @@ use Arbor\http\context\RequestContext;
 use Arbor\http\Response;
 use Arbor\pipeline\PipelineFactory;
 use Arbor\router\RouteContext;
+use Arbor\attributes\ConfigValue;
+use Throwable;
 
 /**
  * Class Dispatcher
@@ -19,21 +21,17 @@ use Arbor\router\RouteContext;
 class Dispatcher
 {
     /**
-     * The pipeline factory instance used to create pipelines for request processing.
-     *
-     * @var PipelineFactory
-     * 
-     */
-    protected PipelineFactory $pipelineFactory;
-
-    /**
      * Dispatcher constructor.
      *
      * @param Router          $router          The router instance responsible for route resolution.
      * @param PipelineFactory $pipelineFactory The factory for creating pipeline instances.
      */
-    public function __construct(PipelineFactory $pipelineFactory)
-    {
+    public function __construct(
+        protected PipelineFactory $pipelineFactory,
+
+        #[ConfigValue('root.is_debug')]
+        protected ?bool $isDebug = false,
+    ) {
         $this->pipelineFactory = $pipelineFactory;
     }
 

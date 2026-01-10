@@ -56,7 +56,7 @@ class Flasher
     public function __construct(
         Message $message,
         View $view,
-        #[ConfigValue('misc.flash_message_types')]
+        #[ConfigValue('flash_message.types')]
         array $initialTypes = []
     ) {
         $this->message = $message;

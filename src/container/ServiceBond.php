@@ -2,6 +2,10 @@
 
 namespace Arbor\container;
 
+use Closure;
+use ReflectionFunction;
+use LogicException;
+
 /**
  * Class ServiceBond
  *
@@ -41,6 +45,7 @@ class ServiceBond
      */
     public function __construct(string $fqn, mixed $resolver, bool $isShared = false)
     {
+        $this->assertStaticResolver($resolver);
         $this->fqn = $fqn;
         $this->resolver = $resolver;
         $this->isShared = $isShared;
@@ -86,6 +91,7 @@ class ServiceBond
      */
     public function setResolver(callable $resolver): self
     {
+        $this->assertStaticResolver($resolver);
         $this->resolver = $resolver;
         return $this;
     }
@@ -110,5 +116,17 @@ class ServiceBond
     {
         $this->isShared = $isShared;
         return $this;
+    }
+
+
+    private function assertStaticResolver(Closure $resolver): void
+    {
+        $ref = new ReflectionFunction($resolver);
+
+        if ($ref->getClosureThis() !== null) {
+            throw new LogicException(
+                'Container resolver closures must be static'
+            );
+        }
     }
 }

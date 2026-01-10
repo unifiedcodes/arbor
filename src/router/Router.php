@@ -244,7 +244,12 @@ class Router
             if ($groupId) {
                 // get group middlewares and combine with route middlewares.
                 $routeContext = $routeContext->withMergedMiddlewares(
-                    $this->group->getMiddlewares($groupId) ?? []
+                    $this->group->getMiddlewares($groupId)
+                );
+
+                // get group attributes and combine with route attributes.
+                $routeContext = $routeContext->withMergedAttributes(
+                    $this->group->getAttributes($groupId)
                 );
             }
 

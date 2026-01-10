@@ -59,7 +59,7 @@ class Fragment
             attributes: $parameters
         );
 
-        return $this->ensureValidResponse($this->httpSubKernel->handle($request, true));
+        return $this->httpSubKernel->handle($request, true);
     }
 
     /**
@@ -77,20 +77,22 @@ class Fragment
      */
     public function controller(callable|array|string $controller, array $parameters = []): Response
     {
+        if (is_callable($controller)) {
+            return $this->fromCallable($controller, $parameters);
+        }
+
         if (is_string($controller)) {
             return $this->fromController($controller, 'process', $parameters);
         }
-
-        // if (is_callable($controller)) {
-        //     return $this->fromController($controller::class, 'process', $parameters);
-        // }
 
         if (is_array($controller) && count($controller) === 2) {
             [$class, $method] = $controller;
             return $this->fromController($class, $method, $parameters);
         }
 
-        throw new InvalidArgumentException('Controller must be a valid instance or an instance of ControllerInterface or [Class::class, "method"] array.');
+        throw new InvalidArgumentException(
+            'Controller must be callable, class-string, or [Class::class, "method"]'
+        );
     }
 
     /**
@@ -114,7 +116,7 @@ class Fragment
             attributes: $parameters
         );
 
-        return $this->ensureValidResponse($this->httpSubKernel->handle($request, true));
+        return $this->httpSubKernel->handle($request, true);
     }
 
     /**
@@ -126,7 +128,7 @@ class Fragment
      */
     public function request(ServerRequest $request): Response
     {
-        return $this->ensureValidResponse($this->httpSubKernel->handle($request, true));
+        return $this->httpSubKernel->handle($request, true);
     }
 
     /**
@@ -141,6 +143,12 @@ class Fragment
     protected function fromController(string $className, string $methodName, array $parameters = []): Response
     {
         $result = Container::call([$className, $methodName], $parameters);
+        return $this->ensureValidResponse($result);
+    }
+
+    protected function fromCallable(callable $callable, array $parameters = []): Response
+    {
+        $result = Container::call($callable, $parameters);
         return $this->ensureValidResponse($result);
     }
 }

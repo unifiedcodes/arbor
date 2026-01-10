@@ -9,8 +9,8 @@ use Arbor\http\ServerRequest;
 use Arbor\http\HttpSubKernel;
 use InvalidArgumentException;
 use Arbor\http\components\Uri;
-use Arbor\container\ServiceContainer;
 use Arbor\http\traits\ResponseNormalizerTrait;
+use Arbor\facades\Container;
 
 /**
  * Fragment Class
@@ -26,40 +26,17 @@ class Fragment
 {
     use ResponseNormalizerTrait;
 
-    /**
-     * The dependency injection container.
-     *
-     * @var ServiceContainer
-     */
-    protected ServiceContainer $container;
-
-    /**
-     * The router instance.
-     *
-     * @var Router
-     */
-    protected Router $router;
-
-    /**
-     * The HTTP sub-kernel for handling sub-requests.
-     *
-     * @var HttpSubKernel
-     */
-    protected HttpSubKernel $httpSubKernel;
 
     /**
      * Constructor.
      *
-     * @param ServiceContainer     $container     The dependency injection container.
      * @param Router        $router        The router instance.
      * @param HttpSubKernel $httpSubKernel The HTTP sub-kernel.
      */
-    public function __construct(ServiceContainer $container, Router $router, HttpSubKernel $httpSubKernel)
-    {
-        $this->container     = $container;
-        $this->router        = $router;
-        $this->httpSubKernel = $httpSubKernel;
-    }
+    public function __construct(
+        protected Router $router,
+        protected HttpSubKernel $httpSubKernel
+    ) {}
 
     /**
      * Generate a fragment by executing a named route.
@@ -163,9 +140,7 @@ class Fragment
      */
     protected function fromController(string $className, string $methodName, array $parameters = []): Response
     {
-        $controller = $this->container->make($className, $parameters);
-        $result = $this->container->call([$controller, $methodName]);
-
+        $result = Container::call([$className, $methodName], $parameters);
         return $this->ensureValidResponse($result);
     }
 }

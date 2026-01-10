@@ -10,10 +10,10 @@ use Arbor\router\URLBuilder;
 use Arbor\http\context\RequestContext;
 use Arbor\pipeline\PipelineFactory;
 use Arbor\router\RouteMethods;
-use Arbor\http\context\RequestStack;
 use Arbor\http\Response;
 use Exception;
 use Throwable;
+use Arbor\attributes\ConfigValue;
 
 /**
  * Class Router (Router Facade)
@@ -68,34 +68,20 @@ class Router
      */
     protected array $lastEntry;
 
-    /**
-     * requeststack instance.
-     *
-     * @var RequestStack
-     */
-    protected RequestStack $requestStack;
-
-    /**
-     * PipelineFactory instance.
-     *
-     * @var Dispatcher
-     */
-    protected Dispatcher $dispatcher;
-
 
     /**
      * Router constructor.
      *
      * Initializes the registry and group manager.
      */
-    public function __construct(RequestStack $requestStack, Dispatcher $dispatcher)
-    {
-        $this->requestStack = $requestStack;
-        $this->dispatcher = $dispatcher;
-
+    public function __construct(
+        protected Dispatcher $dispatcher,
+        #[ConfigValue('root.uri')]
+        protected string $baseURI
+    ) {
         $this->registry = new Registry();
         $this->group = new Group();
-        $this->URLBuilder = new URLBuilder();
+        $this->URLBuilder = new URLBuilder($baseURI);
     }
 
     /**
@@ -391,10 +377,7 @@ class Router
      */
     public function url(string $name, array $parameters = []): ?string
     {
-        $baseURI = $this->requestStack->getCurrent()->getBaseUri();
-
-        $routeURL = $this->URLBuilder->getAbsoluteURL($baseURI, $name, $parameters);
-
+        $routeURL = $this->URLBuilder->getAbsoluteURL($name, $parameters);
         return $routeURL;
     }
 

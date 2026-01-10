@@ -3,7 +3,6 @@
 namespace Arbor\container;
 
 use Exception;
-use Arbor\container\ServiceContainer;
 use Arbor\contracts\container\ServiceProvider;
 
 /**
@@ -16,13 +15,6 @@ use Arbor\contracts\container\ServiceProvider;
  */
 class Providers
 {
-    /**
-     * The container instance.
-     *
-     * @var ServiceContainer
-     */
-    protected ServiceContainer $container;
-
     /**
      * Array of registered (immediate) service providers.
      *
@@ -42,10 +34,10 @@ class Providers
      *
      * @param ServiceContainer $container The container instance.
      */
-    public function __construct(ServiceContainer $container)
-    {
-        $this->container = $container;
-    }
+    public function __construct(
+        protected Registry $registry,
+        protected Resolver $resolver
+    ) {}
 
     /**
      * Register a single provider.
@@ -63,7 +55,7 @@ class Providers
     {
         // Resolve provider instance if a class name is given.
         if (is_string($provider)) {
-            $providerInstance = $this->container->resolve($provider);
+            $providerInstance = $this->resolver->get($provider);
             if (!$providerInstance instanceof ServiceProvider) {
                 throw new \InvalidArgumentException("Provider class {$provider} must extend ServiceProvider");
             }
@@ -81,7 +73,7 @@ class Providers
             }
         } else {
             // Register and boot immediately.
-            $providerInstance->register($this->container);
+            $providerInstance->register();
             $this->providers[] = $providerInstance;
         }
     }
@@ -91,7 +83,7 @@ class Providers
     protected function registerAliases(ServiceProvider $provider): void
     {
         foreach ($provider->aliases() as $alias => $bindingKey) {
-            $this->container->alias($alias, $bindingKey);
+            $this->registry->addAliasName($alias, $bindingKey);
         }
     }
 
@@ -119,7 +111,7 @@ class Providers
     public function bootProviders(): void
     {
         foreach ($this->providers as $provider) {
-            $provider->boot($this->container);
+            $provider->boot();
         }
     }
 
@@ -138,8 +130,8 @@ class Providers
     {
         if (isset($this->deferred[$serviceKey])) {
             $provider = $this->deferred[$serviceKey];
-            $provider->register($this->container);
-            $provider->boot($this->container);
+            $provider->register();
+            $provider->boot();
             $this->providers[] = $provider;
 
             // Remove all provided keys from the deferred mapping.

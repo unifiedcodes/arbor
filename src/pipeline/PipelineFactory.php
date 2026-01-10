@@ -4,7 +4,7 @@
 namespace Arbor\pipeline;
 
 
-use Arbor\container\ServiceContainer;
+use Arbor\container\Invoker;
 use Arbor\pipeline\Pipeline;
 
 /**
@@ -18,29 +18,9 @@ use Arbor\pipeline\Pipeline;
  */
 class PipelineFactory
 {
-    /**
-     * The service container instance.
-     *
-     * @var ServiceContainer
-     */
-    protected ServiceContainer $container;
-
-    /**
-     * PipelineFactory constructor.
-     *
-     * Initializes the factory with the given service container.
-     *
-     * @param ServiceContainer $container The service container instance used for dependency injection.
-     */
-    public function __construct(ServiceContainer $container)
-    {
-        $this->container = $container;
-    }
-
-
     public function create(): Pipeline
     {
-        return new Pipeline($this->container);
+        return new Pipeline();
     }
 
     /**

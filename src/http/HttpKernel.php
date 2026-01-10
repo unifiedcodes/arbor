@@ -22,35 +22,18 @@ class HttpKernel
 {
     use ResponseNormalizerTrait;
 
-    protected RequestFactory $requestFactory;
-    protected PipelineFactory $pipelineFactory;
-    protected Router $router;
-    protected RequestStack $requestStack;
-    protected bool $isDebug = false;
     protected array $globalMiddlewareStack = [];
 
-    /**
-     * @param RequestFactory $requestFactory for creating requests (will be inherited by HTTPSubKernel to make sub requests)
-     * @param RequestStack $requestStack Stack managing request contexts
-     * @param PipelineFactory $pipelineFactory Factory to create middleware pipelines
-     * @param Router $router The router instance
-     * @param bool|null $isDebug Enables debugging mode if true
-     */
-    public function __construct(
-        RequestFactory $requestFactory,
-        RequestStack $requestStack,
-        PipelineFactory $pipelineFactory,
-        Router $router,
-        #[ConfigValue('root.is_debug')]
-        ?bool $isDebug = false,
-    ) {
-        $this->requestFactory = $requestFactory;
-        $this->requestStack = $requestStack;
-        $this->pipelineFactory = $pipelineFactory;
-        $this->router = $router;
 
-        $this->isDebug = $isDebug ?: false;
-    }
+    public function __construct(
+        // keep requestFactory because httpSubkernel uses it to spawn sub requests.
+        protected RequestFactory $requestFactory,
+        protected RequestStack $requestStack,
+        protected PipelineFactory $pipelineFactory,
+        protected Router $router,
+        #[ConfigValue('root.is_debug')]
+        protected ?bool $isDebug = false,
+    ) {}
 
 
     public function useMiddlewares(array $middlewares)

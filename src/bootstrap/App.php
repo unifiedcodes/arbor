@@ -353,9 +353,15 @@ class App
         }
 
         // Bind the Config instance as a singleton.
-        $this->container->singleton(Configurator::class, function (): Configurator {
-            return new Configurator($this->configDir, $this->environment);
-        });
+        $configDir = $this->configDir;
+        $environment = $this->environment;
+
+        $this->container->singleton(
+            Configurator::class,
+            static function () use ($configDir, $environment): Configurator {
+                return new Configurator($configDir, $environment);
+            }
+        );
 
         // Retrieve and set the Config instance.
         $this->configurator = $this->container->make(Configurator::class);

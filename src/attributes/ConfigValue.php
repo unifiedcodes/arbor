@@ -6,6 +6,7 @@ namespace Arbor\attributes;
 use Attribute;
 use Arbor\contracts\metadata\AttributeInterface;
 use Arbor\config\Configurator;
+use Exception;
 
 /**
  * Class ConfigValue
@@ -61,12 +62,12 @@ class ConfigValue implements AttributeInterface
      *
      * @return mixed The configuration value.
      *
-     * @throws \Exception If the Config instance has not been provided.
+     * @throws Exception If the Config instance has not been provided.
      */
     public function resolve(): mixed
     {
         if ($this->config === null) {
-            throw new \Exception("Config instance not found.");
+            throw new Exception("Config instance not found.");
         }
 
         return $this->config->get($this->key, $this->default);

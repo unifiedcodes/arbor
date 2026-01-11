@@ -5,6 +5,7 @@ namespace Arbor\http;
 use Arbor\http\components\Stream;
 use Arbor\http\components\Headers;
 use RuntimeException;
+use InvalidArgumentException;
 
 /**
  * HTTP Response Factory class
@@ -135,16 +136,16 @@ class ResponseFactory
      * @param int $statusCode The HTTP redirect status code (301, 302, 303, 307, 308)
      * @param array<string,string|string[]>|Headers $headers Additional response headers
      * @return Response The created redirect Response object
-     * @throws \InvalidArgumentException If an invalid redirect status code is provided
+     * @throws InvalidArgumentException If an invalid redirect status code is provided
      */
     public static function redirect(
         string $location,
-        int $statusCode = 302,
+        int $statusCode = 307,
         array|Headers $headers = [],
         array $parameters = []
     ): Response {
         if (!in_array($statusCode, [301, 302, 303, 307, 308])) {
-            throw new \InvalidArgumentException('Invalid redirect status code');
+            throw new InvalidArgumentException('Invalid redirect status code');
         }
 
 

@@ -249,23 +249,22 @@ class Router
     }
 
 
-    public function resolveErrorPage(Throwable $error, $request): ?RouteContext
+    public function resolveErrorPage(int $errorCode): ?RouteContext
     {
         // Retrieve error page handler based on the exception code.
-        $errorHandler = $this->registry->getErrorPage($error->getCode());
+        $errorHandler = $this->registry->getErrorPage($errorCode);
 
         if ($errorHandler) {
             return RouteContext::error(
-                path: $request->getRelativePath(),
-                verb: $request->getMethod(),
-                statusCode: $error->getCode(),
+                path: '',
+                verb: '',
+                statusCode: $errorCode,
                 handler: $errorHandler,
             );
         }
 
         return null;
     }
-
 
     /**
      * Loads error page handlers from a file and registers them with the Registry.
@@ -315,7 +314,7 @@ class Router
     }
 
 
-    public function dispatchRoute(RouteContext $route, RequestContext $request)
+    public function dispatchRoute(RouteContext $route, RequestContext $request): Response
     {
         return $this->dispatcher->dispatch($route, $request);
     }

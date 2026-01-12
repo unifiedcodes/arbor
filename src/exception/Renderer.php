@@ -99,7 +99,7 @@ class Renderer
         return [
             'method' => $context->getMethod(),
             'uri' => (string) $context->getUri(),
-            'route' => $context->getRoute()->routeName(),
+            'route' => $context->getRoute()?->routeName(),
         ];
     }
 }

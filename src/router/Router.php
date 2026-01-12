@@ -80,8 +80,6 @@ class Router
         #[ConfigValue('root.uri')]
         protected string $baseURI
     ) {
-        throw new Exception("Error Processing Request", 1);
-
         $this->registry = new Registry();
         $this->group = new Group();
         $this->URLBuilder = new URLBuilder($baseURI);
@@ -222,43 +220,32 @@ class Router
      */
     public function resolve(RequestContext $request): RouteContext
     {
-        try {
-            // Extract path and verb from the request.
-            $path = $request->getRelativePath();
-            $verb = $request->getMethod();
+        // Extract path and verb from the request.
+        $path = $request->getRelativePath();
+        $verb = $request->getMethod();
 
-            // Find a route match.
-            $routeContext = $this->registry->matchPath($path, $verb)
-                ->withRouteName($this->getRouteName($path, $verb));
+        // Find a route match.
+        $routeContext = $this->registry->matchPath($path, $verb)
+            ->withRouteName($this->getRouteName($path, $verb));
 
-            $groupId = $routeContext->groupId();
+        $groupId = $routeContext->groupId();
 
-            if ($groupId) {
-                // get group middlewares and combine with route middlewares.
-                $routeContext = $routeContext->withMergedMiddlewares(
-                    $this->group->getMiddlewares($groupId)
-                );
+        if ($groupId) {
+            // get group middlewares and combine with route middlewares.
+            $routeContext = $routeContext->withMergedMiddlewares(
+                $this->group->getMiddlewares($groupId)
+            );
 
-                // get group attributes and combine with route attributes.
-                $routeContext = $routeContext->withMergedAttributes(
-                    $this->group->getAttributes($groupId)
-                );
-            }
-
-            // replacing current request context in requeststack.
-            RequestStack::replaceCurrent($request->withRoute($routeContext));
-
-            return $routeContext;
-        } catch (Exception $e) {
-
-            $routeContext = $this->resolveErrorPage($e, $request);
-
-            if ($routeContext) {
-                return $routeContext;
-            }
-
-            throw $e;
+            // get group attributes and combine with route attributes.
+            $routeContext = $routeContext->withMergedAttributes(
+                $this->group->getAttributes($groupId)
+            );
         }
+
+        // replacing current request context in requeststack.
+        RequestStack::replaceCurrent($request->withRoute($routeContext));
+
+        return $routeContext;
     }
 
 

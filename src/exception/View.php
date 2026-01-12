@@ -71,7 +71,7 @@ class View
 
             $exceptionsHtml .= "
                 <section>
-                    <h3>Exception: {$level}</h3>
+                    <hr>
                     <div><strong>{$exception['class']} : {$exception['code']}</strong></div>
                     <div>{$exception['message']}</div>
                     <div>{$exception['file']}:{$exception['line']}</div>

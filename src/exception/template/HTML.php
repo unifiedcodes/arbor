@@ -1,16 +1,17 @@
 <?php
 
-namespace Arbor\exception;
+namespace Arbor\exception\template;
 
+use Arbor\exception\ExceptionContext;
 
-class View
+class HTML
 {
-    static public function HTML(array $request, array $exceptiontrail)
+    static public function page(ExceptionContext $exceptionContext)
     {
         $html = '';
 
-        $html .= self::requestInfo($request);
-        $html .= self::exceptionTrail($exceptiontrail);
+        $html .= self::requestInfo($exceptionContext->request());
+        $html .= self::exceptionTrail($exceptionContext->exceptions());
 
         $css = file_get_contents(__DIR__ . '/exception.css');
 

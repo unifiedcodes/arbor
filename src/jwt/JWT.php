@@ -1,6 +1,6 @@
 <?php
 
-namespace Arbor\auth;
+namespace Arbor\jwt;
 
 
 use Exception;

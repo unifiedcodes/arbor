@@ -7,7 +7,6 @@ use Arbor\http\Response;
 use Arbor\pipeline\PipelineFactory;
 use Arbor\router\RouteContext;
 use Arbor\attributes\ConfigValue;
-use Throwable;
 
 /**
  * Class Dispatcher
@@ -49,9 +48,6 @@ class Dispatcher
      */
     public function dispatch(RouteContext $routeContext, RequestContext $request): Response
     {
-        // setting route parameters to request context.
-        $request->setRoute($routeContext);
-
         $pipeline = $this->pipelineFactory->create();
 
         return $pipeline->send($request)

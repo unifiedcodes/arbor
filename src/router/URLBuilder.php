@@ -22,6 +22,7 @@ final class URLBuilder
      * @var array<string, string> Named route registry
      */
     private array $namedRegistry = [];
+    private array $pathRegistry = [];
 
     /**
      * Register a named route path
@@ -30,9 +31,26 @@ final class URLBuilder
      * @param string $path URL pattern with {placeholders}
      * @return void
      */
-    public function add(string $name, string $path): void
+    public function add(string $name, string $path, string $verb): void
     {
+        $verb = strtoupper($verb);
+
+        if (isset($this->namedRegistry[$name])) {
+            throw new Exception("Name '{$name}' for '{$verb}: {$path}' is already in use");
+        }
+
+        if (isset($this->pathRegistry[$verb][$path])) {
+            throw new Exception("Duplicate route for {$verb} {$path}");
+        }
+
         $this->namedRegistry[$name] = $path;
+        $this->pathRegistry[$verb][$path] = $name;
+    }
+
+
+    public function getRouteName(string $path, string $verb): string
+    {
+        return $this->pathRegistry[$verb][$path] ?? '';
     }
 
     /**

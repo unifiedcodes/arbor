@@ -37,6 +37,17 @@ class RequestStack implements RequestStackRO, RequestStackWR
         $this->stack[] = $context;
     }
 
+
+    public function replaceCurrent(RequestContext $context): bool
+    {
+        if (empty($this->stack)) {
+            return false;
+        }
+
+        $this->stack[count($this->stack) - 1] = $context;
+        return true;
+    }
+
     /**
      * Pop the current RequestContext from the stack.
      *

@@ -1,0 +1,37 @@
+#errorpage {
+  background-color: #181818;
+  color: #fff;
+  font-family: sans-serif;
+}
+
+#errorpage main {
+  text-align: center;
+}
+
+#errorpage h3 {
+  font-size: 15px;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+#errorpage ul {
+  position: relative;
+  display: inline-block;
+  text-align: left;
+  margin: 0;
+  list-style: circle;
+  margin-top: 15px;
+}
+
+#errorpage ul li {
+  margin: 15px 0px;
+  font-size: 13px;
+  font-weight: 400;
+  color: #898989;
+}
+
+#errorpage ul li strong {
+  font-weight: 500;
+  font-size: 14px;
+  color: #cbcbcb;
+}

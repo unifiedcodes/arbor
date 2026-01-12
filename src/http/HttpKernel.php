@@ -6,6 +6,7 @@ use Arbor\router\Router;
 use Arbor\attributes\ConfigValue;
 use Arbor\pipeline\PipelineFactory;
 use Arbor\contracts\middleware\StageInterface;
+use Arbor\facades\Anomaly;
 use Arbor\http\Response;
 use Arbor\http\Request;
 use Arbor\http\context\RequestContext;
@@ -63,7 +64,7 @@ class HttpKernel
      */
     public function handle(Request $request, bool $isSubRequest = false): Response
     {
-        $requestContext = new RequestContext($request);
+        $requestContext = RequestContext::from($request);
 
         // Push context into the stack
         $this->requestStack->push($requestContext);
@@ -91,20 +92,33 @@ class HttpKernel
 
             // Clean up output buffers
             if (!$this->isDebug) {
-                while (ob_get_level() > $initialOBLevel) {
-                    ob_end_clean();
-                }
+                $this->cleanOutputBuffer($initialOBLevel);
             }
 
             return $response;
-        } catch (Throwable $error) {
+        }
+        // handling errors
+        catch (Throwable $error) {
 
-            return $this->handleException($error, $requestContext, $initialOBLevel);
-        } finally {
-            // Sub-requests should be removed from stack after handling
+            if (!$this->isDebug) {
+                $this->cleanOutputBuffer($initialOBLevel);
+            }
+
+            return Anomaly::handle($error, $requestContext);
+        }
+        // Sub-requests should be removed from stack after handling
+        finally {
             if ($isSubRequest === true) {
                 $this->requestStack->pop();
             }
+        }
+    }
+
+
+    protected function cleanOutputBuffer($oblevel)
+    {
+        while (ob_get_level() > $oblevel) {
+            ob_end_clean();
         }
     }
 
@@ -135,44 +149,5 @@ class HttpKernel
     protected function routerDispatch(RequestContext $requestContext): Response
     {
         return $this->router->dispatch($requestContext);
-    }
-
-
-    protected function handleException($error, $requestContext, $initialOBLevel)
-    {
-        if ($this->isDebug) {
-            throw $error;
-        }
-
-        // Clean output buffer in case of errors
-        while (ob_get_level() > $initialOBLevel) {
-            ob_end_clean();
-        }
-
-        // recursion guard
-        if ($requestContext->isErrorRequest()) {
-            return $this->createErrorResponse(
-                new Exception('Internal Server Error', 500)
-            );
-        }
-
-        // marking request is already handling Error.
-        $requestContext->markErrorRequest();
-
-        // dispatching error page or outputting a response.
-        $routeContext = $this->router->resolveErrorPage($error, $requestContext);
-
-        if ($routeContext) {
-            return $this->router->dispatchRoute(
-                $routeContext,
-                $requestContext
-            );
-        }
-        // returning with a vague error response in production.
-        else {
-            return $this->createErrorResponse(
-                new Exception('Internal Server Error', 500)
-            );
-        }
     }
 }

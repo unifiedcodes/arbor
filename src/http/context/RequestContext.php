@@ -14,35 +14,101 @@ use BadMethodCallException;
  * 
  * @package Arbor\http\context
  * 
- * 
- * Dynamically call to Request by following methods.
- * 
- * @method string getMethod()
- * 
  */
-class RequestContext
+final class RequestContext
 {
-    /**
-     * The underlying HTTP request object.
-     */
-    protected Request|ServerRequest $request;
-    protected string $baseURI = '';
-    protected string $basePath = '';
-    protected mixed $route = null;
-    protected bool $isErrorRequest = false;
-
     /**
      * Creates a new RequestContext instance.
      *
-     * @param Request $request The HTTP request to wrap
+     * @param Request|ServerRequest $request The HTTP request object
+     * @param string $baseURI The base URI for the application
+     * @param string $basePath The base path extracted from the base URI
+     * @param mixed $route The route information associated with this request
+     * @param bool $isErrorRequest Whether this request is an error request
      */
-    public function __construct(Request $request)
+    public function __construct(
+        protected readonly Request|ServerRequest $request,
+        protected readonly string $baseURI = '',
+        protected readonly string $basePath = '',
+        protected readonly mixed $route = null,
+        protected readonly bool $isErrorRequest = false,
+    ) {}
+
+    /**
+     * Creates a RequestContext instance from a Request object.
+     *
+     * @param Request $request The HTTP request to wrap
+     * @return self A new RequestContext instance
+     */
+    public static function from(Request $request): self
     {
-        $this->request = $request;
+        $baseURI  = '';
+        $basePath = '';
 
         if ($request instanceof ServerRequest) {
-            $this->setBaseURI($this->request->getBaseURI());
+            $baseURI  = self::prepareBaseURI($request->getBaseURI());
+            $basePath = parse_url($baseURI, PHP_URL_PATH) ?? '';
         }
+
+        return new self(
+            request: $request,
+            baseURI: $baseURI,
+            basePath: $basePath
+        );
+    }
+
+    /**
+     * Proxies method calls to the underlying Request object.
+     *
+     * @param string $method The method name to call
+     * @param array<int, mixed> $args The arguments to pass to the method
+     * 
+     * @return mixed The result of the proxied method call
+     * 
+     * @throws BadMethodCallException When the method does not exist on the Request object
+     */
+    public function __call(string $method, array $args): mixed
+    {
+        if (!method_exists($this->request, $method)) {
+            throw new BadMethodCallException(
+                sprintf('Method %s::%s does not exist.', get_class($this->request), $method)
+            );
+        }
+
+        return $this->request->{$method}(...$args);
+    }
+
+    /**
+     * Creates a new instance with the specified route.
+     *
+     * @param mixed $route The route information to associate with the request
+     * @return self A new RequestContext instance with the route set
+     */
+    public function withRoute(mixed $route): self
+    {
+        return new self(
+            request: $this->request,
+            baseURI: $this->baseURI,
+            basePath: $this->basePath,
+            route: $route,
+            isErrorRequest: $this->isErrorRequest
+        );
+    }
+
+    /**
+     * Creates a new instance marked as an error request.
+     *
+     * @return self A new RequestContext instance with isErrorRequest set to true
+     */
+    public function withError(): self
+    {
+        return new self(
+            request: $this->request,
+            baseURI: $this->baseURI,
+            basePath: $this->basePath,
+            route: $this->route,
+            isErrorRequest: true
+        );
     }
 
     /**
@@ -70,28 +136,6 @@ class RequestContext
         ];
     }
 
-    /**
-     * Proxies method calls to the underlying Request object.
-     *
-     * @param string $method The method name to call
-     * @param array<int, mixed> $args The arguments to pass to the method
-     * 
-     * @return mixed The result of the proxied method call
-     * 
-     * @throws BadMethodCallException When the method does not exist on the Request object
-     * 
-     */
-    public function __call(string $method, array $args): mixed
-    {
-        if (method_exists($this->request, $method)) {
-            return $this->request->{$method}(...$args);
-        }
-
-        throw new BadMethodCallException("Method {$method} not found on request.");
-    }
-
-
-    // accessors
     /**
      * Gets the path from the request URI.
      *
@@ -154,16 +198,6 @@ class RequestContext
         return $this->getAttribute('controller.action');
     }
 
-    /**
-     * Gets the full URL including scheme, host, base URL, path, and query string.
-     *
-     * @return string The complete URL
-     */
-    public function getFullUrl(): string
-    {
-        return $this->getScheme() . '://' . $this->getHost() . $this->getBaseUrl() . $this->getPathInfo() .
-            ($this->getQueryString() ? '?' . $this->getQueryString() : '');
-    }
 
     /**
      * Checks if the request is using HTTPS.
@@ -193,25 +227,9 @@ class RequestContext
         return $baseURI;
     }
 
-    /**
-     * Sets the base URI and extracts the base path
-     * 
-     * @param string|null $baseURI The base URI for the application
-     * @return void
-     */
-    protected function setBaseURI(?string $baseURI = null): void
-    {
-        $baseURI = $baseURI ?? '';
-        $baseURI  = $this->prepareBaseURI($baseURI);
-        $parseURI = parse_url($baseURI);
-
-        $this->basePath = isset($parseURI['path']) ? $parseURI['path'] : '';
-        $this->baseURI = $baseURI ?? '';
-    }
-
 
     /**
-     * Gets the base URI
+     * Gets the base URI.
      * 
      * @return string The base URI
      */
@@ -221,7 +239,7 @@ class RequestContext
     }
 
     /**
-     * Gets the base path
+     * Gets the base path.
      * 
      * @return string The base path
      */
@@ -232,9 +250,9 @@ class RequestContext
 
 
     /**
-     * Gets the path relative to the base path
+     * Gets the path relative to the base path.
      * 
-     * @return string The relative path
+     * @return string The relative path with leading slash
      */
     public function getRelativePath(): string
     {
@@ -254,17 +272,6 @@ class RequestContext
     }
 
     /**
-     * Sets the route information for the request.
-     *
-     * @param mixed $route The route data to store
-     * @return void
-     */
-    public function setRoute(mixed $route): void
-    {
-        $this->route = $route;
-    }
-
-    /**
      * Gets the route information.
      *
      * @return mixed The route data
@@ -274,11 +281,11 @@ class RequestContext
         return $this->route;
     }
 
-    public function markErrorRequest(): void
-    {
-        $this->isErrorRequest = true;
-    }
-
+    /**
+     * Checks if this request is an error request.
+     *
+     * @return bool True if this is an error request, false otherwise
+     */
     public function isErrorRequest(): bool
     {
         return $this->isErrorRequest;

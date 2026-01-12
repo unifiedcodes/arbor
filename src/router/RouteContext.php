@@ -34,6 +34,7 @@ final class RouteContext
         private array $parameters,
         private string|array $handler,
         private array $middlewares,
+        private string $routeName = ''
     ) {}
     
     /* -----------------------------------------------------------------
@@ -333,5 +334,31 @@ final class RouteContext
     public function groupId(): ?string
     {
         return $this->node?->getGroupId();
+    }
+
+    /**
+     * get the route name of current node.
+     * 
+     * @return string|null
+     */
+    public function nodeName()
+    {
+        return $this->node?->getName();
+    }
+
+
+    public function withRouteName(string $routeName): self
+    {
+        $clone = clone $this;
+
+        $clone->routeName = $routeName;
+
+        return $clone;
+    }
+
+
+    public function routeName()
+    {
+        return $this->routeName;
     }
 }

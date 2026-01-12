@@ -14,6 +14,7 @@ use Arbor\http\Response;
 use Exception;
 use Throwable;
 use Arbor\attributes\ConfigValue;
+use Arbor\facades\RequestStack;
 
 /**
  * Class Router (Router Facade)
@@ -79,6 +80,8 @@ class Router
         #[ConfigValue('root.uri')]
         protected string $baseURI
     ) {
+        throw new Exception("Error Processing Request", 1);
+
         $this->registry = new Registry();
         $this->group = new Group();
         $this->URLBuilder = new URLBuilder($baseURI);
@@ -197,7 +200,8 @@ class Router
         $this->lastEntry = [
             'path' => !empty($path) ? $path : '/',
             'node' => $node,
-            'meta' => $node->getMeta($verb)
+            'meta' => $node->getMeta($verb),
+            'verb' => $verb
         ];
 
         return $this;
@@ -224,7 +228,8 @@ class Router
             $verb = $request->getMethod();
 
             // Find a route match.
-            $routeContext = $this->registry->matchPath($path, $verb);
+            $routeContext = $this->registry->matchPath($path, $verb)
+                ->withRouteName($this->getRouteName($path, $verb));
 
             $groupId = $routeContext->groupId();
 
@@ -239,6 +244,9 @@ class Router
                     $this->group->getAttributes($groupId)
                 );
             }
+
+            // replacing current request context in requeststack.
+            RequestStack::replaceCurrent($request->withRoute($routeContext));
 
             return $routeContext;
         } catch (Exception $e) {
@@ -336,7 +344,7 @@ class Router
     public function name(string $name): self
     {
         if (!empty($this->lastEntry['path'])) {
-            $this->URLBuilder->add($name, $this->lastEntry['path']);
+            $this->URLBuilder->add($name, $this->lastEntry['path'], $this->lastEntry['verb']);
         }
 
         return $this;
@@ -379,6 +387,12 @@ class Router
     {
         $routeURL = $this->URLBuilder->getAbsoluteURL($name, $parameters);
         return $routeURL;
+    }
+
+
+    public function getRouteName(string $path, string $verb): string
+    {
+        return $this->URLBuilder->getRouteName($path, $verb);
     }
 
     /**

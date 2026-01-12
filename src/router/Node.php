@@ -20,49 +20,49 @@ class Node
      *
      * @var string|null
      */
-    public ?string $name;
+    protected ?string $name;
 
     /**
      * The name of the parameter if the node represents a parameterized route segment.
      *
      * @var string|null
      */
-    public ?string $parameterName;
+    protected ?string $parameterName;
 
     /**
      * Indicates whether the parameter is optional.
      *
      * @var bool
      */
-    public bool $isOptional = false;
+    protected bool $isOptional = false;
 
     /**
      * Indicates whether the parameter is greedy.
      *
      * @var bool
      */
-    public bool $isGreedy = false;
+    protected bool $isGreedy = false;
 
     /**
      * The segment name of the child that is a parameter, if any.
      *
      * @var string|null
      */
-    public ?string $hasParameterChild = null;
+    protected ?string $hasParameterChild = null;
 
     /**
      * The group ID associated with this node, if the node belongs to a group.
      *
      * @var string|null
      */
-    public ?string $groupId = null;
+    protected ?string $groupId = null;
 
     /**
      * The child nodes of the current node, indexed by their segment names.
      *
      * @var array<string, Node>
      */
-    public array $children = [];
+    protected array $children = [];
 
     /**
      * Meta data for the node, typically including route handlers and middlewares,
@@ -70,7 +70,7 @@ class Node
      *
      * @var array<string, Meta>
      */
-    public array $meta = [];
+    protected array $meta = [];
 
     /**
      * Node constructor.
@@ -264,5 +264,10 @@ class Node
     public function isGreedy(): bool
     {
         return $this->isGreedy;
+    }
+
+    public function getName()
+    {
+        return $this->name;
     }
 }

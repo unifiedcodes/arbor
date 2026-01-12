@@ -25,6 +25,24 @@ final class ExceptionContext
         return $this->timestamp;
     }
 
+    public function code(): int
+    {
+        if (!isset($this->exceptions[0]['code'])) {
+            return 500;
+        }
+
+        return (int) $this->exceptions[0]['code'];
+    }
+
+    public function message(): string
+    {
+        if (!isset($this->exceptions[0]['message'])) {
+            return 'An unknown error occurred.';
+        }
+
+        return (string) $this->exceptions[0]['message'];
+    }
+
     /**
      * Immutable modifier
      */

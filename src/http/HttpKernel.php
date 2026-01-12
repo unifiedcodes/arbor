@@ -6,12 +6,12 @@ use Arbor\router\Router;
 use Arbor\attributes\ConfigValue;
 use Arbor\pipeline\PipelineFactory;
 use Arbor\contracts\middleware\StageInterface;
-use Arbor\facades\Anomaly;
 use Arbor\http\Response;
 use Arbor\http\Request;
 use Arbor\http\context\RequestContext;
 use Arbor\http\context\RequestStack;
 use Arbor\http\traits\ResponseNormalizerTrait;
+use Arbor\exception\ExceptionKernel;
 use Throwable;
 use Exception;
 
@@ -104,7 +104,7 @@ class HttpKernel
                 $this->cleanOutputBuffer($initialOBLevel);
             }
 
-            return Anomaly::handle($error, $requestContext);
+            return (new ExceptionKernel($this->isDebug))->handle($error);
         }
         // Sub-requests should be removed from stack after handling
         finally {

@@ -14,6 +14,7 @@ use Arbor\router\Router;
 use Arbor\http\ServerRequest;
 use Arbor\support\Helpers;
 use Arbor\facades\Facade;
+use Arbor\exception\ExceptionKernel;
 
 /**
  * Class App
@@ -279,6 +280,9 @@ class App
         // set environment
         $this->configurator->set('root.environment', $this->environment);
 
+        // Bind Exception Handler
+        $this->bindExceptionHandler();
+
         // load service providers
         $this->loadProviders();
 
@@ -326,11 +330,16 @@ class App
     {
         if ($this->environment === 'production') {
             ini_set('display_errors', '0');
-            error_reporting(0);
         } else {
             ini_set('display_errors', '1');
             error_reporting(E_ALL);
         }
+    }
+
+
+    protected function bindExceptionHandler()
+    {
+        (new ExceptionKernel($this->configurator->get('root.is_debug')))->bind();
     }
 
     /**

@@ -5,7 +5,9 @@ namespace Arbor\exception;
 use Arbor\exception\template\HTML;
 use Arbor\http\Response;
 use Arbor\facades\Respond;
-
+use Arbor\facades\Route;
+use Arbor\facades\RequestStack;
+use Arbor\http\context\RequestContext;
 
 class Renderer
 {
@@ -17,19 +19,66 @@ class Renderer
     }
 
 
-    public function httpRender(ExceptionContext $exceptionContext): Response
+    public function render(ExceptionContext $exceptionContext): Response
     {
-        // if current requestContext already handling error, respond general error.
-        // find error page from router, if found dispatch errorpage.
+        $requestContext = RequestStack::getCurrent();
 
-        print_r($exceptionContext->code());
+        if ($requestContext) {
+            return $this->httpRender($exceptionContext, $requestContext);
+        }
 
-        return Respond::error(500, 'Something Went Wrong !');
+        return $this->httpResponse($exceptionContext);
+    }
+
+
+    public function debugRender(ExceptionContext $exceptionContext): Response
+    {
+        return $this->httpTrailRender($exceptionContext);
     }
 
 
     public function httpTrailRender(ExceptionContext $exceptionContext): Response
     {
         return Respond::html(HTML::page($exceptionContext), 500);
+    }
+
+
+    public function httpRender(ExceptionContext $exceptionContext, RequestContext $requestContext): Response
+    {
+        // 1. Prevent infinite error recursion
+        if ($requestContext->isErrorRequest()) {
+            return $this->httpResponse($exceptionContext);
+        }
+
+        // 2. Mark current request as handling an error
+        $errorRequest = $requestContext->withError();
+        RequestStack::replaceCurrent($errorRequest);
+
+        // 3. Try resolving a dedicated error page
+        $errorRoute = Route::resolveErrorPage($exceptionContext->code());
+
+        if ($errorRoute !== null) {
+            return Route::dispatchRoute($errorRoute, $errorRequest);
+        }
+
+        // 4. Fallback to default error response
+        return $this->httpResponse($exceptionContext);
+    }
+
+
+    protected function httpResponse(ExceptionContext $errCtx): Response
+    {
+        $code = $errCtx->code();
+        $message = $errCtx->message();
+
+        if ($code < 400 || $code >= 600) {
+            $code = 500;
+            $message = 'Something went wrong';
+        }
+
+        return Respond::error(
+            $code,
+            $message
+        );
     }
 }

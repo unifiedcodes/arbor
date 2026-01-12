@@ -61,6 +61,10 @@ class HTML
      */
     static public function requestInfo(array $request): string
     {
+        if (empty($request)) {
+            return "";
+        }
+
         $method = $request['method'] ?? 'N/A';
         $uri    = $request['uri'] ?? 'N/A';
         $route  = $request['route'] ?? 'N/A';
@@ -74,7 +78,7 @@ class HTML
                 <li><strong>Route:</strong> {$route}</li>
             </ul>
         </section>
-    ";
+        <hr>";
     }
 
 
@@ -106,7 +110,6 @@ class HTML
 
             $exceptionsHtml .= "
                 <section>
-                    <hr>
                     <div><strong>{$exception['class']} : {$exception['code']}</strong></div>
                     <div>{$exception['message']}</div>
                     <div>{$exception['file']}:{$exception['line']}</div>

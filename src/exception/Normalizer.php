@@ -142,11 +142,7 @@ class Normalizer
     protected function normalizeRequest(?RequestContext $context = null): array
     {
         if (!$context) {
-            return [
-                'method' => 'N/A',
-                'uri'    => 'N/A',
-                'route'  => 'N/A',
-            ];
+            return [];
         }
 
         return [

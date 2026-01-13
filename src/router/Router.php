@@ -75,7 +75,7 @@ class Router
      *
      * @var RouteContext
      */
-    protected RouteContext $lastEntry;
+    protected array $lastEntry;
 
 
     /**
@@ -209,15 +209,13 @@ class Router
 
 
         // keeping context of just added route.
-        $this->lastEntry = new RouteContext(
-            path: $path,
-            verb: $verb,
-            node: $node,
-            meta: $node->getMeta($verb),
-            handler: $handler,
-            parameters: [],
-            middlewares: [],
-        );
+        $this->lastEntry = [
+            'handler' => $handler,
+            'path' => !empty($path) ? $path : '/',
+            'node' => $node,
+            'meta' => $node->getMeta($verb),
+            'verb' => $verb
+        ];
 
         return $this;
     }
@@ -335,8 +333,8 @@ class Router
      */
     public function name(string $name): self
     {
-        if (!empty($this->lastEntry->path())) {
-            $this->URLBuilder->add($name, $this->lastEntry->path(), $this->lastEntry->verb());
+        if (!empty($this->lastEntry['path'])) {
+            $this->URLBuilder->add($name, $this->lastEntry['path'], $this->lastEntry['verb']);
         }
 
         return $this;
@@ -351,8 +349,8 @@ class Router
      */
     public function attributes(array $attributes): self
     {
-        if ($this->lastEntry->meta()) {
-            $this->lastEntry->meta()->setAttributes($attributes);
+        if (!empty($this->lastEntry['meta'])) {
+            $this->lastEntry['meta']->setAttributes($attributes);
         }
 
         return $this;
@@ -361,8 +359,8 @@ class Router
 
     public function middlewares(array $middlewares): self
     {
-        if ($this->lastEntry->meta()) {
-            $this->lastEntry->meta()->addMiddlewares($middlewares);
+        if (!empty($this->lastEntry['meta'])) {
+            $this->lastEntry['meta']->addMiddlewares($middlewares);
         }
 
         return $this;

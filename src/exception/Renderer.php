@@ -112,10 +112,13 @@ class Renderer
         RequestStack::replaceCurrent($errorRequest);
 
         // 3. Try resolving a dedicated error page
-        $errorRoute = Route::resolveErrorPage($exceptionContext->code());
+        $errorRoute = Route::resolveErrorPage(
+            $exceptionContext->code(),
+            $requestContext->getMethod()
+        );
 
         if ($errorRoute !== null) {
-            return Route::dispatchRoute($errorRoute, $errorRequest);
+            return Route::dispatch($errorRequest, $errorRoute);
         }
 
         // 4. Fallback to default error response

@@ -4,6 +4,7 @@ namespace Arbor\http\traits;
 
 use Arbor\http\Response;
 use Throwable;
+use RuntimeException;
 
 /**
  * Trait for normalizing responses into a standardized Response object format.
@@ -27,27 +28,41 @@ trait ResponseNormalizerTrait
      */
     protected function ensureValidResponse(mixed $response): Response
     {
+        // Handle explicit null as 204 No Content
+        if ($response === null) {
+            return new Response('', 204, []);
+        }
+
         if ($response instanceof Response) {
             return $response;
-        } elseif (is_array($response)) {
+        }
+
+        if (is_array($response)) {
+            $json = json_encode($response, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+
+            if ($json === false) {
+                throw new RuntimeException(
+                    'Failed to encode JSON: ' . json_last_error_msg()
+                );
+            }
+
             return new Response(
-                json_encode($response) ?: '',
+                $json,
                 200,
                 ['Content-Type' => 'application/json'],
             );
-        } elseif (is_string($response)) {
+        }
+
+        if (is_string($response)) {
             return new Response(
                 $response,
                 200,
                 ['Content-Type' => 'text/plain'],
             );
-        } else {
-            return new Response(
-                '',
-                200,
-                ['Content-Type' => 'text/plain'],
-            );
         }
+
+        // throw for other types (bool, int, objects, etc)
+        throw new RuntimeException("Response is not in valid format");
     }
 
     /**

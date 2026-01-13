@@ -255,7 +255,10 @@ class App
     public function boot(): self
     {
         // Set error display contextually
-        $this->environmentContext();
+        $this->errorsDisplay();
+
+        // Bind Exception Handler
+        $this->bindExceptionHandler();
 
         // load helper functions.
         Helpers::load();
@@ -279,9 +282,6 @@ class App
 
         // set environment
         $this->configurator->set('root.environment', $this->environment);
-
-        // Bind Exception Handler
-        $this->bindExceptionHandler();
 
         // load service providers
         $this->loadProviders();
@@ -326,20 +326,20 @@ class App
      * 
      * @internal This method is called automatically during boot()
      */
-    protected function environmentContext(): void
+    protected function errorsDisplay(): void
     {
-        if ($this->environment === 'production') {
-            ini_set('display_errors', '0');
-        } else {
+        if ($this->isDebug()) {
             ini_set('display_errors', '1');
             error_reporting(E_ALL);
+        } else {
+            ini_set('display_errors', '0');
         }
     }
 
 
     protected function bindExceptionHandler()
     {
-        (new ExceptionKernel($this->configurator->get('root.is_debug')))->bind();
+        (new ExceptionKernel($this->isDebug()))->bind();
     }
 
     /**
@@ -440,24 +440,11 @@ class App
      *
      * @return bool True if debug mode is enabled, false otherwise
      * 
-     * @example
-     * ```php
-     * if ($app->isDebug()) {
-     *     // Enable verbose logging
-     *     // Show detailed error pages
-     * }
      * ```
      */
     protected function isDebug(): bool
     {
-        // Default is false.
-        $isDebug = false;
-
-        // Override with configuration if set, otherwise use the default.
-        $isDebug = $this->configurator->get('root.is_debug', $isDebug);
-
-        // Environment override: false if production.
-        return $this->environment == 'production' ? false : $isDebug;
+        return $this->environment === 'development';
     }
 
     /**

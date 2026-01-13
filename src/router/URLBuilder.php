@@ -118,33 +118,38 @@ final class URLBuilder
     {
         $index = 0;
 
-        return (string) preg_replace_callback(
-            '/\{([^}]+)\}/',
+        $result = preg_replace_callback(
+            '/\{([a-zA-Z0-9_]+)([?*]+)?\}/',
             function (array $matches) use ($parameters, &$index): string {
-                $placeholder = $matches[1];
-                $isOptional = str_ends_with($placeholder, '?');
-                $paramName = $isOptional ? substr($placeholder, 0, -1) : $placeholder;
+                $paramName = $matches[1];
+                $mods = $matches[2] ?? '';
 
-                // Named parameter check
+                $isOptional = str_contains($mods, '?');
+                $isGreedy   = str_contains($mods, '*');
+
+                // named param
                 if (array_key_exists($paramName, $parameters)) {
                     return (string) $parameters[$paramName];
                 }
 
-                // Indexed parameter check
+                // indexed param
                 if (array_key_exists($index, $parameters)) {
                     return (string) $parameters[$index++];
                 }
 
-                // Handle optional parameters
-                if ($isOptional) {
+                // optional & greedy both drop if missing
+                if ($isOptional || $isGreedy) {
                     return '';
                 }
 
-                throw new Exception(
-                    "Missing required parameter: '{$placeholder}' for URL segment: '{$matches[0]}'"
-                );
+                // required fails
+                throw new \Exception("Missing parameter: '{$paramName}'");
             },
             $url
         );
+
+        $result = normalizeURLSlashes($result);
+
+        return $result === '' ? '/' : $result;
     }
 }

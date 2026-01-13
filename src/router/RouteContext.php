@@ -9,7 +9,8 @@ use Arbor\router\Meta;
  * Represents the context of a matched route.
  * 
  * Contains all information about a route match including the path, HTTP verb,
- * status code, handler, middlewares, parameters, and metadata.
+ * handler, middlewares, parameters, and metadata.
+ * 
  */
 final class RouteContext
 {
@@ -18,7 +19,6 @@ final class RouteContext
      * 
      * @param string $path The matched route path
      * @param string $verb The HTTP verb (GET, POST, etc.)
-     * @param int $statusCode The HTTP status code for this context
      * @param Node|null $node The matched route node, if any
      * @param Meta|null $meta Route metadata, if any
      * @param array $parameters Extracted route parameters
@@ -28,45 +28,14 @@ final class RouteContext
     public function __construct(
         private string $path,
         private string $verb,
-        private int $statusCode,
         private ?Node $node,
         private ?Meta $meta,
         private array $parameters,
         private string|array $handler,
         private array $middlewares,
-        private string $routeName = ''
+        private string $routeName = '',
     ) {}
     
-    /* -----------------------------------------------------------------
-     | Named constructors
-     |-----------------------------------------------------------------*/
-
-    /**
-     * Creates an error route context.
-     * 
-     * @param string $path The requested path
-     * @param string $verb The HTTP verb
-     * @param int $statusCode The error status code (e.g., 404, 405)
-     * @param string|array $handler The error handler
-     * @return self
-     */
-    public static function error(
-        string $path,
-        string $verb,
-        int $statusCode,
-        string|array $handler,
-    ): self {
-        return new self(
-            path: $path,
-            verb: $verb,
-            statusCode: $statusCode,
-            node: null,
-            meta: null,
-            parameters: [],
-            handler: $handler,
-            middlewares: [],
-        );
-    }
     
     /* -----------------------------------------------------------------
      | Identity
@@ -92,35 +61,6 @@ final class RouteContext
         return $this->verb;
     }
 
-    /**
-     * Gets the HTTP status code.
-     * 
-     * @return int
-     */
-    public function statusCode(): int
-    {
-        return $this->statusCode;
-    }
-
-    /**
-     * Checks if this is an error context (status >= 400).
-     * 
-     * @return bool
-     */
-    public function isError(): bool
-    {
-        return $this->statusCode >= 400;
-    }
-
-    /**
-     * Checks if this is a successful context (status < 400).
-     * 
-     * @return bool
-     */
-    public function isSuccessful(): bool
-    {
-        return $this->statusCode < 400;
-    }
 
     /* -----------------------------------------------------------------
      | Handler & middlewares

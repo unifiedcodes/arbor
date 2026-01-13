@@ -7,12 +7,12 @@ use Arbor\router\Registry;
 use Arbor\router\Group;
 use Arbor\router\Dispatcher;
 use Arbor\router\URLBuilder;
+use Arbor\router\ErrorRouter;
 use Arbor\http\context\RequestContext;
 use Arbor\pipeline\PipelineFactory;
 use Arbor\router\RouteMethods;
 use Arbor\http\Response;
 use Exception;
-use Throwable;
 use Arbor\attributes\ConfigValue;
 use Arbor\facades\RequestStack;
 
@@ -55,6 +55,14 @@ class Router
 
 
     /**
+     * URLBuilder instance.
+     *
+     * @var ErrorRouter
+     */
+    protected ErrorRouter $errorRouter;
+
+
+    /**
      * Pending group options to be applied for route grouping.
      *
      * @var array
@@ -65,9 +73,9 @@ class Router
     /**
      * Keeps last added path, node, meta.
      *
-     * @var array
+     * @var RouteContext
      */
-    protected array $lastEntry;
+    protected RouteContext $lastEntry;
 
 
     /**
@@ -78,11 +86,15 @@ class Router
     public function __construct(
         protected Dispatcher $dispatcher,
         #[ConfigValue('root.uri')]
-        protected string $baseURI
+        protected string $baseURI,
+
+        #[ConfigValue('app.uri_prefix')]
+        protected string $urlPrefix,
     ) {
         $this->registry = new Registry();
         $this->group = new Group();
         $this->URLBuilder = new URLBuilder($baseURI);
+        $this->errorRouter = new ErrorRouter();
     }
 
     /**
@@ -195,38 +207,29 @@ class Router
             isset($groupId) ? $groupId : null
         );
 
-        $this->lastEntry = [
-            'path' => !empty($path) ? $path : '/',
-            'node' => $node,
-            'meta' => $node->getMeta($verb),
-            'verb' => $verb
-        ];
+
+        // keeping context of just added route.
+        $this->lastEntry = new RouteContext(
+            path: $path,
+            verb: $verb,
+            node: $node,
+            meta: $node->getMeta($verb),
+            handler: $handler,
+            parameters: [],
+            middlewares: [],
+        );
 
         return $this;
     }
 
-    /**
-     * Resolves an incoming HTTP request to a matching route.
-     *
-     * Extracts the path and verb from the request, finds a corresponding route,
-     * aggregates middlewares from any associated group, and returns the match.
-     *
-     * @param RequestContext $request The incoming HTTP request.
-     *
-     * @return RouteContext An associative array containing route details (node, handler, middlewares, parameters)
-     *                    if a match is found; otherwise, null.
-     *
-     * @throws Exception If route matching fails.
-     */
-    public function resolve(RequestContext $request): RouteContext
-    {
-        // Extract path and verb from the request.
-        $path = $request->getRelativePath();
-        $verb = $request->getMethod();
 
+    public function resolve(string $path, string $verb, ?string $fallback = null): RouteContext
+    {
         // Find a route match.
-        $routeContext = $this->registry->matchPath($path, $verb)
-            ->withRouteName($this->getRouteName($path, $verb));
+        $routeContext = $this->registry->matchPath($path, $verb, $fallback)
+            ->withRouteName(
+                $this->getRouteName($path, $verb)
+            );
 
         $groupId = $routeContext->groupId();
 
@@ -242,29 +245,36 @@ class Router
             );
         }
 
-        // replacing current request context in requeststack.
+        return $routeContext;
+    }
+
+
+    public function resolveHTTP(RequestContext $request): RouteContext
+    {
+        // Extract path and verb from the request.
+        $path = $request->getRelativePath();
+        $verb = $request->getMethod();
+
+        $routeContext = $this->resolve($path, $verb);
+
+        // replacing current request context in requeststack, with added routecontext.
         RequestStack::replaceCurrent($request->withRoute($routeContext));
 
         return $routeContext;
     }
 
 
-    public function resolveErrorPage(int $errorCode): ?RouteContext
+    public function resolveErrorPage(int $errorCode, string $verb): RouteContext
     {
-        // Retrieve error page handler based on the exception code.
-        $errorHandler = $this->registry->getErrorPage($errorCode);
+        $basePath = $this->urlPrefix . '/__error__/';
 
-        if ($errorHandler) {
-            return RouteContext::error(
-                path: '',
-                verb: '',
-                statusCode: $errorCode,
-                handler: $errorHandler,
-            );
-        }
+        $path = $basePath . $errorCode;
 
-        return null;
+        $fallbackPath = $basePath . 'default';
+
+        return $this->resolve($path, $verb, $fallbackPath);
     }
+
 
     /**
      * Loads error page handlers from a file and registers them with the Registry.
@@ -300,25 +310,21 @@ class Router
      * and returns a response.
      *
      * @param RequestContext         $request         The HTTP request.
-     * @param PipelineFactory $pipelineFactory The pipeline factory instance.
+     * @param RouteContext           $route           The resolved route context.
      *
      * @return Response The response returned by the dispatcher.
      * 
      */
-    public function dispatch(RequestContext $request): Response
+    public function dispatch(RequestContext $request, ?RouteContext $route = null): Response
     {
+        // If route is provided, use it; otherwise resolve it
+        $resolvedRoute = $route ?? $this->resolveHTTP($request);
+
         return $this->dispatcher->dispatch(
-            $this->resolve($request), //route
+            $resolvedRoute,
             $request
         );
     }
-
-
-    public function dispatchRoute(RouteContext $route, RequestContext $request): Response
-    {
-        return $this->dispatcher->dispatch($route, $request);
-    }
-
 
     /**
      * Adds named registry to URLBuilder.
@@ -329,8 +335,8 @@ class Router
      */
     public function name(string $name): self
     {
-        if (!empty($this->lastEntry['path'])) {
-            $this->URLBuilder->add($name, $this->lastEntry['path'], $this->lastEntry['verb']);
+        if (!empty($this->lastEntry->path())) {
+            $this->URLBuilder->add($name, $this->lastEntry->path(), $this->lastEntry->verb());
         }
 
         return $this;
@@ -345,8 +351,8 @@ class Router
      */
     public function attributes(array $attributes): self
     {
-        if (!empty($this->lastEntry['meta'])) {
-            $this->lastEntry['meta']->setAttributes($attributes);
+        if ($this->lastEntry->meta()) {
+            $this->lastEntry->meta()->setAttributes($attributes);
         }
 
         return $this;
@@ -355,8 +361,8 @@ class Router
 
     public function middlewares(array $middlewares): self
     {
-        if (!empty($this->lastEntry['meta'])) {
-            $this->lastEntry['meta']->addMiddlewares($middlewares);
+        if ($this->lastEntry->meta()) {
+            $this->lastEntry->meta()->addMiddlewares($middlewares);
         }
 
         return $this;
@@ -404,5 +410,10 @@ class Router
     public function getGroupById($id)
     {
         return $this->group->getGroupById($id);
+    }
+
+    public function error(): ErrorRouter
+    {
+        return $this->errorRouter;
     }
 }

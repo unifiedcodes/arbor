@@ -339,10 +339,15 @@ class Registry
      *
      * @throws Exception If no matching route is found or the HTTP verb is not allowed.
      */
-    public function matchPath(string $path, string $verb): RouteContext
+    public function matchPath(string $path, string $verb, ?string $fallbackPath = null): RouteContext
     {
         $verb = strtoupper($verb);
         $found = $this->findNode($path);
+
+        // Try fallback if primary fails
+        if (!$found && $fallbackPath !== null && $fallbackPath !== $path) {
+            $found = $this->findNode($fallbackPath);
+        }
 
         if (!$found) {
             throw new Exception('Not Found', 404);
@@ -389,7 +394,6 @@ class Registry
             parameters: $parameters,
             handler: $handler,
             middlewares: $middlewares,
-            statusCode: 200
         );
     }
 

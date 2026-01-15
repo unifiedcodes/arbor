@@ -7,8 +7,8 @@ use Arbor\config\ResolverContext;
 final class TypeCastExpression implements ExpressionInterface
 {
     public function __construct(
-        private readonly string $type,
         private readonly mixed $value,
+        private readonly string $type,
     ) {}
 
     public function resolve(ResolverContext $ctx): mixed

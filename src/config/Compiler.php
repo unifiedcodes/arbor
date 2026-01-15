@@ -10,7 +10,9 @@ use Arbor\config\ResolverContext;
 
 final class Compiler
 {
-    public function __construct(protected Registry $registry) {}
+    public function __construct(
+        protected Registry $registry
+    ) {}
 
     public function compile(array $data): mixed
     {

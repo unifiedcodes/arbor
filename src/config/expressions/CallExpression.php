@@ -11,7 +11,7 @@ final class CallExpression implements ExpressionInterface
 {
     public function __construct(
         protected readonly string $value,
-        protected readonly Closure $callback
+        protected readonly Closure|string $callback
     ) {}
 
 

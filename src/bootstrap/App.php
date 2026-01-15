@@ -277,11 +277,8 @@ class App
         // load environment specific app configuration
         $this->scopeConfig();
 
-        // set debug status
-        $this->configurator->set('root.is_debug', $this->isDebug());
-
-        // set environment
-        $this->configurator->set('root.environment', $this->environment);
+        // compile configurations
+        $this->finalizeConfig();
 
         // load service providers
         $this->loadProviders();
@@ -305,12 +302,11 @@ class App
      */
     protected function setRootURI(): void
     {
-        if (!empty($this->configurator->get('root.uri'))) {
-            // root uri is set by user.
+        if (!empty($this->configurator->touch('root.uri'))) {
             return;
         }
 
-        $this->rootURI = URLResolver::detectRootUri($this->configurator->get('root.front_controller'));
+        $this->rootURI = URLResolver::detectRootUri($this->configurator->touch('root.front_controller'));
 
         $this->configurator->set('root.uri', $this->rootURI);
     }
@@ -393,6 +389,8 @@ class App
     protected function scopeConfig(): void
     {
         $configScope = $this->container->make(AppConfigScope::class, [
+            'rootDir' => $this->configurator->touch('root.dir'),
+            'rootUri' => $this->rootURI,
             'env' => $this->environment
         ]);
 
@@ -401,6 +399,19 @@ class App
         $configScope->scope(URLResolver::getAppKey(
             $this->rootURI
         ));
+    }
+
+
+    protected function finalizeConfig()
+    {
+        // set debug status
+        $this->configurator->set('root.is_debug', $this->isDebug());
+
+        // set environment
+        $this->configurator->set('root.environment', $this->environment);
+
+        // compiling configurations.
+        $this->configurator->finalize();
     }
 
     /**

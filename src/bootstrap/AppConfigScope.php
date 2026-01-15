@@ -4,7 +4,6 @@ namespace Arbor\bootstrap;
 
 use Exception;
 use Arbor\config\Configurator;
-use Arbor\attributes\ConfigValue;
 
 /**
  * AppConfigScope class
@@ -102,10 +101,8 @@ class AppConfigScope
     public function __construct(
         Configurator $configurator,
 
-        #[ConfigValue('root.uri')]
         string $rootUri,
 
-        #[ConfigValue('root.dir')]
         string $rootDir,
 
         string $env
@@ -167,6 +164,7 @@ class AppConfigScope
         }
 
         // Store all loaded app configurations in the global configurator
+        $this->installedApps = $appConfigs;
         $this->configurator->set('installed_apps', $appConfigs);
     }
 
@@ -197,12 +195,8 @@ class AppConfigScope
      */
     public function scope(string $app_key): void
     {
-        // Retrieve all installed applications from configurator
-        // The null default ensures we can detect missing configuration
-        $this->installedApps = $this->configurator->get('installed_apps', null);
-
         // Validate that applications are configured
-        if (!$this->installedApps) {
+        if (empty($this->installedApps)) {
             throw new Exception("Configuration error: 'installed_apps' key is missing or contains an empty app list.");
         }
 
@@ -239,7 +233,7 @@ class AppConfigScope
     {
         // Build absolute path to the application's config directory
         // Combines the global root directory with the app-specific config directory
-        $configs_dir = $this->configurator->get('root.dir') . DIRECTORY_SEPARATOR . $configs_dir;
+        $configs_dir = $this->rootDir . DIRECTORY_SEPARATOR . $configs_dir;
 
         // Delegate to configurator to merge all config files from the directory
         // The environment parameter ensures environment-specific configs are loaded

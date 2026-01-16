@@ -2,15 +2,37 @@
 
 namespace Arbor\config;
 
-
+use Arbor\support\Macros;
 use Exception;
 
-
+/**
+ * Registry class for managing application configuration.
+ * 
+ * Provides methods to load, merge, get, and set configuration values
+ * with support for environment-specific configurations and dot notation access.
+ */
 class Registry
 {
+    use Macros;
+    
+    /**
+     * The configuration data storage.
+     *
+     * @var array<string, mixed>
+     */
     protected array $config = [];
 
-
+    /**
+     * Load configuration files from a directory.
+     *
+     * Reads all PHP files from the specified directory and stores their returned
+     * arrays in the config registry. Files should return associative arrays.
+     *
+     * @param string $configPath The path to the configuration directory
+     * @param bool $merge Whether to merge with existing configuration (default: false)
+     * @return void
+     * @throws Exception If the directory doesn't exist or if a config file doesn't return an array
+     */
     public function loadConfig(string $configPath, bool $merge = false): void
     {
         $configPath = rtrim($configPath, '/') . '/';
@@ -40,7 +62,17 @@ class Registry
         }
     }
 
-
+    /**
+     * Recursively merge two arrays with distinct handling for different array types.
+     *
+     * Supports a special '!replace' flag to completely replace the base array.
+     * List arrays are merged using array_merge, while associative arrays are
+     * merged recursively with override values taking precedence.
+     *
+     * @param array<mixed> $base The base array
+     * @param array<mixed> $override The array to merge over the base
+     * @return array<mixed> The merged array
+     */
     protected function arrayMergeRecursiveDistinct(array $base, array $override): array
     {
         // Replace entire base array with override
@@ -69,8 +101,17 @@ class Registry
         return $base;
     }
 
-
-    public function mergeEnvironment($path, $environment)
+    /**
+     * Merge environment-specific configuration files.
+     *
+     * Loads configuration files from an environment subdirectory and merges them
+     * with the existing configuration.
+     *
+     * @param string $path The base configuration path
+     * @param string|null $environment The environment name (subdirectory)
+     * @return void
+     */
+    public function mergeEnvironment(string $path, ?string $environment): void
     {
         if ($environment !== null) {
             $envPath = rtrim($path, '/\\') . DIRECTORY_SEPARATOR . $environment;
@@ -80,7 +121,16 @@ class Registry
         }
     }
 
-
+    /**
+     * Set a configuration value using dot notation.
+     *
+     * Creates nested arrays as needed to accommodate the key path.
+     * Example: set('database.host', 'localhost')
+     *
+     * @param string $key The configuration key in dot notation
+     * @param mixed $value The value to set
+     * @return void
+     */
     public function set(string $key, mixed $value): void
     {
         $keys = explode('.', $key);
@@ -96,7 +146,18 @@ class Registry
         $config = $value;
     }
 
-
+    /**
+     * Get a configuration value using dot notation.
+     *
+     * Retrieves a value from the configuration using dot notation to traverse
+     * nested arrays. Returns a default value if provided and key not found,
+     * otherwise throws an exception.
+     *
+     * @param string $key The configuration key in dot notation
+     * @param mixed $default Optional default value if key not found
+     * @return mixed The configuration value
+     * @throws Exception If the key is not found and no default is provided
+     */
     public function get(string $key, mixed $default = null): mixed
     {
         $hasDefault = func_num_args() === 2;
@@ -118,19 +179,40 @@ class Registry
         return $value;
     }
 
-
+    /**
+     * Get a deep copy of all configuration data.
+     *
+     * Returns a complete copy of the configuration array to prevent
+     * external modifications to the internal state.
+     *
+     * @return array<string, mixed> A copy of all configuration data
+     */
     public function all(): array
     {
         return unserialize(serialize($this->config));
     }
 
-
+    /**
+     * Get a reference to the raw configuration array.
+     *
+     * WARNING: Returns the actual internal configuration array,
+     * allowing direct modifications. Use with caution.
+     *
+     * @return array<string, mixed> The raw configuration array
+     */
     public function getRaw(): array
     {
         return $this->config;
     }
 
-
+    /**
+     * Replace the entire configuration array.
+     *
+     * Completely replaces the current configuration with the provided array.
+     *
+     * @param array<string, mixed> $config The new configuration array
+     * @return void
+     */
     public function replace(array $config): void
     {
         $this->config = $config;

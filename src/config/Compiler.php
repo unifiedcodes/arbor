@@ -28,7 +28,7 @@ final class Compiler
      * @param array<mixed> $data The configuration data to compile
      * @return mixed The compiled configuration with all expressions resolved
      */
-    public function compile(array $data): mixed
+    public function compile(mixed $data): mixed
     {
         $ctx = new ResolverContext(
             registry: $this->registry,

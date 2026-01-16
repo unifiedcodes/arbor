@@ -4,6 +4,7 @@ namespace Arbor\config;
 
 use Arbor\config\expressions\CallExpression;
 use Arbor\config\expressions\TypeCastExpression;
+use Arbor\config\ExpressionPipeline;
 use Closure;
 use InvalidArgumentException;
 
@@ -71,5 +72,11 @@ class Expr
     public static function cast($value, string $type): TypeCastExpression
     {
         return new TypeCastExpression($value, $type);
+    }
+
+
+    public static function val(string $value): ExpressionPipeline
+    {
+        return (new ExpressionPipeline($value));
     }
 }

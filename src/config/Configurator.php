@@ -207,7 +207,8 @@ class Configurator
      * @param callable $callable The callable to execute when the macro is invoked
      * @return void
      */
-    public function macro(string $name, callable $callable): void {
+    public function macro(string $name, callable $callable): void
+    {
         $this->registry->addMacro($name, $callable);
     }
 }

@@ -194,8 +194,8 @@ class Configurator
             $value = $this->registry->get($key);
         }
 
-        if ($value instanceof ExpressionInterface) {
-            throw new Exception("Cannot touch config '{$key}' is an expression, touchable keys should have static value.", 1);
+        if (!$this->finalized) {
+            $value = $this->compiler->compile($value);
         }
 
         return $value;

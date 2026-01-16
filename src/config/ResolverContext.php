@@ -12,6 +12,7 @@ use LogicException;
  * This class acts as a resolution context that maintains a reference to a registry
  * and an optional resolver callable. It provides methods to access static macros,
  * instance macros, global functions, and registry references.
+ * @package Arbor\config
  */
 final class ResolverContext
 {

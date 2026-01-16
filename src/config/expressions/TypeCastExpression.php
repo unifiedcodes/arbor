@@ -18,6 +18,8 @@ use RuntimeException;
  * - json: Parse JSON string or encode/decode value
  * 
  * The inner value is resolved first to support nested expressions.
+ * 
+ * @package Arbor\config\expressions
  */
 final class TypeCastExpression implements ExpressionInterface
 {

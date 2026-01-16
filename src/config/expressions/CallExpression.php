@@ -54,7 +54,7 @@ final class CallExpression implements ExpressionInterface
         }
 
         // static macro
-        if ($ctx->hasStatic($this->callback)) { 
+        if ($ctx->hasStatic($this->callback)) {
             $callable = $ctx->getStatic($this->callback);
             return $callable($value, ...$this->args);
         }

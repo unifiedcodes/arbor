@@ -14,7 +14,7 @@ use Exception;
 class Registry
 {
     use Macros;
-    
+
     /**
      * The configuration data storage.
      *

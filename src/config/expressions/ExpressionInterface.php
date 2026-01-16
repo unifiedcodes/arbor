@@ -10,6 +10,7 @@ use Arbor\config\ResolverContext;
  * Expressions represent values that need to be resolved using a context,
  * such as references to other configuration values, environment variables,
  * or computed values.
+ * @package Arbor\config\expressions
  */
 interface ExpressionInterface
 {

@@ -10,6 +10,8 @@ use Exception;
  * 
  * Provides methods to load, merge, get, and set configuration values
  * with support for environment-specific configurations and dot notation access.
+ * 
+ * @package Arbor\config
  */
 class Registry
 {

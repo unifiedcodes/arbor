@@ -11,6 +11,7 @@ use Arbor\config\ResolverContext;
  * 
  * This compiler processes configuration arrays, detects DSL expressions in strings,
  * and recursively resolves all expressions using the provided registry.
+ * @package Arbor\config
  */
 final class Compiler
 {

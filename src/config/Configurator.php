@@ -12,6 +12,7 @@ use Exception;
  * This class provides a two-phase configuration system:
  * - Before finalization: configuration can be mutated (set, merge)
  * - After finalization: configuration is compiled and can only be accessed (get, all)
+ * @package Arbor\config
  */
 class Configurator
 {

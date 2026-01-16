@@ -13,6 +13,7 @@ use InvalidArgumentException;
  * 
  * Provides static factory methods for creating various types of expressions
  * used in configuration processing, including callback expressions and type casts.
+ * @package Arbor\config
  */
 class Expr
 {

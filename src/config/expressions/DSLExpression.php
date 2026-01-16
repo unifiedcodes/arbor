@@ -15,6 +15,8 @@ use Throwable;
  * - Supports recursive resolution through the context
  * 
  * Example: {DATABASE_URL|DB_CONNECTION|mysql://localhost}
+ * 
+ * @package Arbor\config\expressions
  */
 final class DSLExpression implements ExpressionInterface
 {

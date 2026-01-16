@@ -65,22 +65,30 @@ final class DSLExpression implements ExpressionInterface
      */
     private function resolveReferenceBlock(string $block, ResolverContext $ctx): mixed
     {
-        $parts = explode('|', $block);
+        // detect default using '?'
+        $default = null;
+        $hasDefault = false;
 
-        // last part = default literal
-        $default = array_pop($parts);
+        if (str_contains($block, '?')) {
+            // split into before '?' and default after '?'
+            [$before, $default] = explode('?', $block, 2);
+            $hasDefault = true;
+        } else {
+            $before = $block;
+        }
+
+        // now split keys by '|'
+        $parts = $before === '' ? [] : explode('|', $before);
 
         foreach ($parts as $key) {
-
-            // recursive resolution via context
             $value = $this->resolveKey($key, $ctx);
-
             if ($value !== '__not_found_value__') {
                 return $value;
             }
         }
 
-        return $default;
+        // fallback
+        return $hasDefault ? $default : null; // or return $block unchanged if you prefer
     }
 
     /**

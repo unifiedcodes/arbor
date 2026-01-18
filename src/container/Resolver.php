@@ -137,11 +137,6 @@ class Resolver
             } else {
                 // For non-static, resolve the instance if class name is provided.
                 $instance = is_string($class) ? $this->get($class) : $class;
-
-                if (!method_exists($instance, $method)) {
-                    throw new Exception("Method '{$method}' does not exist on class " . get_class($instance));
-                }
-
                 return $this->invokeMethod($instance, $method, $customParams);
             }
         }

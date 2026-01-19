@@ -6,6 +6,7 @@ namespace Arbor\attributes;
 use Attribute;
 use Arbor\contracts\metadata\AttributeInterface;
 use Arbor\config\Configurator;
+use Arbor\facades\Config;
 use Exception;
 
 /**
@@ -28,13 +29,6 @@ class ConfigValue implements AttributeInterface
     protected mixed $default;
 
     /**
-     * The Config instance used to resolve the value.
-     *
-     * @var Configurator|null
-     */
-    protected ?Configurator $config = null;
-
-    /**
      * ConfigValue constructor.
      *
      * @param string $key The configuration key.
@@ -52,9 +46,8 @@ class ConfigValue implements AttributeInterface
      *
      * @return void
      */
-    public function require(Configurator $config): void
+    public function require(): void
     {
-        $this->config = $config;
     }
 
     /**
@@ -66,10 +59,6 @@ class ConfigValue implements AttributeInterface
      */
     public function resolve(): mixed
     {
-        if ($this->config === null) {
-            throw new Exception("Config instance not found.");
-        }
-
-        return $this->config->get($this->key, $this->default);
+        return Config::get($this->key, $this->default);
     }
 }

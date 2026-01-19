@@ -2,10 +2,12 @@
 
 namespace Arbor\file;
 
+use finfo;
 use Exception;
 use RuntimeException;
 use Arbor\attributes\ConfigValue;
 use Arbor\http\components\UploadedFile;
+
 
 /**
  * File Uploader Component
@@ -177,9 +179,9 @@ class Uploader
         }
 
         // finding mime type from the file.
-        $finfo = finfo_open(FILEINFO_MIME_TYPE);
-        $mimeType = finfo_file($finfo, $file->getStream()->getMetadata('uri'));
-        finfo_close($finfo);
+        $finfo = new finfo(FILEINFO_MIME_TYPE);
+        $mimeType = $finfo->file($file->getStream()->getMetadata('uri'));
+
 
         // if client media type and finfo mimetype doesn't match, assume a spoof upload.
         if ($file->getClientMediaType() !== $mimeType) {

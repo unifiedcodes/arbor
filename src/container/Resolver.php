@@ -342,12 +342,10 @@ class Resolver
     {
         foreach ($attributes as $attribute) {
             $instance = $attribute->newInstance();
-            if (method_exists($instance, 'require')) {
-                $this->invokeMethod($instance, 'require');
-            }
-            if (method_exists($instance, 'resolve')) {
-                return $instance->resolve();
-            }
+            
+            $this->invokeMethod($instance, 'require');
+            
+            return $instance->resolve();
         }
 
         return null;

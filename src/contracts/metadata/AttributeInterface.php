@@ -21,4 +21,6 @@ interface AttributeInterface
      * @return mixed The resolved injection value.
      */
     public function resolve(): mixed;
+
+    public function require(): void;
 }

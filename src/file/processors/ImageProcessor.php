@@ -2,7 +2,7 @@
 
 namespace Arbor\files\Processors;
 
-use Arbor\contracts\file\FileProcessorInterface;
+use Arbor\file\FileProcessorInterface;
 
 class ImageProcessor implements FileProcessorInterface
 {

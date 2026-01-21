@@ -2,7 +2,7 @@
 
 namespace Arbor\container;
 
-use Arbor\contracts\container\ContainerInterface;
+use Arbor\container\ContainerInterface;
 
 use Arbor\container\Registry;
 use Arbor\container\Resolver;

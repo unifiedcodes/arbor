@@ -1,6 +1,6 @@
 <?php
 
-namespace Arbor\contracts\file;
+namespace Arbor\file;
 
 
 interface FileProcessorInterface

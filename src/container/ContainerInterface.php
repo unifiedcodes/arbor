@@ -1,6 +1,6 @@
 <?php
 
-namespace Arbor\contracts\Container;
+namespace Arbor\container;
 
 /**
  * Describes the interface of a container that exposes methods to read its entries.

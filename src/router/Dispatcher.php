@@ -6,7 +6,7 @@ use Arbor\http\context\RequestContext;
 use Arbor\http\Response;
 use Arbor\pipeline\PipelineFactory;
 use Arbor\router\RouteContext;
-use Arbor\attributes\ConfigValue;
+use Arbor\config\ConfigValue;
 
 /**
  * Class Dispatcher

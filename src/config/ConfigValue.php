@@ -1,10 +1,10 @@
 <?php
 
-namespace Arbor\attributes;
+namespace Arbor\config;
 
 
 use Attribute;
-use Arbor\contracts\metadata\AttributeInterface;
+use Arbor\container\AttributeInterface;
 use Arbor\config\Configurator;
 use Arbor\facades\Config;
 use Exception;
@@ -46,9 +46,7 @@ class ConfigValue implements AttributeInterface
      *
      * @return void
      */
-    public function require(): void
-    {
-    }
+    public function require(): void {}
 
     /**
      * Resolves and returns the configuration value for the given key.

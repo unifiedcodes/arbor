@@ -3,7 +3,7 @@
 namespace Arbor\flash;
 
 use InvalidArgumentException;
-use Arbor\Contracts\session\SessionInterface;
+use Arbor\session\SessionInterface;
 
 /**
  * Flash Message Manager

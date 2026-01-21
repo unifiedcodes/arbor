@@ -5,7 +5,7 @@ namespace Arbor\file;
 use finfo;
 use Exception;
 use RuntimeException;
-use Arbor\attributes\ConfigValue;
+use Arbor\config\ConfigValue;
 use Arbor\http\components\UploadedFile;
 
 

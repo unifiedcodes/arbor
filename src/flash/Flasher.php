@@ -2,7 +2,7 @@
 
 namespace Arbor\flash;
 
-use Arbor\attributes\ConfigValue;
+use Arbor\config\ConfigValue;
 use Arbor\flash\Message;
 use Arbor\flash\View;
 

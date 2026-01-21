@@ -2,7 +2,7 @@
 
 namespace Arbor\session;
 
-use Arbor\Contracts\session\SessionInterface;
+use Arbor\session\SessionInterface;
 use RuntimeException;
 use InvalidArgumentException;
 

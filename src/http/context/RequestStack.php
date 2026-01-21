@@ -2,8 +2,8 @@
 
 namespace Arbor\http\context;
 
-use Arbor\contracts\http\RequestStackWR;
-use Arbor\contracts\http\RequestStackRO;
+use Arbor\http\RequestStackWRInterface;
+use Arbor\http\RequestStackROInterface;
 use Arbor\http\Request;
 
 
@@ -17,7 +17,7 @@ use Arbor\http\Request;
  * 
  * @package Arbor\http\context
  */
-class RequestStack implements RequestStackRO, RequestStackWR
+class RequestStack implements RequestStackROInterface, RequestStackWRInterface
 {
     /**
      * The stack of request contexts.

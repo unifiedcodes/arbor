@@ -1,17 +1,15 @@
 <?php
 
+namespace Arbor\validation;
+
 /**
  * Arbor Validation Contracts
  * 
  * This file contains the RuleListInterface contract for the Arbor validation system.
  * 
- * @package Arbor\contracts\validation
- * @author  Your Name
- * @version 1.0.0
- * @since   1.0.0
+ * @package Arbor\validation
  */
 
-namespace Arbor\contracts\validation;
 
 /**
  * Rule List Interface

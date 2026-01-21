@@ -1,6 +1,6 @@
 <?php
 
-namespace Arbor\contracts\http;
+namespace Arbor\http;
 
 use Arbor\http\context\RequestContext;
 
@@ -17,10 +17,10 @@ use Arbor\http\context\RequestContext;
  * - Retrieving the depth of the request stack.
  * - Converting the stack to a summary array.
  * 
- * @package Arbor\contracts
+ * @package Arbor\http
  * 
  */
-interface RequestStackRO
+interface RequestStackROInterface
 {
     /**
      * Get the current RequestContext in the stack.

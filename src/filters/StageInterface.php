@@ -1,6 +1,6 @@
 <?php
 
-namespace Arbor\contracts\filters;
+namespace Arbor\filters;
 
 /**
  * Stage Interface
@@ -12,7 +12,7 @@ namespace Arbor\contracts\filters;
  * This interface follows the middleware pattern where each stage receives
  * the input data and a callable representing the next stage in the pipeline.
  * 
- * @package Arbor\contracts\filters
+ * @package Arbor\filters
  */
 interface StageInterface
 {

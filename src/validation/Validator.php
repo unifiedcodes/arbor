@@ -9,8 +9,8 @@ use Arbor\validation\Registry;
 use Arbor\validation\Evaluator;
 use Arbor\validation\Definition;
 use Arbor\validation\ErrorsFormatter;
-use Arbor\contracts\validation\RuleInterface;
-use Arbor\contracts\validation\RuleListInterface;
+use Arbor\validation\RuleInterface;
+use Arbor\validation\RuleListInterface;
 
 /**
  * Validator Facade

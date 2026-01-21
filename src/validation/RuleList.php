@@ -2,7 +2,7 @@
 
 namespace Arbor\validation;
 
-use Arbor\contracts\validation\RuleListInterface;
+use Arbor\validation\RuleListInterface;
 use Arbor\validation\ValidationException;
 
 /**

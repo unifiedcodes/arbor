@@ -1,6 +1,6 @@
 <?php
 
-namespace Arbor\contracts\metadata;
+namespace Arbor\container;
 
 /**
  * Interface AttributeInterface
@@ -8,7 +8,7 @@ namespace Arbor\contracts\metadata;
  * Defines a contract for classes that provide attribute resolution,
  * typically used by dependency injection (DI) containers to resolve injection values.
  *
- * @package Arbor\contracts
+ * @package Arbor\container
  */
 interface AttributeInterface
 {

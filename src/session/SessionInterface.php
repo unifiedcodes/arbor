@@ -1,6 +1,6 @@
 <?php
 
-namespace Arbor\Contracts\session;
+namespace Arbor\session;
 
 /**
  * Session Contract

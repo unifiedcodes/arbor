@@ -2,7 +2,7 @@
 
 namespace Arbor\facades;
 
-use Arbor\contracts\container\ContainerInterface;
+use Arbor\container\ContainerInterface;
 use Exception;
 
 abstract class Facade

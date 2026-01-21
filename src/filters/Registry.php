@@ -7,8 +7,8 @@ use RuntimeException;
 use InvalidArgumentException;
 use RecursiveIteratorIterator;
 use RecursiveDirectoryIterator;
-use Arbor\contracts\filters\StageInterface;
-use Arbor\contracts\filters\StageListInterface;
+use Arbor\filters\StageInterface;
+use Arbor\filters\StageListInterface;
 
 /**
  * Registry class for managing filter stages

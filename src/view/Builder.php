@@ -5,7 +5,7 @@ namespace Arbor\view;
 use Exception;
 use Arbor\fragment\Fragment;
 use InvalidArgumentException;
-use Arbor\attributes\ConfigValue;
+use Arbor\config\ConfigValue;
 
 /**
  * HTML Document Builder

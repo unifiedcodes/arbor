@@ -3,7 +3,7 @@
 namespace Arbor\container;
 
 use Exception;
-use Arbor\contracts\container\ServiceProvider;
+use Arbor\container\ServiceProvider;
 
 /**
  * Class Providers

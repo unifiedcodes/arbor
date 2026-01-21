@@ -1,5 +1,10 @@
 <?php
 
+namespace Arbor\validation;
+
+use InvalidArgumentException;
+use RuntimeException;
+
 /**
  * RuleInterface - Contract for validation rules in the Arbor framework
  * 
@@ -7,10 +12,9 @@
  * It provides a standardized way to create and execute validation logic across
  * the application, ensuring consistency and maintainability.
  * 
- * @package Arbor\contracts\validation
+ * @package Arbor\validation
  */
 
-namespace Arbor\contracts\validation;
 
 /**
  * Interface RuleInterface
@@ -72,8 +76,8 @@ interface RuleInterface
      * 
      * @return bool True if validation passes, false if validation fails
      * 
-     * @throws \InvalidArgumentException When invalid data is provided to validate
-     * @throws \RuntimeException When validation cannot be performed due to system issues
+     * @throws InvalidArgumentException When invalid data is provided to validate
+     * @throws RuntimeException When validation cannot be performed due to system issues
      * 
      * @example
      * ```php

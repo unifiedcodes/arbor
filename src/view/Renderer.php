@@ -7,7 +7,7 @@ use Arbor\view\Builder;
 use Arbor\http\Response;
 use Arbor\fragment\Fragment;
 use InvalidArgumentException;
-use Arbor\attributes\ConfigValue;
+use Arbor\config\ConfigValue;
 
 /**
  * HTML Renderer Class

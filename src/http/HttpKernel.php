@@ -3,9 +3,9 @@
 namespace Arbor\http;
 
 use Arbor\router\Router;
-use Arbor\attributes\ConfigValue;
+use Arbor\config\ConfigValue;
 use Arbor\pipeline\PipelineFactory;
-use Arbor\contracts\middleware\StageInterface;
+use Arbor\pipeline\StageInterface;
 use Arbor\http\Response;
 use Arbor\http\Request;
 use Arbor\http\context\RequestContext;

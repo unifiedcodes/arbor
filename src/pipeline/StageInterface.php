@@ -1,6 +1,6 @@
 <?php
 
-namespace Arbor\contracts\middleware;
+namespace Arbor\pipeline;
 
 
 use Arbor\http\Response;
@@ -12,7 +12,7 @@ use Arbor\http\context\RequestContext;
  * Defines a contract for pipeline stage classes that process an incoming request,
  * optionally delegating further processing to the next stage in the pipeline.
  *
- * @package Arbor\contracts\pipeline
+ * @package Arbor\pipeline
  * 
  */
 interface StageInterface

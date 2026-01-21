@@ -6,7 +6,7 @@ use Closure;
 use Exception;
 use Arbor\view\Builder;
 use Arbor\fragment\Fragment;
-use Arbor\attributes\ConfigValue;
+use Arbor\config\ConfigValue;
 
 /**
  * ViewFactory - Elegant View Builder Management

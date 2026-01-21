@@ -1,8 +1,7 @@
 <?php
 
-namespace Arbor\contracts\container;
+namespace Arbor\container;
 
-use Arbor\contracts\Container\ContainerInterface;
 
 /**
  * Class ServiceProvider
@@ -11,7 +10,7 @@ use Arbor\contracts\Container\ContainerInterface;
  * to the container. Optionally, they can override the boot() method for additional initialization
  * and the provides() method for specifying deferred services.
  *
- * @package Arbor\Contracts
+ * @package Arbor\container
  */
 abstract class ServiceProvider
 {

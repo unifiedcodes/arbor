@@ -2,7 +2,7 @@
 
 namespace Arbor\filters;
 
-use Arbor\contracts\filters\StageListInterface;
+use Arbor\filters\StageListInterface;
 
 /**
  * StageList provides a collection of data filtering and sanitization stages

@@ -5,7 +5,7 @@ namespace Arbor\database\connection;
 use Throwable;
 use Exception;
 use InvalidArgumentException;
-use Arbor\attributes\ConfigValue;
+use Arbor\config\ConfigValue;
 
 /**
  * Class ConnectionPool

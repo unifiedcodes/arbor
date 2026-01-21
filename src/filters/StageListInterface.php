@@ -1,6 +1,6 @@
 <?php
 
-namespace Arbor\contracts\filters;
+namespace Arbor\filters;
 
 /**
  * Interface for classes that provide a list of available processing stages.
@@ -13,7 +13,7 @@ namespace Arbor\contracts\filters;
  * - mixed $input: The input data to be processed
  * - callable $next: The next stage in the pipeline (closure/callback)
  *
- * @package Arbor\contracts\filters
+ * @package Arbor\filters
  */
 interface StageListInterface
 {

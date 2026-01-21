@@ -3,7 +3,7 @@
 namespace Arbor\router;
 
 use Exception;
-use Arbor\attributes\ConfigValue;
+use Arbor\config\ConfigValue;
 
 
 /**

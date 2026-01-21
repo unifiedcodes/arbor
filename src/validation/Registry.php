@@ -6,8 +6,8 @@ use RuntimeException;
 use InvalidArgumentException;
 use RecursiveIteratorIterator;
 use RecursiveDirectoryIterator;
-use Arbor\contracts\validation\RuleInterface;
-use Arbor\contracts\validation\RuleListInterface;
+use Arbor\validation\RuleInterface;
+use Arbor\validation\RuleListInterface;
 
 /**
  * Registry class for managing validation rules

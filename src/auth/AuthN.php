@@ -26,22 +26,21 @@ class AuthNService
         }
 
         $userId = $user['id'] ?? null;
+
         if (!$userId) {
             throw new RuntimeException("User record missing id.");
         }
 
         $hash = $this->users->getPasswordHash($userId);
+
         if (!$hash || !password_verify($password, $hash)) {
             throw new RuntimeException("Invalid credentials.");
         }
 
-        // Issue tokens
-        $access = $this->jwt->create(['sub' => $userId], $this->accessTtl);
         $refresh = $this->refresh->issue($userId);
 
         return [
             'user' => $user,
-            'access_token' => $access,
             'refresh_token' => $refresh['refresh_token'],
             'expires_at' => time() + $this->accessTtl,
         ];

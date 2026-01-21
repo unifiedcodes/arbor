@@ -1,12 +1,12 @@
 <?php
 
-namespace Arbor\auth\jwt;
+namespace Arbor\auth;
 
 use Arbor\config\ConfigValue;
 use RuntimeException;
 
 
-class CryptoKeys
+class Keys
 {
     public function __construct(
         #[ConfigValue('root.keys_dir')]
@@ -45,6 +45,7 @@ class CryptoKeys
             'private' => $privateKey,
         ];
     }
+
 
     public function rotate(): string
     {
@@ -99,5 +100,60 @@ class CryptoKeys
         }
 
         return $private;
+    }
+
+
+    public function getActiveKid(): string
+    {
+        $activeFile = "{$this->keysPath}/active_kid";
+
+        if (!file_exists($activeFile)) {
+            throw new RuntimeException("No active key found. Run rotate() first.");
+        }
+
+        $kid = trim(file_get_contents($activeFile));
+        if ($kid === '') {
+            throw new RuntimeException("Active key ID is empty. Rotation may have failed.");
+        }
+
+        return $kid;
+    }
+
+
+    public function getPublicByKid(string $kid): string
+    {
+        $publicFile = "{$this->keysPath}/{$kid}.public";
+
+        if (!file_exists($publicFile)) {
+            throw new RuntimeException("Public key file not found for kid: {$kid}");
+        }
+
+        $base64 = file_get_contents($publicFile);
+        if ($base64 === false) {
+            throw new RuntimeException("Failed to read public key file for kid: {$kid}");
+        }
+
+        $public = base64_decode($base64, true);
+        if ($public === false) {
+            throw new RuntimeException("Public key for kid {$kid} is not valid base64.");
+        }
+
+        return $public;
+    }
+
+
+    public function toJWK(string $kid): array
+    {
+        $raw = $this->getPublicByKid($kid);
+
+        // base64url without padding
+        $x = rtrim(strtr(base64_encode($raw), '+/', '-_'), '=');
+
+        return [
+            'kty' => 'OKP',
+            'crv' => 'Ed25519',
+            'x'   => $x,
+            'kid' => $kid,
+        ];
     }
 }

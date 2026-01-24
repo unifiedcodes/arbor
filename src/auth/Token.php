@@ -2,89 +2,76 @@
 
 namespace Arbor\auth;
 
-use InvalidArgumentException;
 
-class Token
+use JsonSerializable;
+
+
+final class Token implements JsonSerializable
 {
-    protected array $header = [];
-    protected array $payload = [];
-    protected string $signature = '';
-    protected string $rawHeader = '';
-    protected string $rawPayload = '';
+    public function __construct(
+        private readonly string $type,
+        private readonly string $value,
+        private readonly string $id,
+        private readonly array $claims = [],
+        private readonly ?int $expiresAt = null,
+    ) {
+        $this->value     = $value;
+        $this->id        = $id;
+        $this->claims    = $claims;
+        $this->expiresAt = $expiresAt;
+        $this->type      = $type;
+    }
 
-    public static function fromString(string $jwt): self
+
+    public function value(): string
     {
-        $parts = explode('.', $jwt);
-        if (count($parts) !== 3) {
-            throw new InvalidArgumentException("Invalid JWT format, must contain 3 segments.");
+        return $this->value;
+    }
+
+
+    public function id(): string
+    {
+        return $this->id;
+    }
+
+
+    public function claims(): array
+    {
+        return $this->claims;
+    }
+
+
+    public function expiresAt(): ?int
+    {
+        return $this->expiresAt;
+    }
+
+
+    public function type(): string
+    {
+        return $this->type;
+    }
+
+
+    public function isExpired(?int $now = null): bool
+    {
+        if ($this->expiresAt === null) {
+            return false;
         }
 
-        [$h, $p, $s] = $parts;
+        $now = $now ?? time();
 
-        $obj = new self();
-        $obj->rawHeader  = $h;
-        $obj->rawPayload = $p;
-        $obj->signature  = self::base64UrlDecode($s);
-
-        $header = json_decode(self::base64UrlDecode($h), true);
-        $payload = json_decode(self::base64UrlDecode($p), true);
-
-        if (!is_array($header)) {
-            throw new InvalidArgumentException("Invalid JWT header JSON.");
-        }
-
-        if (!is_array($payload)) {
-            throw new InvalidArgumentException("Invalid JWT payload JSON.");
-        }
-
-        $obj->header = $header;
-        $obj->payload = $payload;
-
-        return $obj;
+        return $now >= $this->expiresAt;
     }
 
-    public function getHeader(): array
-    {
-        return $this->header;
-    }
 
-    public function getPayload(): array
+    public function jsonSerialize(): array
     {
-        return $this->payload;
-    }
-
-    public function getSignature(): string
-    {
-        return $this->signature;
-    }
-
-    public function getKid(): ?string
-    {
-        return $this->header['kid'] ?? null;
-    }
-
-    public function getRawSigningInput(): string
-    {
-        return $this->rawHeader . '.' . $this->rawPayload;
-    }
-
-    public function isExpired(): bool
-    {
-        return isset($this->payload['exp']) && time() >= $this->payload['exp'];
-    }
-
-    public function getSubject(): mixed
-    {
-        return $this->payload['sub'] ?? null;
-    }
-
-    protected static function base64UrlDecode(string $data): string
-    {
-        $replaced = strtr($data, '-_', '+/');
-        $pad = strlen($replaced) % 4;
-        if ($pad > 0) {
-            $replaced .= str_repeat('=', 4 - $pad);
-        }
-        return base64_decode($replaced);
+        return [
+            'id'         => $this->id,
+            'claims'     => $this->claims,
+            'expires_at' => $this->expiresAt,
+            'type'       => $this->type,
+        ];
     }
 }

@@ -11,6 +11,7 @@ final class JWTIssuer implements TokenIssuerInterface
 
     public function __construct(
         private string $privateSigningKey,
+        private ?string $kid = null
     ) {
         if (strlen($this->privateSigningKey) !== SODIUM_CRYPTO_SIGN_SECRETKEYBYTES) {
             throw new InvalidArgumentException('Invalid Ed25519 private key.');
@@ -24,7 +25,7 @@ final class JWTIssuer implements TokenIssuerInterface
 
         $payload = array_merge($claims, [
             'iat' => $issuedAt,
-            'jti' => bin2hex(random_bytes(16)),
+            'jti' => $this->base64UrlEncode(random_bytes(16)),
         ]);
 
         if (isset($options['ttl'])) {
@@ -36,14 +37,18 @@ final class JWTIssuer implements TokenIssuerInterface
             'alg' => 'EdDSA',
         ];
 
+        if ($this->kid !== null) {
+            $header['kid'] = $this->kid;
+        }
+
         $jwt = $this->sign($header, $payload);
 
         return new Token(
+            type: 'jwt',
             value: $jwt,
             id: $payload['jti'],
             claims: $claims,
-            expiresAt: $payload['exp'] ?? null,
-            type: 'jwt'
+            expiresAt: $payload['exp'] ?? null
         );
     }
 
@@ -61,11 +66,15 @@ final class JWTIssuer implements TokenIssuerInterface
         }
 
         return new Token(
+            type: 'jwt',
             value: $rawToken,
             id: $payload['jti'],
             claims: $this->extractPublicClaims($payload),
-            expiresAt: $payload['exp'] ?? null,
-            type: 'jwt'
+            metadata: [
+                'header' => $header,
+                'payload' => $payload,
+            ],
+            expiresAt: $payload['exp'] ?? null
         );
     }
 

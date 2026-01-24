@@ -213,28 +213,7 @@ class Builder
      */
     public function set(string $key, mixed $value): static
     {
-        if (!str_contains($key, '.')) {
-            $this->bindings[$key] = $value;
-            return $this;
-        }
-
-        $segments = explode('.', $key);
-        $ref = &$this->bindings;
-
-        foreach ($segments as $segment) {
-            if (!is_array($ref)) {
-                $ref = [];
-            }
-
-            if (!array_key_exists($segment, $ref)) {
-                $ref[$segment] = [];
-            }
-
-            $ref = &$ref[$segment];
-        }
-
-        $ref = $value;
-
+        value_set_at($this->bindings, $key, $value);
         return $this;
     }
 

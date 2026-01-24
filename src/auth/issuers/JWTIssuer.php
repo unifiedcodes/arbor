@@ -10,10 +10,11 @@ final class JWTIssuer implements TokenIssuerInterface
 {
 
     public function __construct(
-        private string $privateSigningKey,
-        private ?string $kid = null
+        private string $signingKey,
+        private ?string $kid = null,
+        private ?int $defaultTtl = null
     ) {
-        if (strlen($this->privateSigningKey) !== SODIUM_CRYPTO_SIGN_SECRETKEYBYTES) {
+        if (strlen($this->signingKey) !== SODIUM_CRYPTO_SIGN_SECRETKEYBYTES) {
             throw new InvalidArgumentException('Invalid Ed25519 private key.');
         }
     }
@@ -28,8 +29,10 @@ final class JWTIssuer implements TokenIssuerInterface
             'jti' => $this->base64UrlEncode(random_bytes(16)),
         ]);
 
-        if (isset($options['ttl'])) {
-            $payload['exp'] = $issuedAt + (int) $options['ttl'];
+        $ttl = $options['ttl'] ?? $this->defaultTtl;
+
+        if ($ttl !== null) {
+            $payload['exp'] = $issuedAt + (int) $ttl;
         }
 
         $header = [
@@ -93,7 +96,7 @@ final class JWTIssuer implements TokenIssuerInterface
 
         $signature = sodium_crypto_sign_detached(
             $signingInput,
-            $this->privateSigningKey
+            $this->signingKey
         );
 
         $encodedSignature = $this->base64UrlEncode($signature);

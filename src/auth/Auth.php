@@ -30,4 +30,12 @@ final class Auth
     ): Token {
         return $this->issuer->issue($claims, $options);
     }
+
+
+    public function resolve(string $rawToken)
+    {
+        $token = $this->issuer->parse($rawToken);
+
+        return $token;
+    }
 }

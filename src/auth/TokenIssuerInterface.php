@@ -10,4 +10,5 @@ interface TokenIssuerInterface
 {
     public function issue(array $claims = [], array $options = []): Token;
     public function parse(string $raw): Token;
+    public function getExpiry(): ?int;
 }

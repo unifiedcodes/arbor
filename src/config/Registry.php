@@ -135,17 +135,7 @@ class Registry
      */
     public function set(string $key, mixed $value): void
     {
-        $keys = explode('.', $key);
-        $config = &$this->config;
-
-        foreach ($keys as $segment) {
-            if (!isset($config[$segment]) || !is_array($config[$segment])) {
-                $config[$segment] = [];
-            }
-            $config = &$config[$segment];
-        }
-
-        $config = $value;
+        value_set_at($this->config, $key, $value);
     }
 
     /**
@@ -163,23 +153,20 @@ class Registry
     public function get(string $key, mixed $default = null): mixed
     {
         $hasDefault = func_num_args() === 2;
-        $keys = explode('.', $key);
-        $value = $this->config;
 
-        foreach ($keys as $segment) {
-            if (!is_array($value) || !array_key_exists($segment, $value)) {
-                if ($hasDefault) {
-                    return $default;
-                }
+        $value = value_at(
+            $this->config,
+            $key,
+            $hasDefault ? $default : null
+        );
 
-                throw new Exception("Config key '{$key}' not found.");
-            }
-
-            $value = $value[$segment];
+        if ($value === null && !$hasDefault) {
+            throw new Exception("Config key '{$key}' not found.");
         }
 
         return $value;
     }
+
 
     /**
      * Get a deep copy of all configuration data.

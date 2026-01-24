@@ -9,19 +9,13 @@ use JsonSerializable;
 final class Token implements JsonSerializable
 {
     public function __construct(
-        private readonly string $type,
-        private readonly string $value,
-        private readonly string $id,
-        private readonly array $claims = [],
-        private readonly array $metadata = [],
-        private readonly ?int $expiresAt = null,
-    ) {
-        $this->value     = $value;
-        $this->id        = $id;
-        $this->claims    = $claims;
-        $this->expiresAt = $expiresAt;
-        $this->type      = $type;
-    }
+        private string $type,
+        private string $value,
+        private string $id,
+        private array $claims = [],
+        private array $metadata = [],
+        private ?int $expiresAt = null,
+    ) {}
 
 
     public function value(): string

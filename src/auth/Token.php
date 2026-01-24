@@ -98,4 +98,22 @@ final class Token implements JsonSerializable
         );
         return $clone;
     }
+
+    public function withClaims(array $claims): self
+    {
+        $clone = clone $this;
+        $clone->claims = $claims;
+        return $clone;
+    }
+
+
+    public function withMergedClaims(array $claims): self
+    {
+        $clone = clone $this;
+        $clone->claims = array_replace_recursive(
+            $this->claims,
+            $claims
+        );
+        return $clone;
+    }
 }

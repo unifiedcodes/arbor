@@ -9,25 +9,36 @@ use InvalidArgumentException;
 
 final class OpaqueIssuer implements TokenIssuerInterface
 {
-    private const TOKEN_BYTE_LENGTH = 32;
-    private const HASH_ALGO = 'sha256';
+    public function __construct(
+        private ?int $ttl = null,
+        private int $tokenByteLength = 32,
+        private string $hashAlgo = 'sha256'
+    ) {}
+
 
     public function issue(array $claims = [], array $options = []): Token
     {
-        $randomBytes = random_bytes(self::TOKEN_BYTE_LENGTH);
+        $issuedAt = time();
 
-        $tokenValue = $this->base64UrlEncode($randomBytes);
+        $payload = array_merge($claims, [
+            'iat' => $issuedAt,
+        ]);
 
-        $tokenId = hash(self::HASH_ALGO, $tokenValue);
+        $ttl = $options['ttl'] ?? $this->ttl;
 
-        $expiresAt = $options['expires_at'] ?? null;
+        if ($ttl !== null) {
+            $payload['exp'] = $issuedAt + (int) $ttl;
+        }
+
+        $token = $this->createToken();
+        $tokenId = $this->tokenId($token);
 
         return new Token(
-            value: $tokenValue,
+            type: 'opaque',
+            value: $token,
             id: $tokenId,
-            claims: [],
-            expiresAt: $expiresAt,
-            type: 'opaque'
+            claims: $payload,
+            expiresAt: $payload['exp']
         );
     }
 
@@ -38,12 +49,33 @@ final class OpaqueIssuer implements TokenIssuerInterface
         }
 
         return new Token(
+            type: 'opaque',
             value: $rawToken,
             id: hash('sha256', $rawToken),
             claims: [],
-            expiresAt: null,
-            type: 'opaque'
+            expiresAt: null
         );
+    }
+
+
+    public function getExpiry(): ?int
+    {
+        return $this->ttl;
+    }
+
+
+    private function createToken()
+    {
+        $randomBytes = random_bytes($this->tokenByteLength);
+        $token = $this->base64UrlEncode($randomBytes);
+
+        return $token;
+    }
+
+
+    private function tokenId(string $token)
+    {
+        return hash($this->hashAlgo, $token);
     }
 
 

@@ -3,7 +3,7 @@
 namespace Arbor\exception;
 
 
-use Arbor\attributes\ConfigValue;
+use Arbor\config\ConfigValue;
 use Arbor\http\Response;
 use Arbor\exception\Renderer;
 use Arbor\exception\Normalizer;

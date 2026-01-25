@@ -38,7 +38,7 @@ final class OpaqueIssuer implements TokenIssuerInterface
             value: $token,
             id: $tokenId,
             claims: $payload,
-            expiresAt: $payload['exp']
+            expiresAt: $payload['exp'] ?? null
         );
     }
 
@@ -51,7 +51,7 @@ final class OpaqueIssuer implements TokenIssuerInterface
         return new Token(
             type: 'opaque',
             value: $rawToken,
-            id: hash('sha256', $rawToken),
+            id: $this->tokenId($rawToken),
             claims: [],
             expiresAt: null
         );
@@ -73,9 +73,10 @@ final class OpaqueIssuer implements TokenIssuerInterface
     }
 
 
-    private function tokenId(string $token)
+    private function tokenId(string $token): string
     {
-        return hash($this->hashAlgo, $token);
+        $hash = hash($this->hashAlgo, $token, true);
+        return $this->base64UrlEncode($hash);
     }
 
 

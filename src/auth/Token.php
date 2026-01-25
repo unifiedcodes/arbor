@@ -30,9 +30,9 @@ final class Token implements JsonSerializable
     }
 
 
-    public function claims(): array
+    public function claims(?string $key = null): mixed
     {
-        return $this->claims;
+        return value_at($this->claims, $key);
     }
 
 
@@ -50,10 +50,6 @@ final class Token implements JsonSerializable
 
     public function meta(?string $path = null): mixed
     {
-        if ($path === null) {
-            return $this->metadata;
-        }
-
         return value_at($this->metadata, $path);
     }
 
@@ -114,6 +110,13 @@ final class Token implements JsonSerializable
             $this->claims,
             $claims
         );
+        return $clone;
+    }
+
+    public function withExpiry(?int $expiresAt): self
+    {
+        $clone = clone $this;
+        $clone->expiresAt = $expiresAt;
         return $clone;
     }
 }

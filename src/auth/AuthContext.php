@@ -7,7 +7,7 @@ use Arbor\auth\Token;
 use RuntimeException;
 
 
-class AuthContext
+final class AuthContext
 {
     public function __construct(
         private Token $token,

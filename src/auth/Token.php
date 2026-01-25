@@ -212,4 +212,18 @@ final class Token implements JsonSerializable
         $clone->expiresAt = $expiresAt;
         return $clone;
     }
+
+    /**
+     * Returns the token value as a string.
+     *
+     * Allows the Token instance to be cast to or used as a string,
+     * returning the underlying token value. This enables convenient
+     * string interpolation and type juggling.
+     *
+     * @return string The token value
+     */
+    public function __toString(): string
+    {
+        return $this->value;
+    }
 }

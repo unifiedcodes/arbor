@@ -260,6 +260,9 @@ class App
         // Set error display contextually
         $this->errorsDisplay();
 
+        // Bind Scope & Stack Service
+        $this->bindScope();
+
         // Bind Exception Handler
         $this->bindExceptionHandler();
 
@@ -282,9 +285,6 @@ class App
 
         // compile configurations
         $this->finalizeConfig();
-
-        // Bind Scope and Execution Context
-        $this->bindScope();
 
         // load service providers
         $this->loadProviders();

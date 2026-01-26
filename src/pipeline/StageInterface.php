@@ -4,7 +4,6 @@ namespace Arbor\pipeline;
 
 
 use Arbor\http\Response;
-use Arbor\http\context\RequestContext;
 
 /**
  * Interface StageInterface
@@ -23,10 +22,10 @@ interface StageInterface
      * This method should perform any necessary operations on the request and then
      * delegate processing to the next middleware or handler using the provided callable.
      *
-     * @param RequestContext  $input The incoming HTTP request.
+     * @param mixed  $input The incoming HTTP request.
      * @param callable $next  The next middleware or handler to process the request.
      *
      * @return Response The HTTP response resulting from processing the request.
      */
-    public function process(RequestContext $input, callable $next): Response;
+    public function process(mixed $input, callable $next): Response;
 }

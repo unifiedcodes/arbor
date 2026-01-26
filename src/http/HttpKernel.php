@@ -8,10 +8,12 @@ use Arbor\pipeline\PipelineFactory;
 use Arbor\pipeline\StageInterface;
 use Arbor\http\Response;
 use Arbor\http\Request;
-use Arbor\http\context\RequestContext;
-use Arbor\http\context\RequestStack;
+use Arbor\http\RequestContext;
 use Arbor\http\traits\ResponseNormalizerTrait;
 use Arbor\exception\ExceptionKernel;
+use Arbor\facades\Scope;
+use Arbor\execution\ExecutionContext;
+use Arbor\execution\ExecutionType;
 use Throwable;
 use Exception;
 
@@ -29,7 +31,6 @@ class HttpKernel
     public function __construct(
         // keep requestFactory because httpSubkernel uses it to spawn sub requests.
         protected RequestFactory $requestFactory,
-        protected RequestStack $requestStack,
         protected PipelineFactory $pipelineFactory,
         protected Router $router,
         #[ConfigValue('root.is_debug')]
@@ -64,19 +65,28 @@ class HttpKernel
      */
     public function handle(Request $request, bool $isSubRequest = false): Response
     {
-        $requestContext = RequestContext::from($request);
-
-        // Push context into the stack
-        $this->requestStack->push($requestContext);
-
-        // Prevent infinite recursion for sub-requests
-        if ($this->requestStack->alreadyDispatched($request)) {
-            throw new Exception("Infinite sub-request detected for route: " . $request->getUri());
-        }
-
         $initialOBLevel = ob_get_level();
 
+        // Enter execution scope (new frame)
+        Scope::enter();
+
         try {
+            // Attach execution context
+            Scope::set(
+                ExecutionContext::class,
+                new ExecutionContext(ExecutionType::HTTP)
+            );
+
+
+            // Attach request context
+            $requestContext = RequestContext::from($request);
+            Scope::set(RequestContext::class, $requestContext);
+
+
+            // Prevent infinite recursion of requests.
+            $this->assertNotAlreadyDispatched($request);
+
+
             // Start output buffering in non-debug environments
             if (!$this->isDebug) {
                 ob_start();
@@ -106,11 +116,9 @@ class HttpKernel
 
             return (new ExceptionKernel($this->isDebug))->handle($error);
         }
-        // Sub-requests should be removed from stack after handling
+        // Always leave scope ()
         finally {
-            if ($isSubRequest === true) {
-                $this->requestStack->pop();
-            }
+            Scope::leave();
         }
     }
 
@@ -149,5 +157,46 @@ class HttpKernel
     protected function routerDispatch(RequestContext $requestContext): Response
     {
         return $this->router->dispatch($requestContext);
+    }
+
+
+    private function assertNotAlreadyDispatched(Request $request): void
+    {
+        $signature = $this->normalizedRequestString($request);
+        $depth = Scope::depth();
+
+        // Walk all existing frames (excluding the current one)
+        for ($i = 0; $i < $depth - 1; $i++) {
+            $frame = Scope::getFrame($i);
+
+            if (!$frame || !$frame->has(RequestContext::class)) {
+                continue;
+            }
+
+            $existingRequest =
+                $frame->get(RequestContext::class)->getRequest();
+
+            if ($this->normalizedRequestString($existingRequest) === $signature) {
+                throw new Exception(
+                    'Infinite sub-request detected for route: ' . $request->getUri()
+                );
+            }
+        }
+    }
+
+
+    private function normalizedRequestString(Request $request): string
+    {
+        // Full URI including query string
+        $uri = (string) $request->getUri();
+
+        // Normalize trailing slash
+        $uri = rtrim($uri, '/');
+        $uri = $uri === '' ? '/' : $uri;
+
+        // Normalize method
+        $method = strtoupper($request->getMethod());
+
+        return $method . ' ' . $uri;
     }
 }

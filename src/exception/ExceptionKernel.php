@@ -7,8 +7,8 @@ use Arbor\config\ConfigValue;
 use Arbor\http\Response;
 use Arbor\exception\Renderer;
 use Arbor\exception\Normalizer;
-use Arbor\facades\RequestStack;
-use Arbor\http\context\RequestContext;
+use Arbor\http\RequestContext;
+use Arbor\facades\Scope;
 use Throwable;
 use ErrorException;
 
@@ -174,7 +174,7 @@ class ExceptionKernel
      */
     public function handle(Throwable $error): Response
     {
-        $requestContext = RequestStack::getCurrent();
+        $requestContext = Scope::get(RequestContext::class);
 
         $exceptionContext = $this->normalizer->normalize($error, $requestContext);
 

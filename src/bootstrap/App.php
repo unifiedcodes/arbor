@@ -15,6 +15,9 @@ use Arbor\http\ServerRequest;
 use Arbor\support\Helpers;
 use Arbor\facades\Facade;
 use Arbor\exception\ExceptionKernel;
+use Arbor\scope\Scope;
+use Arbor\scope\Stack;
+use Arbor\scope\SwooleStack;
 
 /**
  * Class App
@@ -280,10 +283,33 @@ class App
         // compile configurations
         $this->finalizeConfig();
 
+        // Bind Scope and Execution Context
+        $this->bindScope();
+
         // load service providers
         $this->loadProviders();
 
         return $this;
+    }
+
+
+    protected function bindScope(): void
+    {
+        $this->container->singleton(
+            Scope::class,
+            static function () {
+                if (
+                    extension_loaded('swoole') &&
+                    class_exists('Swoole\\Coroutine')
+                ) {
+                    $stack = new SwooleStack();
+                } else {
+                    $stack = new Stack();
+                }
+
+                return new Scope($stack);
+            }
+        );
     }
 
     /**

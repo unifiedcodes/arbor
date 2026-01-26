@@ -8,12 +8,12 @@ use Arbor\router\Group;
 use Arbor\router\Dispatcher;
 use Arbor\router\URLBuilder;
 use Arbor\router\ErrorRouter;
-use Arbor\http\context\RequestContext;
+use Arbor\http\RequestContext;
 use Arbor\router\RouteMethods;
 use Arbor\http\Response;
 use Exception;
 use Arbor\config\ConfigValue;
-use Arbor\facades\RequestStack;
+use Arbor\facades\Scope;
 
 /**
  * Class Router (Router Facade)
@@ -255,7 +255,8 @@ class Router
         $routeContext = $this->resolve($path, $verb);
 
         // replacing current request context in requeststack, with added routecontext.
-        RequestStack::replaceCurrent($request->withRoute($routeContext));
+        $request = $request->withRoute($routeContext);
+        Scope::set(RequestContext::class, $request);
 
         return $routeContext;
     }

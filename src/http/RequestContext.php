@@ -1,6 +1,6 @@
 <?php
 
-namespace Arbor\http\context;
+namespace Arbor\http;
 
 use Arbor\http\Request;
 use Arbor\http\ServerRequest;

@@ -6,8 +6,8 @@ use Arbor\exception\template\HTML;
 use Arbor\http\Response;
 use Arbor\facades\Respond;
 use Arbor\facades\Route;
-use Arbor\facades\RequestStack;
-use Arbor\http\context\RequestContext;
+use Arbor\http\RequestContext;
+use Arbor\facades\Scope;
 
 /**
  * Renderer class responsible for rendering exceptions into HTTP responses.
@@ -47,7 +47,7 @@ class Renderer
      */
     public function render(ExceptionContext $exceptionContext): Response
     {
-        $requestContext = RequestStack::getCurrent();
+        $requestContext = Scope::get(RequestContext::class);
 
         if ($requestContext) {
             return $this->httpRender($exceptionContext, $requestContext);
@@ -109,7 +109,7 @@ class Renderer
 
         // 2. Mark current request as handling an error
         $errorRequest = $requestContext->withError();
-        RequestStack::replaceCurrent($errorRequest);
+        Scope::set(RequestContext::class, $errorRequest);
 
         // 3. Try resolving a dedicated error page
         $errorRoute = Route::resolveErrorPage(

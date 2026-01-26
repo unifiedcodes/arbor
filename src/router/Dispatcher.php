@@ -2,7 +2,7 @@
 
 namespace Arbor\router;
 
-use Arbor\http\context\RequestContext;
+use Arbor\http\RequestContext;
 use Arbor\http\Response;
 use Arbor\pipeline\PipelineFactory;
 use Arbor\router\RouteContext;

@@ -3,7 +3,7 @@
 namespace Arbor\exception;
 
 
-use Arbor\http\context\RequestContext;
+use Arbor\http\RequestContext;
 use Throwable;
 
 /**

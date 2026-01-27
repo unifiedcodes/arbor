@@ -1,6 +1,6 @@
 <?php
 
-namespace Arbor\auth;
+namespace Arbor\auth\authentication;
 
 
 use JsonSerializable;

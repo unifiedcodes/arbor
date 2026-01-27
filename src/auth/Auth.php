@@ -3,11 +3,12 @@
 namespace Arbor\auth;
 
 
-use Arbor\auth\TokenStoreInterface;
-use Arbor\auth\TokenIssuerInterface;
-use Arbor\auth\Token;
+use Arbor\auth\authentication\TokenStoreInterface;
+use Arbor\auth\authentication\TokenIssuerInterface;
+use Arbor\auth\authentication\Registry;
+use Arbor\auth\authentication\Token;
+use Arbor\auth\authentication\Policy;
 use Arbor\auth\AuthContext;
-use Arbor\auth\Registry;
 
 
 /**
@@ -32,20 +33,20 @@ final class Auth
      *
      * @param TokenIssuerInterface $issuer The token issuer implementation
      * @param TokenStoreInterface|null $store Optional token store for persistence
-     * @param AuthPolicy|null $policy Optional custom authentication policy
+     * @param Policy|null $policy Optional custom authentication policy
      * @param array $options Configuration options (e.g., 'hasExpiry' for token expiration)
      */
     public function __construct(
         private TokenIssuerInterface $issuer,
         private ?TokenStoreInterface $store = null,
-        private ?AuthPolicy $policy = null,
+        private ?Policy $policy = null,
         private array $options = []
     ) {
         $this->registry = new Registry($this->store);
 
         if (!$this->policy) {
             // constructing auth policy with options and defaults
-            $this->policy = new AuthPolicy(
+            $this->policy = new Policy(
                 $options['hasExpiry'] ?? $this->issuer->getExpiry(),
                 $this->store,
             );
@@ -99,5 +100,11 @@ final class Auth
 
         // build auth context.
         return new AuthContext($token, $this->store);
+    }
+
+
+    public function revoke(Token $token): void
+    {
+        $this->registry->revoke($token);
     }
 }

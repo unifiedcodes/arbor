@@ -1,9 +1,9 @@
 <?php
 
-namespace Arbor\auth;
+namespace Arbor\auth\authentication;
 
-use Arbor\auth\TokenStoreInterface;
-use Arbor\auth\Token;
+use Arbor\auth\authentication\TokenStoreInterface;
+use Arbor\auth\authentication\Token;
 use InvalidArgumentException;
 
 /**
@@ -80,5 +80,12 @@ class Registry
     public function get(Token $token): Token
     {
         return $this->store->retrieve($token);
+    }
+
+
+    public function revoke(Token $token): void
+    {
+        $tokenId = $token->id();
+        $this->store->revoke($tokenId);
     }
 }

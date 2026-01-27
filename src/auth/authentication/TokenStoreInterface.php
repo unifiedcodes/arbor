@@ -36,7 +36,7 @@ interface TokenStoreInterface
      *
      * @return Token The retrieved token object.
      */
-    public function retrieve(Token $token): Token;
+    public function retrieve(Token $token): ?Token;
 
     /**
      * Validates a token against stored rules and required claims.

@@ -3,6 +3,7 @@
 namespace Arbor\auth\authentication;
 
 use Arbor\auth\authentication\TokenStoreInterface;
+use Arbor\auth\authentication\NullTokenStore;
 use Arbor\auth\authentication\Token;
 use InvalidArgumentException;
 
@@ -21,7 +22,11 @@ class Registry
      * @param TokenStoreInterface|null $store Optional token store implementation. 
      *                                         If null, save operations will be skipped.
      */
-    public function __construct(private ?TokenStoreInterface $store = null) {}
+    public function __construct(private ?TokenStoreInterface $store = null)
+    {
+        $this->store = $store ?? new NullTokenStore();
+    }
+
 
     /**
      * Save a token to the store.
@@ -37,10 +42,8 @@ class Registry
      */
     public function save(Token $token): void
     {
-        if ($this->store) {
-            $this->validateClaims($token);
-            $this->store->save($token);
-        }
+        $this->validateClaims($token);
+        $this->store->save($token);
     }
 
 
@@ -77,9 +80,15 @@ class Registry
      * 
      * @return Token The retrieved token
      */
-    public function get(Token $token): Token
+    public function get(Token $token): ?Token
     {
         return $this->store->retrieve($token);
+    }
+
+
+    public function validate(Token $token): void
+    {
+        $this->store->validate($token);
     }
 
 

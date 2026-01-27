@@ -5,12 +5,12 @@ namespace Arbor\router;
 
 use Arbor\router\Registry;
 use Arbor\router\Group;
-use Arbor\router\Dispatcher;
 use Arbor\router\URLBuilder;
 use Arbor\router\ErrorRouter;
 use Arbor\router\RouteMethods;
 use Arbor\http\Response;
 use Arbor\config\ConfigValue;
+use Arbor\pipeline\PipelineFactory;
 use Exception;
 
 /**
@@ -81,12 +81,16 @@ class Router
      * Initializes the registry and group manager.
      */
     public function __construct(
-        protected Dispatcher $dispatcher,
+        protected PipelineFactory $pipelineFactory,
+
         #[ConfigValue('root.uri')]
         protected string $baseURI,
 
         #[ConfigValue('app.uri_prefix')]
         protected string $urlPrefix,
+
+        #[ConfigValue('root.is_debug')]
+        protected ?bool $isDebug = false,
     ) {
         $this->registry = new Registry();
         $this->group = new Group();
@@ -260,7 +264,7 @@ class Router
      * Loads error page handlers from a file and registers them with the Registry.
      *
      * The file at the specified path must return an associative array where the keys 
-     * are HTTP error codes and the values are valid route handler definitions. This 
+     * are error codes and the values are valid route handler definitions. This 
      * allows for centralized, file-based configuration of global error handling.
      *
      * @param string $filePath The path to the file containing error page definitions.
@@ -284,19 +288,28 @@ class Router
 
 
     /**
-     * Dispatches the HTTP request using the provided pipeline factory.
+     * Dispatches the request using the provided pipeline factory.
      *
      * Delegates the request handling to the Dispatcher, which processes the route
      * and returns a response.
      *
      * @param RouteContext           $route           The resolved route context.
      *
-     * @return Response The response returned by the dispatcher.
+     * @return Response The response returned by the route.
      * 
      */
     public function dispatch(RouteContext $routeContext): Response
     {
-        return $this->dispatcher->dispatch($routeContext);
+        $pipeline = $this->pipelineFactory->create();
+
+        return $pipeline
+            ->through(
+                $routeContext->middlewares()
+            )
+            ->then(
+                $routeContext->handler(),
+                $routeContext->parameters()
+            );
     }
 
     /**

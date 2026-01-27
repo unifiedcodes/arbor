@@ -17,7 +17,6 @@ use Arbor\facades\Facade;
 use Arbor\exception\ExceptionKernel;
 use Arbor\scope\Scope;
 use Arbor\scope\Stack;
-use Arbor\scope\SwooleStack;
 
 /**
  * Class App
@@ -298,15 +297,7 @@ class App
         $this->container->singleton(
             Scope::class,
             static function () {
-                if (
-                    extension_loaded('swoole') &&
-                    class_exists('Swoole\\Coroutine')
-                ) {
-                    $stack = new SwooleStack();
-                } else {
-                    $stack = new Stack();
-                }
-
+                $stack = new Stack();
                 return new Scope($stack);
             }
         );

@@ -36,7 +36,7 @@ class Pipeline
      *
      * @var mixed
      */
-    protected mixed $input;
+    protected mixed $input = null;
 
     /**
      * The list of middleware stages in the pipeline.

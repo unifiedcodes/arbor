@@ -46,11 +46,11 @@ class Dispatcher
      *
      * @return Response
      */
-    public function dispatch(RouteContext $routeContext, RequestContext $request): Response
+    public function dispatch(RouteContext $routeContext): Response
     {
         $pipeline = $this->pipelineFactory->create();
 
-        return $pipeline->send($request)
+        return $pipeline
             ->through(
                 $routeContext->middlewares()
             )

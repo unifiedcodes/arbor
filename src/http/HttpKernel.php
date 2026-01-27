@@ -14,6 +14,7 @@ use Arbor\exception\ExceptionKernel;
 use Arbor\facades\Scope;
 use Arbor\execution\ExecutionContext;
 use Arbor\execution\ExecutionType;
+use Arbor\router\RouteContext;
 use Throwable;
 use Exception;
 
@@ -84,7 +85,7 @@ class HttpKernel
 
 
             // Prevent infinite recursion of requests.
-            $this->assertNotAlreadyDispatched($request);
+            $this->isAlreadyDispatched($request);
 
 
             // Start output buffering in non-debug environments
@@ -141,26 +142,35 @@ class HttpKernel
         $pipeline = $this->pipelineFactory->create();
 
         return $pipeline
-            ->send($requestContext)
             ->through($this->globalMiddlewareStack)
-            ->then(function (RequestContext $input) {
-                return $this->routerDispatch($input);
+            ->then(function () {
+                return $this->routerDispatch();
             });
     }
 
     /**
      * Dispatch the request context via the router.
      *
-     * @param RequestContext $requestContext
      * @return Response The controller return value (to be normalized to Response)
      */
-    protected function routerDispatch(RequestContext $requestContext): Response
+    protected function routerDispatch(): Response
     {
-        return $this->router->dispatch($requestContext);
+        $requestContext = Scope::get(RequestContext::class);
+
+        // Extract path and verb from the request.
+        $path = $requestContext->getRelativePath();
+        $verb = $requestContext->getMethod();
+
+        $routeContext = $this->router->resolve($path, $verb);
+
+        // setting route context to scope
+        Scope::set(RouteContext::class, $routeContext);
+
+        return $this->router->dispatch($routeContext);
     }
 
 
-    private function assertNotAlreadyDispatched(Request $request): void
+    private function isAlreadyDispatched(Request $request): void
     {
         $signature = $this->normalizedRequestString($request);
         $depth = Scope::depth();

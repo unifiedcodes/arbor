@@ -8,12 +8,10 @@ use Arbor\router\Group;
 use Arbor\router\Dispatcher;
 use Arbor\router\URLBuilder;
 use Arbor\router\ErrorRouter;
-use Arbor\http\RequestContext;
 use Arbor\router\RouteMethods;
 use Arbor\http\Response;
-use Exception;
 use Arbor\config\ConfigValue;
-use Arbor\facades\Scope;
+use Exception;
 
 /**
  * Class Router (Router Facade)
@@ -246,22 +244,6 @@ class Router
     }
 
 
-    public function resolveHTTP(RequestContext $request): RouteContext
-    {
-        // Extract path and verb from the request.
-        $path = $request->getRelativePath();
-        $verb = $request->getMethod();
-
-        $routeContext = $this->resolve($path, $verb);
-
-        // replacing current request context in requeststack, with added routecontext.
-        $request = $request->withRoute($routeContext);
-        Scope::set(RequestContext::class, $request);
-
-        return $routeContext;
-    }
-
-
     public function resolveErrorPage(int $errorCode, string $verb): RouteContext
     {
         $basePath = $this->urlPrefix . '/__error__/';
@@ -307,21 +289,14 @@ class Router
      * Delegates the request handling to the Dispatcher, which processes the route
      * and returns a response.
      *
-     * @param RequestContext         $request         The HTTP request.
      * @param RouteContext           $route           The resolved route context.
      *
      * @return Response The response returned by the dispatcher.
      * 
      */
-    public function dispatch(RequestContext $request, ?RouteContext $route = null): Response
+    public function dispatch(RouteContext $routeContext): Response
     {
-        // If route is provided, use it; otherwise resolve it
-        $resolvedRoute = $route ?? $this->resolveHTTP($request);
-
-        return $this->dispatcher->dispatch(
-            $resolvedRoute,
-            $request
-        );
+        return $this->dispatcher->dispatch($routeContext);
     }
 
     /**

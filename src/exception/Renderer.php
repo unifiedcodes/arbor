@@ -118,7 +118,7 @@ class Renderer
         );
 
         if ($errorRoute !== null) {
-            return Route::dispatch($errorRequest, $errorRoute);
+            return Route::dispatch($errorRoute);
         }
 
         // 4. Fallback to default error response

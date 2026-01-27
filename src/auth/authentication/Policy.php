@@ -2,7 +2,7 @@
 
 namespace Arbor\auth\authentication;
 
-use Arbor\auth\authentication\TokenStoreInterface;
+use Arbor\auth\authentication\Registry;
 use Arbor\auth\authentication\Token;
 use RuntimeException;
 
@@ -18,11 +18,11 @@ class Policy
      * Constructor
      *
      * @param bool $hasExpiryPolicy Whether token expiry validation should be enforced
-     * @param TokenStoreInterface|null $store Optional token store for additional validation
+     * @param Registry $registry token registry for persistance related validation
      */
     public function __construct(
         private bool $hasExpiryPolicy,
-        private ?TokenStoreInterface $store = null,
+        private Registry $registry,
     ) {}
 
     /**
@@ -35,10 +35,7 @@ class Policy
      */
     public function validate(Token $token): void
     {
-        if ($this->store) {
-            // check store level validation
-            $this->store->validate($token);
-        }
+        $this->registry->validate($token);
 
         if (
             $this->hasExpiryPolicy !== null

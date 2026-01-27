@@ -3,7 +3,6 @@
 namespace Arbor\auth;
 
 
-use Arbor\auth\authentication\TokenStoreInterface;
 use Arbor\auth\authentication\TokenIssuerInterface;
 use Arbor\auth\authentication\Registry;
 use Arbor\auth\authentication\Token;
@@ -20,38 +19,22 @@ use Arbor\auth\AuthContext;
 final class Auth
 {
     /**
-     * @var Registry Registry instance for managing token persistence
-     */
-    private Registry $registry;
-
-
-    /**
      * Constructor
      *
      * Initializes the Auth instance with required dependencies and optional configurations.
      * Sets up the registry for token persistence and initializes the auth policy if not provided.
      *
      * @param TokenIssuerInterface $issuer The token issuer implementation
-     * @param TokenStoreInterface|null $store Optional token store for persistence
-     * @param Policy|null $policy Optional custom authentication policy
+     * @param Policy $policy Optional custom authentication policy
+     * @param Registry $registry token registry for persistence
      * @param array $options Configuration options (e.g., 'hasExpiry' for token expiration)
      */
     public function __construct(
         private TokenIssuerInterface $issuer,
-        private ?TokenStoreInterface $store = null,
-        private ?Policy $policy = null,
+        private Registry $registry,
+        private Policy $policy,
         private array $options = []
-    ) {
-        $this->registry = new Registry($this->store);
-
-        if (!$this->policy) {
-            // constructing auth policy with options and defaults
-            $this->policy = new Policy(
-                $options['hasExpiry'] ?? $this->issuer->getExpiry(),
-                $this->store,
-            );
-        }
-    }
+    ) {}
 
 
     /**
@@ -88,23 +71,31 @@ final class Auth
      *
      * @throws Exception if token validation fails or token is invalid
      */
-    public function resolve(string $rawToken): AuthContext
+    public function resolve(string $rawToken, ?string $verificationKey = null): AuthContext
     {
-        $token = $this->issuer->parse($rawToken);
+        $token = $this->issuer->parse($rawToken, $verificationKey);
 
         // get enriched token from persistance.
-        $token = $this->registry->get($token);
+        $storedToken = $this->registry->get($token);
+
+        if ($storedToken) {
+            $token = $storedToken;
+        }
 
         // checking Policy
         $this->policy->validate($token);
 
         // build auth context.
-        return new AuthContext($token, $this->store);
+        return new AuthContext($token, $this->registry);
     }
 
 
-    public function revoke(Token $token): void
+    public function revoke(Token|AuthContext $token): void
     {
+        if ($token instanceof AuthContext) {
+            $token = $token->token();
+        }
+
         $this->registry->revoke($token);
     }
 }

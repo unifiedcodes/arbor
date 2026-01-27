@@ -2,9 +2,8 @@
 
 namespace Arbor\auth;
 
-
+use Arbor\auth\authentication\Registry;
 use Arbor\auth\authentication\Token;
-use Arbor\auth\authentication\TokenStoreInterface;
 use RuntimeException;
 
 
@@ -20,12 +19,12 @@ final class AuthContext
      * Initializes a new AuthContext instance.
      * 
      * @param Token $token The authentication token
-     * @param TokenStoreInterface|null $store Optional token store for revocation operations
+     * @param Registry $store Optional token store for revocation operations
      * @param array $attributes Optional key-value pairs of custom attributes
      */
     public function __construct(
         private Token $token,
-        private readonly ?TokenStoreInterface $store = null,
+        private readonly Registry $registry,
         private readonly array $attributes = []
     ) {}
 
@@ -98,11 +97,7 @@ final class AuthContext
      */
     public function revoke(): void
     {
-        if (!$this->store) {
-            throw new RuntimeException('Token store not available.');
-        }
-
-        $this->store->revoke($this->tokenId());
+        $this->registry->revoke($this->token());
     }
 
     /**
@@ -119,7 +114,7 @@ final class AuthContext
     {
         return new self(
             token: $this->token,
-            store: $this->store,
+            registry: $this->registry,
             attributes: array_merge($this->attributes, [$key => $value])
         );
     }

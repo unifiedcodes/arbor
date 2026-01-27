@@ -1,9 +1,9 @@
 <?php
 
-namespace Arbor\auth;
+namespace Arbor\auth\authentication;
 
 
-use Arbor\auth\Token;
+use Arbor\auth\authentication\Token;
 
 
 /**

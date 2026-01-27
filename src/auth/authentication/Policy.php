@@ -1,9 +1,9 @@
 <?php
 
-namespace Arbor\auth;
+namespace Arbor\auth\authentication;
 
-use Arbor\auth\TokenStoreInterface;
-use Arbor\auth\Token;
+use Arbor\auth\authentication\TokenStoreInterface;
+use Arbor\auth\authentication\Token;
 use RuntimeException;
 
 /**
@@ -12,7 +12,7 @@ use RuntimeException;
  * Handles token validation according to configured policies.
  * Supports both store-level validation and expiry policy enforcement.
  */
-class AuthPolicy
+class Policy
 {
     /**
      * Constructor
@@ -28,9 +28,6 @@ class AuthPolicy
     /**
      * Validate a token against configured policies
      *
-     * Performs validation in the following order:
-     * 1. Store-level validation (if a store is configured)
-     * 2. Expiry policy validation (if expiry policy is enabled)
      *
      * @param Token $token The token to validate
      * @return void

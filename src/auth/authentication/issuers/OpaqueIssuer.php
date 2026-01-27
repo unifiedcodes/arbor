@@ -1,9 +1,9 @@
 <?php
 
-namespace Arbor\Auth\issuers;
+namespace Arbor\Auth\authentication\issuers;
 
-use Arbor\Auth\Token;
-use Arbor\Auth\TokenIssuerInterface;
+use Arbor\Auth\authentication\Token;
+use Arbor\Auth\authentication\TokenIssuerInterface;
 use InvalidArgumentException;
 
 /**

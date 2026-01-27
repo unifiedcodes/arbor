@@ -3,7 +3,8 @@
 namespace Arbor\auth;
 
 
-use Arbor\auth\Token;
+use Arbor\auth\authentication\Token;
+use Arbor\auth\authentication\TokenStoreInterface;
 use RuntimeException;
 
 

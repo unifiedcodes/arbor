@@ -5,7 +5,7 @@ namespace Arbor\filters;
 use Arbor\filters\Registry;
 use Arbor\filters\StageList;
 use InvalidArgumentException;
-use Arbor\pipeline\PipelineFactory;
+use Arbor\pipeline\Pipeline;
 use Arbor\filters\StageInterface;
 use Arbor\filters\StageListInterface;
 
@@ -21,25 +21,6 @@ use Arbor\filters\StageListInterface;
 class Filters
 {
     /**
-     * Factory for creating pipeline instances.
-     * 
-     * Used to create new pipeline instances for processing data through registered filter stages.
-     * 
-     * @var PipelineFactory
-     */
-    protected PipelineFactory $pipelineFactory;
-
-    /**
-     * Registry for managing and storing filter stage instances.
-     * 
-     * Handles the registration, storage, and resolution of filter stages. Acts as a
-     * container for all available filter stages that can be applied to data.
-     * 
-     * @var Registry
-     */
-    protected Registry $registry;
-
-    /**
      * Initialize the Filters instance with a pipeline factory and registry.
      * 
      * Sets up the core dependencies required for filter processing. The pipeline factory
@@ -48,11 +29,10 @@ class Filters
      * @param PipelineFactory $pipelineFactory Factory for creating pipeline instances
      * @param Registry $registry Registry for managing filter stage instances
      */
-    public function __construct(PipelineFactory $pipelineFactory, Registry $registry)
-    {
-        $this->pipelineFactory = $pipelineFactory;
-        $this->registry = $registry;
-    }
+    public function __construct(
+        protected Pipeline $pipeline,
+        protected Registry $registry
+    ) {}
 
     /**
      * Register a filter stage or stage list with the registry.
@@ -128,9 +108,7 @@ class Filters
 
         $stages = $this->registry->resolveAll($filters);
 
-        $pipeline = $this->pipelineFactory->create();
-
-        return $pipeline
+        return $this->pipeline
             ->send($input)
             ->through($stages)
             ->via('process')

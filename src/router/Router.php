@@ -10,7 +10,7 @@ use Arbor\router\ErrorRouter;
 use Arbor\router\RouteMethods;
 use Arbor\http\Response;
 use Arbor\config\ConfigValue;
-use Arbor\pipeline\PipelineFactory;
+use Arbor\pipeline\Pipeline;
 use Exception;
 
 /**
@@ -81,7 +81,7 @@ class Router
      * Initializes the registry and group manager.
      */
     public function __construct(
-        protected PipelineFactory $pipelineFactory,
+        protected Pipeline $pipeline,
 
         #[ConfigValue('root.uri')]
         protected string $baseURI,
@@ -300,9 +300,7 @@ class Router
      */
     public function dispatch(RouteContext $routeContext): Response
     {
-        $pipeline = $this->pipelineFactory->create();
-
-        return $pipeline
+        return $this->pipeline
             ->through(
                 $routeContext->middlewares()
             )

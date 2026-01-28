@@ -4,7 +4,7 @@ namespace Arbor\http;
 
 use Arbor\router\Router;
 use Arbor\config\ConfigValue;
-use Arbor\pipeline\PipelineFactory;
+use Arbor\pipeline\Pipeline;
 use Arbor\pipeline\StageInterface;
 use Arbor\http\Response;
 use Arbor\http\Request;
@@ -32,7 +32,7 @@ class HttpKernel
     public function __construct(
         // keep requestFactory because httpSubkernel uses it to spawn sub requests.
         protected RequestFactory $requestFactory,
-        protected PipelineFactory $pipelineFactory,
+        protected Pipeline $pipeline,
         protected Router $router,
         #[ConfigValue('root.is_debug')]
         protected ?bool $isDebug = false,
@@ -139,9 +139,7 @@ class HttpKernel
      */
     protected function executeGlobalMiddlewares(RequestContext $requestContext): Response
     {
-        $pipeline = $this->pipelineFactory->create();
-
-        return $pipeline
+        return $this->pipeline
             ->through($this->globalMiddlewareStack)
             ->then(function () {
                 return $this->routerDispatch();

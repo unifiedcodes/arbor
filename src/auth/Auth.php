@@ -8,6 +8,10 @@ use Arbor\auth\authentication\Registry;
 use Arbor\auth\authentication\Token;
 use Arbor\auth\authentication\Policy;
 use Arbor\auth\AuthContext;
+use Arbor\auth\authorization\ActionInterface;
+use Arbor\auth\Authorizer;
+use Arbor\facades\Scope;
+use RuntimeException;
 
 
 /**
@@ -33,6 +37,7 @@ final class Auth
         private TokenIssuerInterface $issuer,
         private Registry $registry,
         private Policy $policy,
+        private ?Authorizer $authorizer = null,
         private array $options = []
     ) {}
 
@@ -85,8 +90,20 @@ final class Auth
         // checking Policy
         $this->policy->validate($token);
 
+        // gathering abilities of user.
+        $abilities = $this->registry->getAbilities($token);
+
+        $authContext = new AuthContext(
+            $token,
+            $this->registry,
+            $abilities
+        );
+
+        // setting into scope
+        Scope::set(AuthContext::class, $authContext);
+
         // build auth context.
-        return new AuthContext($token, $this->registry);
+        return $authContext;
     }
 
 
@@ -97,5 +114,36 @@ final class Auth
         }
 
         $this->registry->revoke($token);
+    }
+
+
+    public function ability(string $id, string $resource, ActionInterface $action): void
+    {
+        $this->haveAuthorizer();
+        $this->authorizer->addAbility($id, $resource, $action);
+    }
+
+
+    public function can(string $resource, ActionInterface $action): void
+    {
+        $this->haveAuthorizer();
+
+        $authContext = Scope::get(AuthContext::class);
+
+        $this->authorizer->hasAbility($authContext, $resource, $action);
+    }
+
+
+    public function haveAuthorizer(): void
+    {
+        if (!$this->authorizer) {
+            throw new RuntimeException("authorizer is not configured");
+        }
+    }
+
+
+    public function definedAbilities(): array
+    {
+        return $this->authorizer->abilityIds();
     }
 }

@@ -25,6 +25,7 @@ final class AuthContext
     public function __construct(
         private Token $token,
         private readonly Registry $registry,
+        private array $abilities = [],
         private readonly array $attributes = []
     ) {}
 
@@ -139,5 +140,11 @@ final class AuthContext
     public function attributes(): array
     {
         return $this->attributes;
+    }
+
+
+    public function hasAbility(string $id): bool
+    {
+        return isset($this->abilities[$id]);
     }
 }

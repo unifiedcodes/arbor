@@ -22,8 +22,10 @@ class Registry
      * @param TokenStoreInterface|null $store Optional token store implementation. 
      *                                         If null, save operations will be skipped.
      */
-    public function __construct(private ?TokenStoreInterface $store = null)
-    {
+    public function __construct(
+        private ?TokenStoreInterface $store = null,
+        private ?AuthorityStoreInterface $authstore = null
+    ) {
         $this->store = $store ?? new NullTokenStore();
     }
 
@@ -96,5 +98,11 @@ class Registry
     {
         $tokenId = $token->id();
         $this->store->revoke($tokenId);
+    }
+
+
+    public function getAbilities(Token $token): array
+    {
+        return $this->authstore->abilities($token);
     }
 }

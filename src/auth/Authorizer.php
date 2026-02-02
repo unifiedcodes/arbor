@@ -12,13 +12,10 @@ use RuntimeException;
 class Authorizer
 {
     private Registry $registry;
-    private Evaluator $evaluator;
-
 
     public function __construct()
     {
         $this->registry = new Registry();
-        $this->evaluator = new Evaluator();
     }
 
 
@@ -36,7 +33,9 @@ class Authorizer
             throw new RuntimeException("ability not registered");
         }
 
-        $this->evaluator->resolve($authContext, $abilityId);
+        if (!$authContext->hasAbility($abilityId)) {
+            throw new RuntimeException("no permission for this action");
+        }
     }
 
 

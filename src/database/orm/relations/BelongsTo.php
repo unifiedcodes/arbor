@@ -4,6 +4,7 @@ namespace Arbor\database\orm\relations;
 
 
 use Arbor\database\orm\Model;
+use Arbor\database\orm\ModelQuery;
 
 
 /**
@@ -66,10 +67,17 @@ class BelongsTo extends Relationship
         $this->foreignKey = $foreignKey;
         $this->foreignValue = $parent->getAttribute($this->foreignKey);
 
-        // Build the query
-        $query = $related::query()->where($this->ownerKey, $this->foreignValue);
+        parent::__construct($parent);
+    }
 
-        parent::__construct($parent, $query);
+
+    protected function newQuery(): ModelQuery
+    {
+        return $this->relatedInstance::query()
+            ->where(
+                $this->ownerKey,
+                $this->parent->getAttribute($this->foreignKey)
+            );
     }
 
 
@@ -82,7 +90,7 @@ class BelongsTo extends Relationship
      */
     public function resolve()
     {
-        return $this->query->first();
+        return $this->newQuery()->first();
     }
 
 

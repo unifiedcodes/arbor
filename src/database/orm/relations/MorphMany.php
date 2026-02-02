@@ -3,6 +3,7 @@
 namespace Arbor\database\orm\relations;
 
 use Arbor\database\orm\Model;
+use Arbor\database\orm\ModelQuery;
 
 /**
  * MorphMany Relationship
@@ -73,11 +74,20 @@ class MorphMany extends Relationship
         $this->localKey = $localKey ?? $parent->getPrimaryKey();
         $this->morphType = get_class($parent);
 
-        $query = $related::query()
-            ->where($this->foreignKey, $parent->getAttribute($this->localKey))
-            ->where($this->typeKey, $this->morphType);
+        parent::__construct($parent);
+    }
 
-        parent::__construct($parent, $query);
+    protected function newQuery(): ModelQuery
+    {
+        return $this->relatedInstance::query()
+            ->where(
+                $this->foreignKey,
+                $this->parent->getAttribute($this->localKey)
+            )
+            ->where(
+                $this->typeKey,
+                $this->morphType
+            );
     }
 
     /**
@@ -89,7 +99,7 @@ class MorphMany extends Relationship
      */
     public function resolve()
     {
-        return $this->query->get();
+        return $this->newQuery()->get();
     }
 
     /**

@@ -3,6 +3,7 @@
 namespace Arbor\database\orm\relations;
 
 use Arbor\database\orm\Model;
+use Arbor\database\orm\ModelQuery;
 
 /**
  * HasMany Relationship
@@ -54,9 +55,17 @@ class HasMany extends Relationship
         $this->foreignKey = $foreignKey;
         $this->localKey = $localKey ?? $parent->getPrimaryKey();
 
-        $query = $related::query()->where($this->foreignKey, $parent->getAttribute($this->localKey));
+        parent::__construct($parent);
+    }
 
-        parent::__construct($parent, $query);
+
+    protected function newQuery(): ModelQuery
+    {
+        return $this->relatedInstance::query()
+            ->where(
+                $this->foreignKey,
+                $this->parent->getAttribute($this->localKey)
+            );
     }
 
 
@@ -69,7 +78,7 @@ class HasMany extends Relationship
      */
     public function resolve()
     {
-        return $this->query->get();
+        return $this->newQuery()->get();
     }
 
 

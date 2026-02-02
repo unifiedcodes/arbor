@@ -330,7 +330,6 @@ abstract class Model extends BaseModel
      * It allows many instances of the current model to be associated with
      * many instances of the related model.
      *
-     * @param Model  $parent        The parent model instance
      * @param string $related       The fully qualified class name of the related model
      * @param string $pivotTable    The name of the intermediate/pivot table
      * @param string $foreignKey    The foreign key in pivot table referencing parent model
@@ -339,7 +338,6 @@ abstract class Model extends BaseModel
      * @return BelongsToMany BelongsToMany relationship instance
      */
     public function belongsToMany(
-        Model $parent,
         string $related,
         string $pivotTable,
         string $foreignKey,     // FK in pivot referencing parent
@@ -347,7 +345,7 @@ abstract class Model extends BaseModel
         array $pivotColumns = []     // Extra columns in pivot table.
     ) {
         return new BelongsToMany(
-            $parent,
+            $this,
             $related,
             $pivotTable,
             $foreignKey,

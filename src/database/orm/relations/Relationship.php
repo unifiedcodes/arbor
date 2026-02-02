@@ -19,30 +19,12 @@ use BadMethodCallException;
 abstract class Relationship
 {
     /**
-     * The parent model instance that owns this relationship.
-     *
-     * @var Model
-     */
-    protected Model $parent;
-
-    /**
-     * The query builder instance used to construct database queries for this relationship.
-     *
-     * @var ModelQuery
-     */
-    protected ModelQuery $query;
-
-    /**
      * Initialize a new relationship instance.
      *
      * @param Model $parent The parent model that owns this relationship
      * @param ModelQuery $query The query builder for the related model
      */
-    public function __construct(Model $parent, ModelQuery $query)
-    {
-        $this->parent = $parent;
-        $this->query = $query;
-    }
+    public function __construct(protected Model $parent) {}
 
     /**
      * Resolve the relationship and return the related model(s).
@@ -79,15 +61,8 @@ abstract class Relationship
      */
     abstract public function match(string $relationName, array $models, array $related): array;
 
-    /**
-     * Get the underlying query builder instance.
-     *
-     * @return ModelQuery The query builder for this relationship
-     */
-    public function getQuery(): ModelQuery
-    {
-        return $this->query;
-    }
+    abstract protected function newQuery(): ModelQuery;
+
 
     /**
      * Get the parent model instance.
@@ -130,10 +105,13 @@ abstract class Relationship
      */
     public function __call($method, $arguments)
     {
-        if (method_exists($this->query, $method)) {
-            $result = $this->query->$method(...$arguments);
+        // Always work on a fresh query
+        $query = $this->newQuery();
 
-            // If the query returns itself (chainable), return the Relationship for further chaining
+        if (method_exists($query, $method)) {
+            $result = $query->$method(...$arguments);
+
+            // Preserve fluent relationship chaining
             return $result instanceof ModelQuery ? $this : $result;
         }
 

@@ -41,7 +41,7 @@ trait AttributesTrait
     public function fill(array $attributes): static
     {
         foreach ($attributes as $key => $value) {
-            $this->attributes[$key] = $value;
+            $this->setAttribute($key, $value);
         }
         return $this;
     }

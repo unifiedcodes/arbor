@@ -335,7 +335,7 @@ abstract class Model extends BaseModel
      * @param string $foreignKey    The foreign key in pivot table referencing parent model
      * @param string $relatedKey    The foreign key in pivot table referencing related model
      * @param array  $pivotColumns  Additional columns to retrieve from the pivot table
-     * @return BelongsToMany BelongsToMany relationship instance
+     * @return Relationship BelongsToMany relationship instance
      */
     public function belongsToMany(
         string $related,
@@ -343,7 +343,7 @@ abstract class Model extends BaseModel
         string $foreignKey,     // FK in pivot referencing parent
         string $relatedKey,     // FK in pivot referencing related): Relationship
         array $pivotColumns = []     // Extra columns in pivot table.
-    ) {
+    ): Relationship {
         return new BelongsToMany(
             $this,
             $related,

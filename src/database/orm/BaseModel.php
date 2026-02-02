@@ -47,9 +47,9 @@ abstract class BaseModel implements ArrayAccess, JsonSerializable
     /**
      * The table name associated with this model
      * 
-     * @var string|null
+     * @var string
      */
-    protected static ?string $tableName = null;
+    protected static string $tableName;
 
     /**
      * The primary key column name for this model

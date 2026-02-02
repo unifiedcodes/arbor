@@ -12,7 +12,7 @@ use InvalidArgumentException;
 /**
  * Query
  * 
- * Decoration on Builder class, provides a chainable Builder and Query as proxy class.
+ * A chainable Builder and Query as proxy class.
  * This class extends the Builder functionality by adding execution capabilities and 
  * database interaction methods. It acts as a bridge between the query building process
  * and the actual database execution.

@@ -9,17 +9,81 @@ use Arbor\database\query\Expression;
 use Arbor\database\orm\Pivot;
 
 
+/**
+ * BelongsToMany Relationship
+ *
+ * Represents a many-to-many relationship between two models through a pivot table.
+ * For example, a Student belongs to many Courses, and a Course has many Students.
+ * The pivot table stores the relationship between the two models along with any extra metadata.
+ * 
+ * @package Arbor\database\orm\relations
+ * 
+ */
 class BelongsToMany extends Relationship
 {
+    /**
+     * The related model class name.
+     *
+     * @var string
+     */
     protected string $related;
+
+    /**
+     * The name of the pivot table connecting the two models.
+     *
+     * @var string
+     */
     protected string $pivotTable;
+
+    /**
+     * The foreign key in the pivot table referencing the parent model.
+     *
+     * @var string
+     */
     protected string $foreignKey;
+
+    /**
+     * The foreign key in the pivot table referencing the related model.
+     *
+     * @var string
+     */
     protected string $relatedKey;
+
+    /**
+     * The primary key of the parent model.
+     *
+     * @var string
+     */
     protected string $parentKey;
+
+    /**
+     * The primary key of the related model.
+     *
+     * @var string
+     */
     protected string $relatedPrimary;
+
+    /**
+     * Extra columns in the pivot table to be included in the results.
+     *
+     * @var array
+     */
     protected array  $pivotColumns;
 
 
+    /**
+     * Constructor
+     *
+     * Initializes a BelongsToMany relationship by setting up the join query
+     * between the parent model and related model through a pivot table.
+     *
+     * @param Model $parent The parent model instance
+     * @param string $related The class name of the related model
+     * @param string $pivotTable The name of the pivot table
+     * @param string $foreignKey The foreign key column in the pivot table referencing the parent
+     * @param string $relatedKey The foreign key column in the pivot table referencing the related model
+     * @param array $pivotColumns Extra columns from the pivot table to include in results
+     */
     public function __construct(
         Model $parent,
         string $related,
@@ -45,6 +109,13 @@ class BelongsToMany extends Relationship
     }
 
 
+    /**
+     * Get pivot table conditions
+     *
+     * Builds the WHERE conditions to filter the pivot table by the parent model's primary key.
+     *
+     * @return array Array of conditions in the format [column => value]
+     */
     protected function pivotConditions(): array
     {
         return [
@@ -53,6 +124,16 @@ class BelongsToMany extends Relationship
     }
 
 
+    /**
+     * Get columns to select in the query
+     *
+     * Builds the list of columns to select, including all related model columns
+     * and pivot table columns aliased with "pivot_" prefix.
+     *
+     * @param array $columns Optional array of columns to select. If empty, selects all related columns
+     *
+     * @return array Array of column selections including Expression objects for aliasing
+     */
     protected function getSelectColumns(array $columns = []): array
     {
         $relatedTable = $this->related::getTableName();
@@ -79,6 +160,14 @@ class BelongsToMany extends Relationship
     }
 
 
+    /**
+     * Build the join query
+     *
+     * Constructs the query that joins the related model table with the pivot table
+     * and applies the pivot conditions to filter results.
+     *
+     * @return ModelQuery The constructed query with joins and conditions
+     */
     protected function makeJoin(): ModelQuery
     {
         $relatedTable = $this->related::getTableName();
@@ -98,6 +187,16 @@ class BelongsToMany extends Relationship
     }
 
 
+    /**
+     * Hydrate record with pivot data
+     *
+     * Separates pivot data from related model data and creates both a related model
+     * instance and a Pivot instance with the separated data.
+     *
+     * @param array $record The raw database record containing both related and pivot columns
+     *
+     * @return Model The related model instance with the pivot attached as a relation
+     */
     protected function hydrateWithPivot(array $record): Model
     {
         $pivotData = [];
@@ -134,6 +233,13 @@ class BelongsToMany extends Relationship
     }
 
 
+    /**
+     * Resolve the relationship
+     *
+     * Executes the query and returns all related models hydrated with their pivot data.
+     *
+     * @return array Array of related model instances with pivot data attached
+     */
     public function resolve()
     {
         $records = $this->query->fetchAll();
@@ -147,6 +253,16 @@ class BelongsToMany extends Relationship
     }
 
 
+    /**
+     * Detach related models from the pivot table
+     *
+     * Removes one or more related model associations from the pivot table.
+     * If no IDs are specified, detaches all related models for this parent.
+     *
+     * @param int|array|null $relatedIds The ID(s) of related models to detach, or null to detach all
+     *
+     * @return int The number of rows deleted from the pivot table
+     */
     public function detach($relatedIds = null): int
     {
         $pivotTable = $this->pivotTable;
@@ -169,6 +285,17 @@ class BelongsToMany extends Relationship
     }
 
 
+    /**
+     * Attach related models to the pivot table
+     *
+     * Inserts one or more related model associations into the pivot table.
+     * Extra pivot data can be provided for additional columns.
+     *
+     * @param int|array $relatedIds The ID(s) of related models to attach
+     * @param array $extra Additional pivot table column data to insert (e.g., ['role' => 'admin'])
+     *
+     * @return void
+     */
     public function attach($relatedIds, array $extra = []): void
     {
         $pivotTable = $this->pivotTable;
@@ -195,6 +322,18 @@ class BelongsToMany extends Relationship
     }
 
 
+    /**
+     * Synchronize related models in the pivot table
+     *
+     * Updates the pivot table to contain exactly the specified related model IDs.
+     * Detaches models not in the list and attaches new ones. This is useful for
+     * updating many-to-many relationships from form submissions.
+     *
+     * @param int|array $relatedIds The ID(s) that should be associated with the parent model
+     * @param array $extra Additional pivot table column data for newly attached records
+     *
+     * @return void
+     */
     public function sync($relatedIds, array $extra = []): void
     {
         $pivotTable = $this->pivotTable;
@@ -222,6 +361,17 @@ class BelongsToMany extends Relationship
     }
 
 
+    /**
+     * Eager load the relationship for multiple models
+     *
+     * Optimizes loading of related models for a collection of parent models by executing
+     * a single query with an IN clause instead of multiple queries.
+     *
+     * @param string $relationName The name of the relationship to attach to the models
+     * @param array $models Array of parent model instances
+     *
+     * @return array The models array with the relationship data attached
+     */
     public function eagerLoad(string $relationName, array $models): array
     {
         if (empty($models)) {
@@ -261,6 +411,18 @@ class BelongsToMany extends Relationship
     }
 
 
+    /**
+     * Match related models to parent models
+     *
+     * Associates each parent model with its corresponding related models by grouping
+     * related models by their parent ID from the pivot data.
+     *
+     * @param string $relationName The name of the relationship to attach
+     * @param array $models Array of parent model instances
+     * @param array $related Array of related model instances with pivot data
+     *
+     * @return array The models array with the relationship data attached to each model
+     */
     public function match(string $relationName, array $models, array $related): array
     {
         // Build dictionary: parent_id => [related models]

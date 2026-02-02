@@ -3,6 +3,7 @@
 namespace Arbor\database\orm\relations;
 
 use Arbor\database\orm\Model;
+use Arbor\database\orm\ModelQuery;
 
 /**
  * MorphOne Relationship
@@ -75,13 +76,22 @@ class MorphOne extends Relationship
         $this->localKey = $localKey ?? $parent->getPrimaryKey();
         $this->morphType = get_class($parent);
 
-        $query = $related::query()
-            ->where($this->foreignKey, $parent->getAttribute($this->localKey))
-            ->where($this->typeKey, $this->morphType);
-
-        parent::__construct($parent, $query);
+        parent::__construct($parent);
     }
 
+
+    protected function newQuery(): ModelQuery
+    {
+        return $this->relatedInstance::query()
+            ->where(
+                $this->foreignKey,
+                $this->parent->getAttribute($this->localKey)
+            )
+            ->where(
+                $this->typeKey,
+                $this->morphType
+            );
+    }
 
     /**
      * Resolve the relationship
@@ -93,7 +103,7 @@ class MorphOne extends Relationship
      */
     public function resolve()
     {
-        return $this->query->first();
+        return $this->newQuery()->first();
     }
 
 

@@ -3,6 +3,7 @@
 namespace Arbor\database\orm\relations;
 
 use Arbor\database\orm\Model;
+use Arbor\database\orm\ModelQuery;
 
 /**
  * HasOne Relationship
@@ -54,9 +55,18 @@ class HasOne extends Relationship
         $this->foreignKey = $foreignKey;
         $this->localKey = $localKey ?? $parent->getPrimaryKey();
 
-        $query = $related::query()->where($this->foreignKey, $parent->getAttribute($this->localKey));
 
-        parent::__construct($parent, $query);
+        parent::__construct($parent);
+    }
+
+
+    protected function newQuery(): ModelQuery
+    {
+        return $this->relatedInstance::query()
+            ->where(
+                $this->foreignKey,
+                $this->parent->getAttribute($this->localKey)
+            );
     }
 
     /**
@@ -68,7 +78,7 @@ class HasOne extends Relationship
      */
     public function resolve()
     {
-        return $this->query->first();
+        return $this->newQuery()->first();
     }
 
     /**

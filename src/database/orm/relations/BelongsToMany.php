@@ -103,11 +103,14 @@ class BelongsToMany extends Relationship
 
         $this->parent = $parent;
 
-        $query = $this->makeJoin();
-
-        parent::__construct($parent, $query);
+        parent::__construct($parent);
     }
 
+
+    protected function newQuery(): ModelQuery
+    {
+        return $this->makeJoin();
+    }
 
     /**
      * Get pivot table conditions
@@ -242,7 +245,7 @@ class BelongsToMany extends Relationship
      */
     public function resolve()
     {
-        $records = $this->query->fetchAll();
+        $records = $this->newQuery()->fetchAll();
         $models = [];
 
         foreach ($records as $record) {

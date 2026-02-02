@@ -125,12 +125,22 @@ class ModelQuery
      */
     public function create(array $attributes)
     {
-        // insert into table, get back inserted-id
-        $id = $this->builder->insert($attributes);
+        $class = $this->model;
 
-        $attributes = array_merge($attributes, ['id' => $id]);
+        // 1. Create model in untrusted mode → fillable enforced
+        $model = new $class($attributes, false);
 
-        return $this->hydrate($attributes);
+        // 2. Persist using model state
+        $id = $this->builder->insert($model->toArray());
+
+        // 3. Mark model as persisted
+        $primaryKey = $class::getPrimaryKey();
+        $model->setAttribute($primaryKey, $id);
+
+        $model->exists = true;
+        $model->syncOriginal();
+
+        return $model;
     }
 
     /**

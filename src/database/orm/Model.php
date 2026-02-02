@@ -9,6 +9,7 @@ use Arbor\database\orm\relations\BelongsTo;
 use Arbor\database\orm\relations\BelongsToMany;
 use Arbor\database\orm\relations\MorphOne;
 use Arbor\database\orm\relations\MorphMany;
+use Arbor\database\orm\relations\MorphToMany;
 use Arbor\database\orm\relations\Relationship;
 
 /**
@@ -284,6 +285,42 @@ abstract class Model extends BaseModel
     public function morphMany(string $related, string $foreignKey, string $typeKey): Relationship
     {
         return new MorphMany($this, $related, $foreignKey, $typeKey);
+    }
+
+
+    /**
+     * Define a polymorphic many-to-many relationship.
+     *
+     * Example: Post <-> Tag through taggables
+     *
+     * @param string $related        Related model class
+     * @param string $pivotTable     Pivot table name
+     * @param string $foreignKey     FK in pivot referencing parent
+     * @param string $relatedKey     FK in pivot referencing related
+     * @param string $morphType      Column storing morph type
+     * @param string $morphClass     Morph class value (usually static::class)
+     * @param array  $pivotColumns  Extra pivot columns
+     * @return Relationship
+     */
+    public function morphToMany(
+        string $related,
+        string $pivotTable,
+        string $foreignKey,
+        string $relatedKey,
+        string $morphType,
+        string $morphClass,
+        array $pivotColumns = []
+    ): Relationship {
+        return new MorphToMany(
+            $this,
+            $related,
+            $pivotTable,
+            $foreignKey,
+            $relatedKey,
+            $morphType,
+            $morphClass,
+            $pivotColumns
+        );
     }
 
     /**

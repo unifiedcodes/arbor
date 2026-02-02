@@ -4,6 +4,7 @@ namespace Arbor\database\orm\relations;
 
 use Arbor\database\orm\Model;
 use Arbor\database\orm\ModelQuery;
+use BadMethodCallException;
 
 /**
  * Abstract base class for defining relationships between models in the ORM.
@@ -125,7 +126,7 @@ abstract class Relationship
      * @param string $method The method name being called
      * @param array $arguments The arguments passed to the method
      * @return mixed Either this relationship instance (for chaining) or the method result
-     * @throws \BadMethodCallException If the method doesn't exist on the query builder
+     * @throws BadMethodCallException If the method doesn't exist on the query builder
      */
     public function __call($method, $arguments)
     {
@@ -133,10 +134,10 @@ abstract class Relationship
             $result = $this->query->$method(...$arguments);
 
             // If the query returns itself (chainable), return the Relationship for further chaining
-            return $result instanceof \Arbor\database\orm\ModelQuery ? $this : $result;
+            return $result instanceof ModelQuery ? $this : $result;
         }
 
-        throw new \BadMethodCallException(
+        throw new BadMethodCallException(
             "Method {$method} does not exist on " . static::class
         );
     }

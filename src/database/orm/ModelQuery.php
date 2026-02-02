@@ -186,13 +186,20 @@ class ModelQuery
      */
     public function first(?array $columns = null)
     {
-        // Run builder first
         $record = $this->builder->select($columns)->first();
 
-        // Hydrate into a model if found
-        return $record
-            ? $this->hydrate($record)
-            : null;
+        if (!$record) {
+            return null;
+        }
+
+        $model = $this->hydrate($record);
+
+        // Eager load relations for a single model
+        if (!empty($this->withRelations)) {
+            $this->eagerRelations([$model]);
+        }
+
+        return $model;
     }
 
     /**

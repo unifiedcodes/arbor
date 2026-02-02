@@ -32,6 +32,13 @@ abstract class Model extends BaseModel
     protected array $relations = [];
 
     /**
+     * Attributes that are allowed for mass assignment.
+     *
+     * @var array<int, string>
+     */
+    protected array $fillable = [];
+
+    /**
      * Set the given relationship on the model.
      *
      * @param string $relation The name of the relationship
@@ -131,6 +138,22 @@ abstract class Model extends BaseModel
         );
     }
 
+
+    public function getFillable(): array
+    {
+        return $this->fillable;
+    }
+
+
+    public function isFillable(string $key): bool
+    {
+        // If fillable is empty, allow nothing
+        if (empty($this->fillable)) {
+            return false;
+        }
+
+        return in_array($key, $this->fillable, true);
+    }
     // -----------------------
     // Save / delete
     // -----------------------

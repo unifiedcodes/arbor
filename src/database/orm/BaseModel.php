@@ -73,9 +73,16 @@ abstract class BaseModel implements ArrayAccess, JsonSerializable
      */
     public function __construct(array $attributes = [], bool $exists = false)
     {
-        $this->fill($attributes);
+        if ($exists) {
+            // Trusted hydration (DB → Model)
+            $this->attributes = $attributes;
+        } else {
+            // Untrusted hydration (External → Model)
+            $this->fill($attributes);
+        }
+
+        $this->exists = $exists;
         $this->syncOriginal();
-        $this->exists($exists);
     }
 
     // -----------------------

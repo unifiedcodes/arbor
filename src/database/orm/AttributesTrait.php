@@ -2,6 +2,8 @@
 
 namespace Arbor\database\orm;
 
+use InvalidArgumentException;
+
 /**
  * Trait AttributesTrait
  * 
@@ -41,8 +43,17 @@ trait AttributesTrait
     public function fill(array $attributes): static
     {
         foreach ($attributes as $key => $value) {
+
+            // If model supports fillable, enforce it
+            if (method_exists($this, 'isFillable')) {
+                if (! $this->isFillable($key)) {
+                    throw new InvalidArgumentException("{$key} is not fillable");
+                }
+            }
+
             $this->setAttribute($key, $value);
         }
+
         return $this;
     }
 

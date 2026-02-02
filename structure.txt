@@ -1,0 +1,197 @@
+.
+├── composer.json
+├── LICENSE
+├── README.md
+├── src
+│   ├── auth
+│   │   ├── AuthContext.php
+│   │   ├── authentication
+│   │   │   ├── AuthorityStoreInterface.php
+│   │   │   ├── issuers
+│   │   │   │   ├── JWTIssuer.php
+│   │   │   │   └── OpaqueIssuer.php
+│   │   │   ├── NullTokenStore.php
+│   │   │   ├── Policy.php
+│   │   │   ├── Registry.php
+│   │   │   ├── TokenIssuerInterface.php
+│   │   │   ├── Token.php
+│   │   │   └── TokenStoreInterface.php
+│   │   ├── authorization
+│   │   │   ├── ActionHelpers.php
+│   │   │   ├── ActionInterface.php
+│   │   │   ├── Action.php
+│   │   │   ├── Evaluator.php
+│   │   │   └── Registry.php
+│   │   ├── Authorizer.php
+│   │   ├── Auth.php
+│   │   └── Keys.php
+│   ├── bootstrap
+│   │   ├── AppConfigScope.php
+│   │   ├── App.php
+│   │   ├── Autoloader.php
+│   │   └── URLResolver.php
+│   ├── config
+│   │   ├── Compiler.php
+│   │   ├── Configurator.php
+│   │   ├── ConfigValue.php
+│   │   ├── ExpressionPipeline.php
+│   │   ├── expressions
+│   │   │   ├── CallExpression.php
+│   │   │   ├── DSLExpression.php
+│   │   │   ├── ExpressionInterface.php
+│   │   │   └── TypeCastExpression.php
+│   │   ├── Expr.php
+│   │   ├── Registry.php
+│   │   └── ResolverContext.php
+│   ├── container
+│   │   ├── AttributeInterface.php
+│   │   ├── ContainerInterface.php
+│   │   ├── Providers.php
+│   │   ├── Registry.php
+│   │   ├── Resolver.php
+│   │   ├── ServiceBond.php
+│   │   ├── ServiceContainer.php
+│   │   └── ServiceProvider.php
+│   ├── database
+│   │   ├── connection
+│   │   │   ├── Connection.php
+│   │   │   └── ConnectionPool.php
+│   │   ├── Database.php
+│   │   ├── DatabaseResolver.php
+│   │   ├── orm
+│   │   │   ├── AttributesTrait.php
+│   │   │   ├── BaseModel.php
+│   │   │   ├── Model.php
+│   │   │   ├── ModelQuery.php
+│   │   │   ├── Pivot.php
+│   │   │   └── relations
+│   │   │       ├── BelongsToMany.php
+│   │   │       ├── BelongsTo.php
+│   │   │       ├── HasMany.php
+│   │   │       ├── HasOne.php
+│   │   │       ├── MorphMany.php
+│   │   │       ├── MorphOne.php
+│   │   │       ├── MorphToMany.php
+│   │   │       └── Relationship.php
+│   │   ├── PdoDb.php
+│   │   ├── query
+│   │   │   ├── Builder.php
+│   │   │   ├── Expression.php
+│   │   │   ├── grammar
+│   │   │   │   ├── Grammar.php
+│   │   │   │   └── MysqlGrammar.php
+│   │   │   ├── helpers
+│   │   │   │   ├── HelpersTrait.php
+│   │   │   │   ├── JoinTrait.php
+│   │   │   │   └── WhereTrait.php
+│   │   │   └── Placeholder.php
+│   │   ├── QueryBuilder.php
+│   │   └── utility
+│   │       ├── GrammarResolver.php
+│   │       └── PlaceholderParser.php
+│   ├── exception
+│   │   ├── ExceptionContext.php
+│   │   ├── ExceptionKernel.php
+│   │   ├── Normalizer.php
+│   │   ├── Renderer.php
+│   │   └── template
+│   │       ├── exception.css
+│   │       └── HTML.php
+│   ├── execution
+│   │   ├── ExecutionContext.php
+│   │   └── ExecutionType.php
+│   ├── facades
+│   │   ├── Config.php
+│   │   ├── Container.php
+│   │   ├── DB.php
+│   │   ├── Facade.php
+│   │   ├── Flash.php
+│   │   ├── Respond.php
+│   │   ├── Route.php
+│   │   ├── Scope.php
+│   │   ├── Session.php
+│   │   └── View.php
+│   ├── file
+│   │   ├── FileProcessorInterface.php
+│   │   ├── processors
+│   │   │   └── ImageProcessor.php
+│   │   └── Uploader.php
+│   ├── filters
+│   │   ├── Filters.php
+│   │   ├── Registry.php
+│   │   ├── StageInterface.php
+│   │   ├── StageListInterface.php
+│   │   └── StageList.php
+│   ├── flash
+│   │   ├── Flasher.php
+│   │   ├── Message.php
+│   │   └── View.php
+│   ├── fragment
+│   │   └── Fragment.php
+│   ├── http
+│   │   ├── components
+│   │   │   ├── Attributes.php
+│   │   │   ├── Cookies.php
+│   │   │   ├── Headers.php
+│   │   │   ├── Stream.php
+│   │   │   ├── UploadedFile.php
+│   │   │   └── Uri.php
+│   │   ├── HttpKernel.php
+│   │   ├── HttpSubKernel.php
+│   │   ├── RequestContext.php
+│   │   ├── RequestFactory.php
+│   │   ├── Request.php
+│   │   ├── ResponseFactory.php
+│   │   ├── Response.php
+│   │   ├── ServerRequest.php
+│   │   └── traits
+│   │       ├── BodyTrait.php
+│   │       ├── HeaderTrait.php
+│   │       └── ResponseNormalizerTrait.php
+│   ├── pipeline
+│   │   ├── Pipeline.php
+│   │   └── StageInterface.php
+│   ├── router
+│   │   ├── ErrorRouter.php
+│   │   ├── Group.php
+│   │   ├── Meta.php
+│   │   ├── Node.php
+│   │   ├── Registry.php
+│   │   ├── RouteContext.php
+│   │   ├── RouteMethods.php
+│   │   ├── Router.php
+│   │   └── URLBuilder.php
+│   ├── scope
+│   │   ├── Frame.php
+│   │   ├── Scope.php
+│   │   ├── StackInterface.php
+│   │   └── Stack.php
+│   ├── session
+│   │   ├── SessionInterface.php
+│   │   └── Session.php
+│   ├── support
+│   │   ├── helpers
+│   │   │   ├── arrays.php
+│   │   │   ├── common.php
+│   │   │   └── url.php
+│   │   ├── Helpers.php
+│   │   └── Macros.php
+│   ├── validation
+│   │   ├── Definition.php
+│   │   ├── ErrorsFormatter.php
+│   │   ├── Evaluator.php
+│   │   ├── Parser.php
+│   │   ├── Registry.php
+│   │   ├── RuleInterface.php
+│   │   ├── RuleListInterface.php
+│   │   ├── RuleList.php
+│   │   ├── ValidationException.php
+│   │   ├── ValidatorFactory.php
+│   │   └── Validator.php
+│   └── view
+│       ├── Builder.php
+│       ├── Renderer.php
+│       └── ViewFactory.php
+└── structure.txt
+
+38 directories, 157 files

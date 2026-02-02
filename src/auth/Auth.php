@@ -137,7 +137,7 @@ final class Auth
     public function haveAuthorizer(): void
     {
         if (!$this->authorizer) {
-            throw new RuntimeException("authorizer is not configured");
+            throw new RuntimeException("'Authorizer' is not configured");
         }
     }
 

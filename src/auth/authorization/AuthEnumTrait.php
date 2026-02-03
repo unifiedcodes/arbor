@@ -6,7 +6,7 @@ use LogicException;
 use UnitEnum;
 use BackedEnum;
 
-trait ActionHelpers
+trait AuthEnumTrait
 {
     public function key(): string
     {

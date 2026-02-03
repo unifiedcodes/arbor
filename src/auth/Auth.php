@@ -9,6 +9,7 @@ use Arbor\auth\authentication\Token;
 use Arbor\auth\authentication\Policy;
 use Arbor\auth\AuthContext;
 use Arbor\auth\authorization\ActionInterface;
+use Arbor\auth\authorization\ResourceInterface;
 use Arbor\auth\Authorizer;
 use Arbor\facades\Scope;
 use RuntimeException;
@@ -117,14 +118,21 @@ final class Auth
     }
 
 
-    public function ability(string $id, string $resource, ActionInterface $action): void
+    public function ability(string $id, ResourceInterface|string $resource, ActionInterface $action): void
     {
         $this->haveAuthorizer();
         $this->authorizer->addAbility($id, $resource, $action);
     }
 
 
-    public function can(string $resource, ActionInterface $action): void
+    public function abilityFile(string $filePath): void
+    {
+        $auth = $this;
+        require_once $filePath;
+    }
+
+
+    public function can(ResourceInterface|string $resource, ActionInterface $action): void
     {
         $this->haveAuthorizer();
 

@@ -92,12 +92,30 @@ class Registry
     }
 
 
+    /**
+     * Validate a token.
+     *
+     * Performs validation checks on the token using the configured token store.
+     *
+     * @param Token $token The token to validate
+     *
+     * @return void
+     */
     public function validate(Token $token): void
     {
         $this->store->validate($token);
     }
 
 
+    /**
+     * Revoke a token.
+     *
+     * Revokes the token by its ID using the configured token store.
+     *
+     * @param Token $token The token to revoke
+     *
+     * @return void
+     */
     public function revoke(Token $token): void
     {
         $tokenId = $token->id();
@@ -105,6 +123,16 @@ class Registry
     }
 
 
+    /**
+     * Get abilities for a token.
+     *
+     * Retrieves the list of abilities granted to the provided token
+     * from the configured authority store.
+     *
+     * @param Token $token The token whose abilities should be retrieved
+     *
+     * @return array An array of abilities granted to the token
+     */
     public function getAbilities(Token $token): array
     {
         return $this->authstore->abilities($token);

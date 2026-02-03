@@ -142,7 +142,16 @@ final class AuthContext
         return $this->attributes;
     }
 
-
+    /**
+     * Check if the current authentication context has a specific ability.
+     *
+     * Determines whether the authenticated user possesses the ability identified
+     * by the provided ability ID.
+     *
+     * @param string $id The ability identifier to check for
+     *
+     * @return bool True if the ability is granted, false otherwise
+     */
     public function hasAbility(string $id): bool
     {
         return in_array($id, $this->abilities);

@@ -108,6 +108,16 @@ final class Auth
     }
 
 
+    /**
+     * Revoke an authentication token
+     *
+     * Revokes the provided token, effectively invalidating it for future use.
+     * Accepts either a Token or AuthContext instance.
+     *
+     * @param Token|AuthContext $token The token or auth context to revoke
+     *
+     * @return void
+     */
     public function revoke(Token|AuthContext $token): void
     {
         if ($token instanceof AuthContext) {
@@ -118,6 +128,20 @@ final class Auth
     }
 
 
+    /**
+     * Register an ability
+     *
+     * Defines a new ability that maps a resource and action to an ability identifier.
+     * The authorizer must be configured, otherwise a RuntimeException is thrown.
+     *
+     * @param string $id The unique identifier for this ability
+     * @param ResourceInterface|string $resource The resource the ability applies to
+     * @param ActionInterface $action The action the ability allows
+     *
+     * @throws RuntimeException If authorizer is not configured
+     *
+     * @return void
+     */
     public function ability(string $id, ResourceInterface|string $resource, ActionInterface $action): void
     {
         $this->haveAuthorizer();
@@ -125,6 +149,16 @@ final class Auth
     }
 
 
+    /**
+     * Load abilities from a file
+     *
+     * Includes and executes the specified file in the context of this Auth instance,
+     * allowing the file to define abilities using the ability() method.
+     *
+     * @param string $filePath The path to the abilities definition file
+     *
+     * @return void
+     */
     public function abilityFile(string $filePath): void
     {
         $auth = $this;
@@ -132,6 +166,20 @@ final class Auth
     }
 
 
+    /**
+     * Check if the current user can perform an action on a resource
+     *
+     * Verifies that the authenticated user in the current scope has the ability
+     * to perform the specified action on the given resource. The authorizer must
+     * be configured, otherwise a RuntimeException is thrown.
+     *
+     * @param ResourceInterface|string $resource The resource to check access for
+     * @param ActionInterface $action The action to check authorization for
+     *
+     * @throws RuntimeException If authorizer is not configured
+     *
+     * @return void
+     */
     public function can(ResourceInterface|string $resource, ActionInterface $action): void
     {
         $this->haveAuthorizer();
@@ -142,6 +190,16 @@ final class Auth
     }
 
 
+    /**
+     * Ensure an authorizer is configured
+     *
+     * Validates that an Authorizer instance has been set. Throws a RuntimeException
+     * if the authorizer is not available.
+     *
+     * @throws RuntimeException If authorizer is not configured
+     *
+     * @return void
+     */
     public function haveAuthorizer(): void
     {
         if (!$this->authorizer) {
@@ -150,6 +208,13 @@ final class Auth
     }
 
 
+    /**
+     * Get all defined ability IDs
+     *
+     * Returns a list of all ability identifiers that have been defined in the authorizer.
+     *
+     * @return array An array of ability ID strings
+     */
     public function definedAbilities(): array
     {
         return $this->authorizer->abilityIds();

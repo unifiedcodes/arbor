@@ -20,6 +20,9 @@ use RuntimeException;
  *
  * Manages authentication operations including token issuance, resolution, and validation.
  * This class coordinates between token issuers, storage, and validation policies.
+ * 
+ * @package Arbor/auth
+ * 
  */
 final class Auth
 {

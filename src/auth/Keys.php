@@ -12,6 +12,9 @@ use RuntimeException;
  * This class handles Ed25519 signing keys using libsodium for secure
  * cryptographic operations. It supports key rotation with timestamp-based
  * key IDs (KIDs) and provides methods to access both active and archived keys.
+ * 
+ * @package Arbor/auth
+ * 
  */
 class Keys
 {

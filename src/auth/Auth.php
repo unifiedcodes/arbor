@@ -16,7 +16,7 @@ use RuntimeException;
 
 
 /**
- * Auth class
+ * Auth class Orchestrator for authentication and authorization.
  *
  * Manages authentication operations including token issuance, resolution, and validation.
  * This class coordinates between token issuers, storage, and validation policies.

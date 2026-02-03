@@ -4,7 +4,7 @@ namespace Arbor\auth\authorization;
 
 enum Action: string implements ActionInterface
 {
-    use ActionHelpers;
+    use AuthEnumTrait;
 
         // CRUD
     case CREATE = 'create';

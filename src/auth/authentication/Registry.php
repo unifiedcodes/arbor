@@ -3,8 +3,10 @@
 namespace Arbor\auth\authentication;
 
 use Arbor\auth\authentication\TokenStoreInterface;
-use Arbor\auth\authentication\NullTokenStore;
+use Arbor\auth\authentication\AuthorityStoreInterface;
 use Arbor\auth\authentication\Token;
+use Arbor\auth\authentication\NullTokenStore;
+use Arbor\auth\authentication\NullAuthStore;
 use InvalidArgumentException;
 
 /**
@@ -13,6 +15,7 @@ use InvalidArgumentException;
  * This class acts as a registry for storing and retrieving authentication tokens.
  * It provides token persistence through a TokenStoreInterface implementation and
  * validates token claims against store requirements.
+ * 
  */
 class Registry
 {
@@ -27,6 +30,7 @@ class Registry
         private ?AuthorityStoreInterface $authstore = null
     ) {
         $this->store = $store ?? new NullTokenStore();
+        $this->authstore = $authstore ?? new NullAuthStore();
     }
 
 

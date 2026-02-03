@@ -12,6 +12,9 @@ use RuntimeException;
  * 
  * This immutable class provides access to token data, token validation, revocation capabilities,
  * and a mechanism for storing arbitrary attributes associated with the authentication session.
+ * 
+ * @package Arbor/auth
+ * 
  */
 final class AuthContext
 {

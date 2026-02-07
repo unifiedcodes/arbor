@@ -4,12 +4,14 @@ namespace Arbor\files\entries;
 
 use Arbor\files\entries\FileEntryInterface;
 use Arbor\files\Payload;
+use Arbor\http\components\UploadedFile;
+use RuntimeException;
 
 
 final class HttpEntry implements FileEntryInterface
 {
     public function __construct(
-        private ?array $file = null
+        private UploadedFile|array|null $file = null
     ) {}
 
 
@@ -24,13 +26,43 @@ final class HttpEntry implements FileEntryInterface
 
     public function toPayload(): Payload
     {
+        if (is_array($this->file)) {
+            return $this->fromRawFile($this->file);
+        }
+
+        if ($this->file instanceof UploadedFile) {
+            return $this->fromUploadedFile();
+        }
+
+        throw new RuntimeException('No uploaded file provided');
+    }
+
+
+    protected function fromRawFile(array $file): Payload
+    {
         return new Payload(
-            originalName: $this->file['name'],
-            mime: $this->file['type'] ?? 'application/octet-stream',
-            size: (int) $this->file['size'],
-            source: $this->file['tmp_name'],
+            originalName: $file['name'],
+            mime: $file['type'] ?? 'application/octet-stream',
+            size: (int) $file['size'],
+            source: $file['tmp_name'],
             meta: [
-                'error' => $this->file['error'] ?? null,
+                'error' => $file['error'] ?? null,
+            ]
+        );
+    }
+
+
+    protected function fromUploadedFile(): Payload
+    {
+        return new Payload(
+            originalName: $this->file->getClientFilename(),
+            mime: $this->file->getClientMediaType() ?? 'application/octet-stream',
+            size: $this->file->getSize(),
+            source: $this->file->getStream(), // or path if Payload prefers
+            meta: [
+                'error'     => $this->file->getError(),
+                'extension' => $this->file->getClientExtension(),
+                'moved'     => $this->file->isMoved(),
             ]
         );
     }

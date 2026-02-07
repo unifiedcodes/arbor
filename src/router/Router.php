@@ -43,13 +43,6 @@ class Router
      */
     protected Group $group;
 
-    /**
-     * URLBuilder instance.
-     *
-     * @var URLBuilder
-     */
-    protected URLBuilder $URLBuilder;
-
 
     /**
      * URLBuilder instance.
@@ -83,18 +76,13 @@ class Router
     public function __construct(
         protected Pipeline $pipeline,
 
-        #[ConfigValue('root.uri')]
-        protected string $baseURI,
+        protected URLBuilder $URLBuilder,
 
         #[ConfigValue('app.uri_prefix')]
         protected string $urlPrefix,
-
-        #[ConfigValue('root.is_debug')]
-        protected ?bool $isDebug = false,
     ) {
         $this->registry = new Registry();
         $this->group = new Group();
-        $this->URLBuilder = new URLBuilder($baseURI);
         $this->errorRouter = new ErrorRouter();
     }
 

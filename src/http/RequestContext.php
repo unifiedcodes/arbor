@@ -21,15 +21,11 @@ final class RequestContext
      * Creates a new RequestContext instance.
      *
      * @param Request|ServerRequest $request The HTTP request object
-     * @param string $baseURI The base URI for the application
-     * @param string $basePath The base path extracted from the base URI
      * @param mixed $route The route information associated with this request
      * @param bool $isErrorRequest Whether this request is an error request
      */
     public function __construct(
         protected readonly Request|ServerRequest $request,
-        protected readonly string $baseURI = '',
-        protected readonly string $basePath = '',
         protected readonly mixed $route = null,
         protected readonly bool $isErrorRequest = false,
     ) {}
@@ -42,18 +38,8 @@ final class RequestContext
      */
     public static function from(Request $request): self
     {
-        $baseURI  = '';
-        $basePath = '';
-
-        if ($request instanceof ServerRequest) {
-            $baseURI  = self::prepareBaseURI($request->getBaseURI());
-            $basePath = parse_url($baseURI, PHP_URL_PATH) ?? '';
-        }
-
         return new self(
             request: $request,
-            baseURI: $baseURI,
-            basePath: $basePath
         );
     }
 
@@ -88,8 +74,6 @@ final class RequestContext
     {
         return new self(
             request: $this->request,
-            baseURI: $this->baseURI,
-            basePath: $this->basePath,
             route: $route,
             isErrorRequest: $this->isErrorRequest
         );
@@ -104,8 +88,6 @@ final class RequestContext
     {
         return new self(
             request: $this->request,
-            baseURI: $this->baseURI,
-            basePath: $this->basePath,
             route: $this->route,
             isErrorRequest: true
         );
@@ -209,55 +191,16 @@ final class RequestContext
         return $this->getScheme() === 'https';
     }
 
-    /**
-     * Prepares and normalizes the base URI by adding scheme if missing.
-     *
-     * @param string|null $baseURI The base URI to prepare
-     * @return string The prepared base URI with scheme
-     */
-    protected static function prepareBaseURI($baseURI)
-    {
-        $parseURI = parse_url($baseURI ?? '');
-
-        if (!isset($parseURI['scheme'])) {
-            $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
-            $baseURI = $scheme . $baseURI;
-        }
-
-        return $baseURI;
-    }
-
-
-    /**
-     * Gets the base URI.
-     * 
-     * @return string The base URI
-     */
-    public function getBaseURI(): string
-    {
-        return $this->baseURI;
-    }
-
-    /**
-     * Gets the base path.
-     * 
-     * @return string The base path
-     */
-    public function getBasePath(): string
-    {
-        return $this->basePath;
-    }
-
 
     /**
      * Gets the path relative to the base path.
      * 
      * @return string The relative path with leading slash
      */
-    public function getRelativePath(): string
+    public function getRelativePath(string $basePath): string
     {
         $requestedPath = $this->request->getUri()->getPath();
-        $basePath = rtrim($this->getBasePath(), '/');
+        $basePath = rtrim($basePath, '/');
 
         // Normalize slashes
         $requestedPath = '/' . ltrim($requestedPath, '/');

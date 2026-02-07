@@ -501,10 +501,7 @@ class App
      */
     public function handleHTTP(): Response
     {
-        // building Request Object.
-        $requestFactory = $this->container->resolve(RequestFactory::class);
-
-        $this->request = $requestFactory->fromGlobals();
+        $request = RequestFactory::fromGlobals();
 
         // Auto Resolve a Router instance from the container.
         $router = $this->container->make(Router::class);
@@ -514,6 +511,7 @@ class App
             HttpKernel::class,
             [
                 'router' => $router,
+                'baseURI' => $this->getConfig('root.uri'),
                 'isDebug' => $this->getConfig('root.is_debug')
             ]
         );
@@ -521,7 +519,7 @@ class App
         $kernel->useMiddlewares($this->getConfig('middlewares', []));
 
         // Process the request through the Kernel and return the response.
-        return $kernel->handle($this->request);
+        return $kernel->handle($request);
     }
 
     /**

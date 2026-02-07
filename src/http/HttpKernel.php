@@ -34,6 +34,10 @@ class HttpKernel
         protected RequestFactory $requestFactory,
         protected Pipeline $pipeline,
         protected Router $router,
+
+        #[ConfigValue('root.uri')]
+        protected string $baseURI = '/',
+
         #[ConfigValue('root.is_debug')]
         protected ?bool $isDebug = false,
     ) {}
@@ -75,7 +79,11 @@ class HttpKernel
             // Attach execution context
             Scope::set(
                 ExecutionContext::class,
-                new ExecutionContext(ExecutionType::HTTP)
+
+                new ExecutionContext(
+                    ExecutionType::HTTP,
+                    $this->baseURI
+                )
             );
 
 
@@ -153,10 +161,11 @@ class HttpKernel
      */
     protected function routerDispatch(): Response
     {
+        $executionContext = Scope::get(ExecutionContext::class);
         $requestContext = Scope::get(RequestContext::class);
 
         // Extract path and verb from the request.
-        $path = $requestContext->getRelativePath();
+        $path = $requestContext->getRelativePath($executionContext->basePath());
         $verb = $requestContext->getMethod();
 
         $routeContext = $this->router->resolve($path, $verb);

@@ -20,11 +20,6 @@ use Arbor\config\ConfigValue;
  */
 class RequestFactory
 {
-    public function __construct(
-        #[ConfigValue('root.uri')]
-        protected string $baseURI
-    ) {}
-
     /**
      * Creates a ServerRequest instance from PHP global variables
      * 
@@ -33,7 +28,7 @@ class RequestFactory
      * 
      * @return ServerRequest The server request object
      */
-    public function fromGlobals(): ServerRequest
+    public static function fromGlobals(): ServerRequest
     {
         $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
         $uri = RequestFactory::URIfromGlobals($_SERVER);
@@ -57,8 +52,7 @@ class RequestFactory
             $cookies,
             $_GET,
             $_POST,
-            $_FILES,
-            $this->baseURI
+            $_FILES
         );
     }
 
@@ -71,7 +65,6 @@ class RequestFactory
      * @param string $body Request body content
      * @param array<string, mixed> $attributes Request attributes
      * @param string|null $version HTTP protocol version
-     * @param string|null $baseURI Base URI to use (overrides the factory's base URI)
      * 
      * @return Request The created request object
      */
@@ -117,7 +110,7 @@ class RequestFactory
      * @param array<string, mixed> $server The $_SERVER array
      * @return Uri The created Uri object
      */
-    protected function URIfromGlobals(array $server): Uri
+    protected static function URIfromGlobals(array $server): Uri
     {
         $scheme = (!empty($server['HTTPS']) && $server['HTTPS'] !== 'off') ? 'https' : 'http';
         $host = $server['HTTP_HOST'] ?? $server['SERVER_NAME'] ?? 'localhost';
@@ -145,7 +138,7 @@ class RequestFactory
      * @param array<string, mixed> $server The $_SERVER array
      * @return Headers The created Headers object
      */
-    protected function HeadersFromGlobals(array $server): Headers
+    protected static function HeadersFromGlobals(array $server): Headers
     {
         $headers = [];
         foreach ($server as $key => $value) {

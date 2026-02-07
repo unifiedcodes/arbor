@@ -56,9 +56,6 @@ class ServerRequest extends Request
      */
     protected null|array|object $parsedBody;
 
-
-    protected string $baseURI;
-
     /**
      * ServerRequest constructor.
      *
@@ -88,7 +85,6 @@ class ServerRequest extends Request
         array $queryParams = [],
         array $parsedBody = [],
         array $uploadedFiles = [],
-        string $baseURI = '/'
     ) {
         // Construct the parent Request class
         parent::__construct($method, $uri, $headers, $body, $attributes, $version);
@@ -101,7 +97,6 @@ class ServerRequest extends Request
 
         // Normalize the uploaded files array to UploadedFile instances
         $this->uploadedFiles = $this->normalizeFiles($uploadedFiles);
-        $this->baseURI = $baseURI;
     }
 
     /**
@@ -275,11 +270,5 @@ class ServerRequest extends Request
         }
 
         return $normalized;
-    }
-
-
-    public function getBaseURI(): string
-    {
-        return $this->baseURI;
     }
 }

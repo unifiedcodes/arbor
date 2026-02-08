@@ -2,39 +2,18 @@
 
 namespace Arbor\files;
 
-use Arbor\files\policy\FilePolicyInterface;
+use Arbor\files\policies\FilePolicyInterface;
 use RuntimeException;
 use LogicException;
 
 
 final class PolicyCatalog
 {
-    /**
-     * All registered policy instances
-     *
-     * @var FilePolicyInterface[]
-     */
     private array $policies = [];
+    private array $namespaces = [];
+    private array $mimes = [];
 
-    /**
-     * Namespace → policy
-     *
-     * @var array<string, FilePolicyInterface>
-     */
-    private array $byNamespace = [];
 
-    /**
-     * Mime pattern → list of policies
-     *
-     * @var array<string, FilePolicyInterface[]>
-     */
-    private array $byMime = [];
-
-    /**
-     * Register multiple policy FQNs.
-     *
-     * @param array<class-string<FilePolicyInterface>> $policies
-     */
     public function registerPolicies(array $policies): void
     {
         foreach ($policies as $policyFqn) {
@@ -42,12 +21,20 @@ final class PolicyCatalog
         }
     }
 
-    /**
-     * Register a single policy FQN.
-     *
-     * @param class-string<FilePolicyInterface> $policyFqn
-     */
+
     public function registerPolicy(string $policyFqn): void
+    {
+        $policy = $this->registerPolicyInstance($policyFqn);
+
+        // Register namespace → policyFqn
+        $this->registerNamespace($policy);
+
+        // Register mimes -> policyFqn
+        $this->registerMimes($policy);
+    }
+
+
+    protected function registerPolicyInstance(string $policyFqn)
     {
         if (!class_exists($policyFqn)) {
             throw new RuntimeException(
@@ -61,89 +48,102 @@ final class PolicyCatalog
             );
         }
 
-        // Instantiate once — policies are descriptors
-        $policy = new $policyFqn();
-
         // Prevent duplicate registration
-        if (in_array($policy, $this->policies, true)) {
-            return;
+        if (isset($this->policies[$policyFqn])) {
+            throw new RuntimeException("policy already registered");
         }
 
-        // Register namespace
+
+        // registering policy.
+        $policy = new $policyFqn();
+        $this->policies[$policyFqn] = $policy;
+
+        return $policy;
+    }
+
+
+    protected function registerNamespace(FilePolicyInterface $policy)
+    {
         $namespace = $policy->namespace();
 
         if ($namespace !== '') {
-            if (isset($this->byNamespace[$namespace])) {
+            if (isset($this->namespaces[$namespace])) {
                 throw new LogicException(
                     "Duplicate policy namespace: {$namespace}"
                 );
             }
 
-            $this->byNamespace[$namespace] = $policy;
+            $this->namespaces[$namespace] = $policy::class;
+        }
+    }
+
+
+    protected function registerMimes(FilePolicyInterface $policy)
+    {
+        $namespace = $policy->namespace() ?: '*';
+
+        if (str_contains($namespace, '/')) {
+            throw new LogicException(
+                "Policy namespace must not contain '/'"
+            );
         }
 
-        // Register mimes
         foreach ($policy->mimes() as $mime) {
+
             if (!is_string($mime) || $mime === '') {
                 throw new LogicException(
-                    "Invalid mime declared by policy {$policyFqn}"
+                    "Invalid mime declared by policy " . $policy::class
                 );
             }
 
-            $this->byMime[$mime][] = $policy;
-        }
+            $key = "{$namespace}/{$mime}";
 
-        $this->policies[] = $policy;
-    }
-
-    /**
-     * Resolve policy by claimed mime.
-     *
-     * First matching policy wins.
-     */
-    public function resolvePolicy(string $claimedMime): FilePolicyInterface
-    {
-        foreach ($this->byMime as $pattern => $policies) {
-            if ($this->mimeMatches($pattern, $claimedMime)) {
-                return $policies[0];
+            if (isset($this->mimes[$key])) {
+                throw new LogicException(
+                    "Duplicate policy match {$key}"
+                );
             }
-        }
 
-        throw new RuntimeException(
-            "No policy supports file type {$claimedMime}"
-        );
+            $this->mimes[$key] = $policy::class;
+        }
     }
 
-    /**
-     * Resolve policy by namespace.
-     */
-    public function policyByNamespace(string $namespace): FilePolicyInterface
+
+    public function hasPolicy(string $policyFqn): bool
     {
-        if (!isset($this->byNamespace[$namespace])) {
+        return isset($this->policies[$policyFqn]);
+    }
+
+
+    public function resolve(string $selector): FilePolicyInterface
+    {
+        $key = $this->normalizeSelector($selector);
+
+        if (!isset($this->mimes[$key])) {
             throw new RuntimeException(
-                "No policy registered for namespace {$namespace}"
+                "No policy resolves '{$selector}'"
             );
         }
 
-        return $this->byNamespace[$namespace];
+        return $this->policies[$this->mimes[$key]];
     }
 
-    /**
-     * Mime pattern matcher.
-     */
-    private function mimeMatches(string $pattern, string $mime): bool
+
+    private function normalizeSelector(string $selector): string
     {
-        if ($pattern === $mime) {
-            return true;
+        $parts = explode('/', $selector);
+        $partsCount = count($parts);
+
+        if ($partsCount === 2) {
+            [$type, $sub] = $parts;
+            return "*/{$type}/{$sub}";
         }
 
-        if (str_ends_with($pattern, '/*')) {
-            return str_starts_with(
-                $mime,
-                rtrim($pattern, '*')
-            );
+        if ($partsCount === 3) {
+            [$namespace, $type, $sub] = $parts;
+            return "{$namespace}/{$type}/{$sub}";
         }
 
-        return false;
+        throw new LogicException("Invalid policy selector '{$selector}'");
     }
 }

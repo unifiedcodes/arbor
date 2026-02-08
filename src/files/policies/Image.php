@@ -2,7 +2,7 @@
 
 namespace Arbor\files\policies;
 
-use Arbor\files\policy\FilePolicyInterface;
+use Arbor\files\policies\FilePolicyInterface;
 use Arbor\files\FileContext;
 use Arbor\files\stores\FileStoreInterface;
 use Arbor\files\strategies\FileStrategyInterface;
@@ -67,6 +67,6 @@ final class Image implements FilePolicyInterface
      */
     public function namespace(): string
     {
-        return 'images';
+        return '';
     }
 }

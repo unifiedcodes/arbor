@@ -2,7 +2,7 @@
 
 namespace Arbor\files\policies;
 
-use Arbor\files\policies\FilePolicyInterface;
+
 use Arbor\files\FileContext;
 use Arbor\files\stores\FileStoreInterface;
 use Arbor\files\strategies\FileStrategyInterface;
@@ -10,18 +10,28 @@ use Arbor\files\strategies\ImageWithGD;
 use LogicException;
 
 
-final class Image implements FilePolicyInterface
+final class Image extends FilePolicy implements FilePolicyInterface
 {
+    /**
+     * Default options for image uploads.
+     */
+    protected function defaults(): array
+    {
+        return [
+            'mimes' => [
+                'image/jpeg',
+                'image/png',
+                'image/webp',
+            ],
+        ];
+    }
+
     /**
      * Supported claimed mimes for this policy.
      */
     public function mimes(): array
     {
-        return [
-            'image/jpeg',
-            'image/png',
-            'image/webp',
-        ];
+        return $this->option('mimes', []);
     }
 
     /**
@@ -33,7 +43,8 @@ final class Image implements FilePolicyInterface
     }
 
     /**
-     * No-op filters.
+     * Filters for image uploads.
+     * Empty by default, but extendable via options.
      */
     public function filters(FileContext $context): array
     {
@@ -41,7 +52,8 @@ final class Image implements FilePolicyInterface
     }
 
     /**
-     * No-op transformers.
+     * Transformers for image uploads.
+     * Empty by default, but extendable via options.
      */
     public function transformers(FileContext $context): array
     {
@@ -50,10 +62,6 @@ final class Image implements FilePolicyInterface
 
     /**
      * Storage target for images.
-     *
-     * NOTE:
-     * If you already have a default image store, return it here.
-     * Throwing for now is acceptable if storage is not wired yet.
      */
     public function store(FileContext $context): FileStoreInterface
     {

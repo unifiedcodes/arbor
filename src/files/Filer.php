@@ -5,6 +5,7 @@ namespace Arbor\files;
 
 use Arbor\files\entries\FileEntryInterface;
 use Arbor\files\FileContext;
+use Arbor\files\policies\FilePolicyInterface;
 use Arbor\files\PolicyCatalog;
 use RuntimeException;
 
@@ -45,17 +46,20 @@ final class Filer
         $fileContext = $strategy->prove($fileContext);
 
         // filter the file.
-        $this->filterFile($fileContext, $policy->filters($fileContext));
-
+        $this->filterFile($fileContext, $policy);
 
         // transform the file.
+        $fileContext = $this->transformFile($fileContext, $policy);
+
         // store the file.
         // return file record.
     }
 
 
-    protected function filterFile(FileContext $fileContext, array $filters)
+    protected function filterFile(FileContext $fileContext, FilePolicyInterface $policy): void
     {
+        $filters = $policy->filters($fileContext);
+
         foreach ($filters as $filter) {
 
             // if filter fails.
@@ -63,5 +67,17 @@ final class Filer
                 throw new RuntimeException($filter->errorMessage($fileContext));
             }
         }
+    }
+
+
+    protected function transformFile(FileContext $fileContext, FilePolicyInterface $policy): FileContext
+    {
+        $transformers = $policy->transformers($fileContext);
+
+        foreach ($transformers as $transformer) {
+            $fileContext = $transformer->transform($fileContext);
+        }
+
+        return $fileContext;
     }
 }

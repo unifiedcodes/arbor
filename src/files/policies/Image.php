@@ -7,6 +7,8 @@ use Arbor\files\FileContext;
 use Arbor\files\stores\FileStoreInterface;
 use Arbor\files\strategies\FileStrategyInterface;
 use Arbor\files\strategies\ImageWithGD;
+use Arbor\files\recordStores\FileRecordStoreInterface;
+use Arbor\files\stores\LocalStore;
 use LogicException;
 
 
@@ -65,9 +67,15 @@ final class Image extends FilePolicy implements FilePolicyInterface
      */
     public function store(FileContext $context): FileStoreInterface
     {
-        throw new LogicException(
-            'Image policy does not define a store yet'
-        );
+        return new LocalStore();
+    }
+
+    /**
+     * file record persistance.
+     */
+    public function recordStore(FileContext $context): ?FileRecordStoreInterface
+    {
+        return null;
     }
 
     /**

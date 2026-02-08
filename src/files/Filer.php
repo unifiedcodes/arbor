@@ -7,6 +7,7 @@ use Arbor\files\entries\FileEntryInterface;
 use Arbor\files\FileContext;
 use Arbor\files\policies\FilePolicyInterface;
 use Arbor\files\PolicyCatalog;
+use Arbor\files\Registry;
 use RuntimeException;
 
 
@@ -27,7 +28,7 @@ final class Filer
     }
 
 
-    public function save(mixed $input)
+    public function save(mixed $input): FileRecord
     {
         $fileEntry = $this->entryPrototype->withInput($input);
 
@@ -53,6 +54,7 @@ final class Filer
 
         // store the file.
         // return file record.
+        return $this->register($fileContext, $policy);
     }
 
 
@@ -79,5 +81,16 @@ final class Filer
         }
 
         return $fileContext;
+    }
+
+
+    protected function register(FileContext $fileContext, FilePolicyInterface $policy): FileRecord
+    {
+        $registry = new Registry(
+            $policy->store($fileContext),
+            $policy->recordStore($fileContext)
+        );
+
+        return $registry->register($fileContext);
     }
 }

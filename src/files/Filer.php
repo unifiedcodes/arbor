@@ -4,10 +4,9 @@ namespace Arbor\files;
 
 
 use Arbor\files\entries\FileEntryInterface;
-use Arbor\files\strategies\FileStrategyInterface;
 use Arbor\files\FileContext;
 use Arbor\files\PolicyCatalog;
-use LogicException;
+use RuntimeException;
 
 
 final class Filer
@@ -31,55 +30,38 @@ final class Filer
     {
         $fileEntry = $this->entryPrototype->withInput($input);
 
-
         // create file context
         $fileContext = FileContext::fromPayload(
             $fileEntry->toPayload()
         );
 
-
         // resolve policy
-        $policy = $this->policyCatalog->resolve($fileContext->get('mime'));
-
+        $policy = $this->policyCatalog->resolve($fileContext->claimMime());
 
         // resolve strategy from policy.
         $strategy = $policy->strategy($fileContext);
 
-
         // prove the file.
-        $fileContext = $this->proveFileType($strategy, $fileContext);
-
-
-        print_r($fileContext);
+        $fileContext = $strategy->prove($fileContext);
 
         // filter the file.
-        // normalize the file.
+        $this->filterFile($fileContext, $policy->filters($fileContext));
+
+
         // transform the file.
         // store the file.
         // return file record.
     }
 
 
-    protected function proveFileType(FileStrategyInterface $strategy, FileContext $fileContext): FileContext
+    protected function filterFile(FileContext $fileContext, array $filters)
     {
-        $fileContext = $strategy->prove($fileContext);
+        foreach ($filters as $filter) {
 
-        if (!$fileContext->isProved()) {
-            throw new LogicException($strategy::class . ' did not mark file as proved');
+            // if filter fails.
+            if (!$filter->filter($fileContext)) {
+                throw new RuntimeException($filter->errorMessage($fileContext));
+            }
         }
-
-        return $fileContext;
-    }
-
-
-    protected function normalizeFile(FileStrategyInterface $strategy, FileContext $fileContext)
-    {
-        $fileContext = $strategy->normalize($fileContext);
-
-        if (!$fileContext->isNormalized()) {
-            throw new LogicException($strategy::class . ' did not normalize file');
-        }
-
-        return $fileContext;
     }
 }

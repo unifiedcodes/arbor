@@ -4,90 +4,166 @@ namespace Arbor\files;
 
 
 use Arbor\files\Payload;
-use Arbor\files\FileNormalized;
+use LogicException;
 
 
 final class FileContext
 {
-    private function __construct(
-        private Payload $payload,
-        private array $attributes = [],
-        private ?FileNormalized $normalized = null,
-        private bool $proved = false
-    ) {}
+    private Payload $payload;
+    private string $mime;
+    private string $extension;
+    private int $size;
+    private string $hash;
+    private string $path;
+    private bool $binary;
+    private bool $proved = false;
+    private array $attributes = [];
+    private ?string $name = null;
+
 
     public static function fromPayload(Payload $payload): self
     {
-        return new self($payload, [
-            'name' => $payload->originalName,
-            'mime' => $payload->mime,
-            'size' => $payload->size,
-        ]);
+        $ctx = new self();
+        $ctx->payload = $payload;
+        return $ctx;
     }
 
-    public function payload(): Payload
+    public function getPayload(): Payload
     {
         return $this->payload;
     }
 
-    public function get(string $key, mixed $default = null): mixed
+    public function claimMime(): ?string
     {
-        return $this->attributes[$key] ?? $default;
+        return $this->payload->mime;
     }
 
-    public function with(string $key, mixed $value): self
+    public function claimExtension(): ?string
     {
-        $clone = clone $this;
-        $clone->attributes[$key] = $value;
-        return $clone;
+        return $this->payload->extension;
     }
 
-    public function all(): array
+    public function originalName(): string
     {
-        return $this->attributes;
+        return $this->payload->name;
     }
 
-
-    /* --------------------Normalization-------------------- */
-
-    public function withNormalized(FileNormalized $file): self
+    public function claimSize(): int
     {
-        $clone = clone $this;
-        $clone->normalized = $file;
-        return $clone;
+        return $this->payload->size;
     }
 
-
-    public function normalized(): FileNormalized
-    {
-        if (!$this->normalized) {
-            throw new \LogicException('File not normalized');
+    public function normalize(
+        string $mime,
+        string $extension,
+        int $size,
+        string $path,
+        string $hash,
+        bool $binary,
+    ): self {
+        if ($this->proved) {
+            throw new LogicException('FileContext is already normalized');
         }
-        return $this->normalized;
+
+        $clone = clone $this;
+
+        $clone->mime = $mime;
+        $clone->extension = $extension;
+        $clone->size = $size;
+        $clone->path = $path;
+        $clone->hash = $hash;
+        $clone->binary = $binary;
+
+        $clone->name = pathinfo($this->originalName(), PATHINFO_FILENAME);
+        $clone->proved = true;
+
+        return $clone;
     }
 
-
-    public function isNormalized(): bool
+    public function withName(string $name): self
     {
-        return $this->normalized !== null;
+        $this->assertProved();
+
+        $clone = clone $this;
+        $clone->name = $name;
+
+        return $clone;
     }
-
-
-    /* --------------------Proved state-------------------- */
 
     public function isProved(): bool
     {
         return $this->proved;
     }
 
-    public function markProved(): self
+    private function assertProved(): void
     {
-        if ($this->proved) {
-            return $this; // idempotent
+        if (!$this->proved) {
+            throw new LogicException('FileContext is not proved yet');
+        }
+    }
+
+    public function name(): string
+    {
+        $this->assertProved();
+        return $this->name;
+    }
+
+    public function mime(): string
+    {
+        $this->assertProved();
+        return $this->mime;
+    }
+
+    public function extension(): string
+    {
+        $this->assertProved();
+        return $this->extension;
+    }
+
+    public function size(): int
+    {
+        $this->assertProved();
+        return $this->size;
+    }
+
+    public function path(): string
+    {
+        $this->assertProved();
+        return $this->path;
+    }
+
+    public function hash(): string
+    {
+        $this->assertProved();
+        return $this->hash;
+    }
+
+    public function isBinary(): bool
+    {
+        $this->assertProved();
+        return $this->binary;
+    }
+
+    public function set(string $key, mixed $value): void
+    {
+        value_set_at($this->attributes, $key, $value);
+    }
+
+    public function get(string $key): mixed
+    {
+        $value = value_at($this->attributes, $key, null);
+
+        if ($value === null && !$this->has($key)) {
+            throw new LogicException(
+                'attribute not available: ' . $key
+            );
         }
 
-        $clone = clone $this;
-        $clone->proved = true;
-        return $clone;
+        return $value;
+    }
+
+    public function has(string $key): bool
+    {
+        return value_at($this->attributes, $key, '__missing__') !== '__missing__';
     }
 }

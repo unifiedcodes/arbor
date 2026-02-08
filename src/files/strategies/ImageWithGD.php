@@ -3,14 +3,13 @@
 namespace Arbor\files\strategies;
 
 use Arbor\files\FileContext;
-use Arbor\files\FileNormalized;
+use Arbor\files\FilePathResolver;
 use RuntimeException;
 use finfo;
 
-
 final class ImageWithGD implements FileStrategyInterface
 {
-    private const MAX_SIZE = 5_000_000; // 10 MB
+    private const MAX_SIZE = 5_000_000; // 5 MB
 
     private const ALLOWED_MIME = [
         'image/jpeg' => 'jpg',
@@ -18,58 +17,35 @@ final class ImageWithGD implements FileStrategyInterface
         'image/webp' => 'webp',
     ];
 
-    public function type(): string
-    {
-        return 'image';
-    }
 
-    /**
-     * Hard validation
-     */
     public function prove(FileContext $context): FileContext
     {
-        $payload = $context->payload();
+        // ---- claimed checks ----
+        $size = $context->claimSize();
 
-        // 1. Size limit
-        if ($context->get('size') <= 0 || $context->get('size') > self::MAX_SIZE) {
+        if ($size <= 0 || $size > self::MAX_SIZE) {
             throw new RuntimeException('Invalid image size');
         }
 
-        // 2. Resolve source path safely
-        $path = $this->resolvePath($payload->source);
+        // ---- resolve source path ----
+        $source = $context->getPayload()->source;
+        $path = FilePathResolver::resolve($source);
 
-        // 3. Real MIME detection (server-side)
+        // ---- real MIME detection ----
         $finfo = new finfo(FILEINFO_MIME_TYPE);
-        $realMime = $finfo->file($path);
+        $mime  = $finfo->file($path);
 
-        if (!isset(self::ALLOWED_MIME[$realMime])) {
+        if (!isset(self::ALLOWED_MIME[$mime])) {
             throw new RuntimeException('Unsupported or spoofed image type');
         }
 
-        // 4. Image header validation (no full read)
+        // ---- structural image validation ----
         $info = @getimagesize($path);
         if ($info === false) {
             throw new RuntimeException('Invalid image structure');
         }
 
-        return $context
-            ->with('trusted_mime', $realMime)
-            ->with('width',  $info[0])
-            ->with('height', $info[1])
-            ->markProved();
-    }
-
-    /**
-     * Security boundary
-     * Decode → re-encode → discard original
-     */
-    public function normalize(FileContext $context): FileContext
-    {
-        $payload = $context->payload();
-        $mime    = $context->get('trusted_mime');
-
-        $path = $this->resolvePath($payload->source);
-
+        // ---- security boundary: decode & re-encode ----
         $image = match ($mime) {
             'image/jpeg' => @imagecreatefromjpeg($path),
             'image/png'  => @imagecreatefrompng($path),
@@ -81,7 +57,6 @@ final class ImageWithGD implements FileStrategyInterface
             throw new RuntimeException('Failed to decode image');
         }
 
-        // Canonical output (always safe)
         $safePath = tempnam(sys_get_temp_dir(), 'img_');
 
         match ($mime) {
@@ -91,31 +66,19 @@ final class ImageWithGD implements FileStrategyInterface
         };
 
 
-        return $context->withNormalized(
-            new FileNormalized(
-                path: $safePath,
-                mime: $context->get('trusted_mime'),
-                extension: self::ALLOWED_MIME[$context->get('trusted_mime')]
-            )
+        // ---- final normalization ----
+        $finalSize = filesize($safePath);
+        $hash      = hash_file('sha256', $safePath);
+        $extension = self::ALLOWED_MIME[$mime];
+
+
+        return $context->normalize(
+            mime: $mime,
+            extension: $extension,
+            size: $finalSize,
+            path: $safePath,
+            hash: $hash,
+            binary: true,
         );
-    }
-
-    /**
-     * Resolve stream or path safely
-     */
-    private function resolvePath(mixed $source): string
-    {
-        if (is_string($source)) {
-            return $source;
-        }
-
-        if (method_exists($source, 'getMetadata')) {
-            $meta = $source->getMetadata();
-            if (!empty($meta['uri'])) {
-                return $meta['uri'];
-            }
-        }
-
-        throw new RuntimeException('Unresolvable file source');
     }
 }

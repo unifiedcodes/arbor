@@ -41,13 +41,12 @@ final class HttpEntry implements FileEntryInterface
     protected function fromRawFile(array $file): Payload
     {
         return new Payload(
-            originalName: $file['name'],
+            name: $file['name'],
             mime: $file['type'] ?? 'application/octet-stream',
             size: (int) $file['size'],
             source: $file['tmp_name'],
-            meta: [
-                'error' => $file['error'] ?? null,
-            ]
+            error: $file['error'] ?? null,
+            moved: false
         );
     }
 
@@ -55,15 +54,13 @@ final class HttpEntry implements FileEntryInterface
     protected function fromUploadedFile(): Payload
     {
         return new Payload(
-            originalName: $this->file->getClientFilename(),
+            name: $this->file->getClientFilename(),
             mime: $this->file->getClientMediaType() ?? 'application/octet-stream',
             size: $this->file->getSize(),
-            source: $this->file->getStream(), // or path if Payload prefers
-            meta: [
-                'error'     => $this->file->getError(),
-                'extension' => $this->file->getClientExtension(),
-                'moved'     => $this->file->isMoved(),
-            ]
+            source: $this->file->getStream(),
+            error: $this->file->getError(),
+            extension: $this->file->getClientExtension(),
+            moved: $this->file->isMoved()
         );
     }
 }

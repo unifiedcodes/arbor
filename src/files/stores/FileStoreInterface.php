@@ -14,8 +14,6 @@ interface FileStoreInterface
 
     public function exists(string $path): bool;
 
-    public function url(string $path): string;
-
     public function delete(string $path): void;
 
     public function key(): string;

@@ -7,16 +7,22 @@ use RuntimeException;
 
 final class LocalStore implements FileStoreInterface
 {
+    public function __construct(
+        public readonly string $rootURL,
+        public readonly string $rootDir
+    ) {}
 
     public function write(FileContext $context, string $path): void
     {
-        ensureDir(dirname($path));
+        ensureDir($path);
 
         $source = $context->path();
 
-        if (!@copy($source, $path)) {
+        $fileName = $path . $context->name();
+
+        if (!copy($source, $fileName)) {
             throw new RuntimeException(
-                'Failed to write file to local store: ' . $path
+                'Failed to write file to ' . $this->key() . ' store: ' . $path
             );
         }
     }
@@ -42,7 +48,7 @@ final class LocalStore implements FileStoreInterface
 
     public function delete(string $path): void
     {
-        if (is_file($path) && !@unlink($path)) {
+        if (is_file($path) && !unlink($path)) {
             throw new RuntimeException(
                 'Failed to delete file: ' . $path
             );

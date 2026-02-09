@@ -52,9 +52,13 @@ final class Filer
         // transform the file.
         $fileContext = $this->transformFile($fileContext, $policy);
 
+
         // store the file.
-        // return file record.
         return $this->register($fileContext, $policy);
+
+        // generate variants.
+
+        // return enriched with variants file record.
     }
 
 
@@ -91,6 +95,10 @@ final class Filer
             $policy->recordStore($fileContext)
         );
 
-        return $registry->register($fileContext);
+        return $registry->register(
+            $fileContext,
+            $policy->storePath($fileContext),
+            $policy->namespace()
+        );
     }
 }

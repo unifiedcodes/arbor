@@ -11,7 +11,6 @@ use Arbor\files\strategies\FileStrategyInterface;
 
 interface FilePolicyInterface
 {
-
     public function strategy(FileContext $context): FileStrategyInterface;
 
     public function filters(FileContext $context): array;
@@ -23,6 +22,8 @@ interface FilePolicyInterface
     public function recordStore(FileContext $context): ?FileRecordStoreInterface;
 
     public function namespace(): string;
+
+    public function storePath(FileContext $context): string;
 
     public function mimes(): array;
 }

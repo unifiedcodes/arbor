@@ -2,6 +2,7 @@
 
 namespace Arbor\files;
 
+use LogicException;
 
 final class FileRecord
 {
@@ -9,6 +10,7 @@ final class FileRecord
         public readonly string $store,
         public readonly string $path,
         public readonly string $url,
+        public readonly string $publicURL,
 
         public readonly string $mime,
         public readonly string $extension,
@@ -21,15 +23,23 @@ final class FileRecord
 
     public static function from(
         FileContext $context,
-        string $path,
         string $storeKey,
-        string $url,
+        string $path,
+        string $uri,
+        string $publicURL,
         string $namespace,
     ): self {
+        if (!$context->isProved()) {
+            throw new LogicException(
+                'Cannot create FileRecord from unproved FileContext'
+            );
+        }
+
         return new self(
             store: $storeKey,
             path: $path,
-            url: $url,
+            url: $uri,
+            publicURL: $publicURL,
 
             mime: $context->mime(),
             extension: $context->extension(),

@@ -9,7 +9,7 @@ final class FileRecord
     private function __construct(
         public readonly string $store,
         public readonly string $path,
-        public readonly string $url,
+        public readonly string $uri,
         public readonly string $publicURL,
 
         public readonly string $mime,
@@ -38,7 +38,7 @@ final class FileRecord
         return new self(
             store: $storeKey,
             path: $path,
-            url: $uri,
+            uri: $uri,
             publicURL: $publicURL,
 
             mime: $context->mime(),

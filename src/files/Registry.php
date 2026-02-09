@@ -6,6 +6,7 @@ namespace Arbor\files;
 use Arbor\files\recordStores\FileRecordStoreInterface;
 use Arbor\files\stores\FileStoreInterface;
 use Arbor\files\FileRecord;
+use LogicException;
 
 
 final class Registry
@@ -36,5 +37,30 @@ final class Registry
         // $this->recordStore->save($record);
 
         return $record;
+    }
+
+
+    public static function generateURI(
+        string $store,
+        string $namespace,
+        string $id,
+        string $extension,
+        ?string $variant = null
+    ): string {
+
+        if ($store === '' || $namespace === '' || $id === '' || $extension === '') {
+            throw new LogicException('Invalid arguments for URI generation');
+        }
+
+        $variantPart = $variant !== null ? "~{$variant}" : '';
+
+        return sprintf(
+            '%s://%s/%s%s.%s',
+            $store,
+            $namespace,
+            $id,
+            $variantPart,
+            $extension
+        );
     }
 }

@@ -12,6 +12,7 @@ final class LocalStore implements FileStoreInterface
         public readonly string $rootDir
     ) {}
 
+
     public function write(FileContext $context, string $path): void
     {
         ensureDir($path);

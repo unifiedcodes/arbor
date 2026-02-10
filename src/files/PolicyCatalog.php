@@ -34,7 +34,7 @@ final class PolicyCatalog
     }
 
 
-    protected function registerPolicyInstance(string $policyFqn)
+    protected function registerPolicyInstance(string $policyFqn): FilePolicyInterface
     {
         if (!class_exists($policyFqn)) {
             throw new RuntimeException(
@@ -115,7 +115,7 @@ final class PolicyCatalog
     }
 
 
-    public function resolve(string $selector): FilePolicyInterface
+    public function resolve(string $selector, array $options = []): FilePolicyInterface
     {
         $key = $this->normalizeSelector($selector);
 
@@ -125,7 +125,14 @@ final class PolicyCatalog
             );
         }
 
-        return $this->policies[$this->mimes[$key]];
+        $policyFqn = $this->mimes[$key];
+        $policy = $this->policies[$policyFqn];
+
+        if ($options !== []) {
+            $policy = $policy->withOptions($options);
+        }
+
+        return $policy;
     }
 
 

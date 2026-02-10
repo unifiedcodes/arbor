@@ -8,6 +8,7 @@ use Arbor\files\ingress\FileContext;
 use Arbor\files\policies\FilePolicyInterface;
 use Arbor\files\PolicyCatalog;
 use Arbor\files\recordStores\FileRecordStoreInterface;
+use Arbor\files\record\FileRecord;
 use RuntimeException;
 
 

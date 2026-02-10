@@ -1,13 +1,13 @@
 <?php
 
-namespace Arbor\files;
+namespace Arbor\files\source;
 
 
 use RuntimeException;
 use Arbor\http\components\Stream;
 
 
-final class FilePathResolver
+final class FilePathResolver implements SourceResolverInterface
 {
     public static function resolve(mixed $source): string
     {

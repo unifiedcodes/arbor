@@ -1,6 +1,6 @@
 <?php
 
-namespace Arbor\files;
+namespace Arbor\files\record;
 
 
 use LogicException;

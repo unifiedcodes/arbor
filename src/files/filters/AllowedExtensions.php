@@ -3,7 +3,7 @@
 namespace Arbor\files\filters;
 
 
-use Arbor\files\FileContext;
+use Arbor\files\ingress\FileContext;
 
 
 final class AllowedExtensions implements FileFilterInterface

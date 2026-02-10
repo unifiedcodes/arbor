@@ -8,7 +8,6 @@ use Arbor\http\components\Headers;
 use Arbor\http\components\Stream;
 use Arbor\http\components\Cookies;
 use Arbor\http\components\Attributes;
-use Arbor\config\ConfigValue;
 
 /**
  * Class RequestFactory

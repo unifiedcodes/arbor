@@ -9,12 +9,17 @@ abstract class FilePolicy
 
     public function __construct(array $options = [])
     {
-        $this->options = $this->mergeDefaults($options);
+        $this->options = $this->mergeOptions($options);
+    }
+
+    public function withOptions(array $options): self
+    {
+        return new static($options);
     }
 
     abstract protected function defaults(): array;
 
-    protected function mergeDefaults(array $options): array
+    protected function mergeOptions(array $options): array
     {
         return array_replace_recursive(
             $this->defaults(),

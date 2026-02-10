@@ -7,30 +7,19 @@ use Arbor\files\entries\FileEntryInterface;
 use Arbor\files\ingress\FileContext;
 use Arbor\files\policies\FilePolicyInterface;
 use Arbor\files\PolicyCatalog;
-use Arbor\files\recordStores\FileRecordStoreInterface;
 use Arbor\files\record\FileRecord;
 use RuntimeException;
 
 
 final class Filer
 {
-    private PolicyCatalog $policyCatalog;
-
     public function __construct(
         private FileEntryInterface $entryPrototype,
-        private ?FileRecordStoreInterface $recordStore
-    ) {
-        $this->policyCatalog = new PolicyCatalog();
-    }
+        private PolicyCatalog $policyCatalog
+    ) {}
 
 
-    public function policies(array $policies)
-    {
-        $this->policyCatalog->registerPolicies($policies);
-    }
-
-
-    public function save(mixed $input): FileRecord
+    public function save(mixed $input, array $options = []): FileRecord
     {
         $fileEntry = $this->entryPrototype->withInput($input);
 
@@ -40,7 +29,7 @@ final class Filer
         );
 
         // resolve policy
-        $policy = $this->policyCatalog->resolve($fileContext->claimMime());
+        $policy = $this->policyCatalog->resolve($fileContext->claimMime(), $options);
 
         // resolve strategy from policy.
         $strategy = $policy->strategy($fileContext);
@@ -98,7 +87,6 @@ final class Filer
         // write in safe place.
         // mutate filecontext.
         // make a fileRecord from FileRecord Factory.
-        // optionally keep in recordstore.
         // return filerecord.
     }
 }

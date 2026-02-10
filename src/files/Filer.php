@@ -4,10 +4,10 @@ namespace Arbor\files;
 
 
 use Arbor\files\entries\FileEntryInterface;
-use Arbor\files\FileContext;
+use Arbor\files\ingress\FileContext;
 use Arbor\files\policies\FilePolicyInterface;
 use Arbor\files\PolicyCatalog;
-use Arbor\files\Registry;
+use Arbor\files\recordStores\FileRecordStoreInterface;
 use RuntimeException;
 
 
@@ -17,6 +17,7 @@ final class Filer
 
     public function __construct(
         private FileEntryInterface $entryPrototype,
+        private ?FileRecordStoreInterface $recordStore
     ) {
         $this->policyCatalog = new PolicyCatalog();
     }
@@ -90,15 +91,13 @@ final class Filer
 
     protected function register(FileContext $fileContext, FilePolicyInterface $policy): FileRecord
     {
-        $registry = new Registry(
-            $policy->store($fileContext),
-            $policy->recordStore($fileContext)
-        );
+        $store = $policy->store($fileContext);
+        $path = $policy->storePath($fileContext);
 
-        return $registry->register(
-            $fileContext,
-            $policy->storePath($fileContext),
-            $policy->namespace()
-        );
+        // write in safe place.
+        // mutate filecontext.
+        // make a fileRecord from FileRecord Factory.
+        // optionally keep in recordstore.
+        // return filerecord.
     }
 }

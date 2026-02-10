@@ -2,7 +2,7 @@
 
 namespace Arbor\files\stores;
 
-use Arbor\files\FileContext;
+use Arbor\files\ingress\FileContext;
 use RuntimeException;
 
 final class LocalStore implements FileStoreInterface

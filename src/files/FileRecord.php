@@ -2,7 +2,10 @@
 
 namespace Arbor\files;
 
+
 use LogicException;
+use Arbor\files\ingress\FileContext;
+
 
 final class FileRecord
 {

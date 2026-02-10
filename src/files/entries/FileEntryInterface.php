@@ -2,7 +2,7 @@
 
 namespace Arbor\files\entries;
 
-use Arbor\files\Payload;
+use Arbor\files\ingress\Payload;
 
 interface FileEntryInterface
 {

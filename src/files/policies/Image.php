@@ -3,7 +3,7 @@
 namespace Arbor\files\policies;
 
 use Arbor\facades\Config;
-use Arbor\files\FileContext;
+use Arbor\files\ingress\FileContext;
 use Arbor\files\stores\FileStoreInterface;
 use Arbor\files\strategies\FileStrategyInterface;
 use Arbor\files\strategies\ImageWithGD;
@@ -74,15 +74,7 @@ final class Image extends FilePolicy implements FilePolicyInterface
 
     public function storePath(FileContext $context): string
     {
-        return Config::get('root.uploads_dir');
-    }
-
-    /**
-     * file record persistance.
-     */
-    public function recordStore(FileContext $context): ?FileRecordStoreInterface
-    {
-        return null;
+        return Config::get('root.uploads_path');
     }
 
     /**

@@ -3,7 +3,7 @@
 namespace Arbor\files\stores;
 
 
-use Arbor\files\FileContext;
+use Arbor\files\ingress\FileContext;
 
 
 interface FileStoreInterface

@@ -3,7 +3,7 @@
 namespace Arbor\files\strategies;
 
 
-use Arbor\files\FileContext;
+use Arbor\files\ingress\FileContext;
 
 
 interface FileStrategyInterface

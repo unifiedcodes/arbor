@@ -3,7 +3,7 @@
 namespace Arbor\files\entries;
 
 use Arbor\files\entries\FileEntryInterface;
-use Arbor\files\Payload;
+use Arbor\files\ingress\Payload;
 use Arbor\http\components\UploadedFile;
 use RuntimeException;
 

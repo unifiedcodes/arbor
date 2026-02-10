@@ -2,7 +2,7 @@
 
 namespace Arbor\files\strategies;
 
-use Arbor\files\FileContext;
+use Arbor\files\ingress\FileContext;
 use Arbor\files\FilePathResolver;
 use RuntimeException;
 use finfo;

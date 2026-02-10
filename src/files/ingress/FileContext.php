@@ -1,9 +1,9 @@
 <?php
 
-namespace Arbor\files;
+namespace Arbor\files\ingress;
 
 
-use Arbor\files\Payload;
+use Arbor\files\ingress\Payload;
 use LogicException;
 
 

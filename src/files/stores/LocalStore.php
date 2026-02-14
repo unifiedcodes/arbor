@@ -8,14 +8,14 @@ use RuntimeException;
 final class LocalStore implements FileStoreInterface
 {
     public function __construct(
-        public readonly string $rootURL,
-        public readonly string $rootDir
+        private readonly string $rootURL,
+        private readonly string $rootDir
     ) {}
 
 
-    public function write(FileContext $context, string $path): void
+    public function write(FileContext $context, string $path): FileContext
     {
-        ensureDir($path);
+        $path = ensureDir(normalizeDirPath($this->rootDir . $path));
 
         $source = $context->path();
 
@@ -26,6 +26,10 @@ final class LocalStore implements FileStoreInterface
                 'Failed to write file to ' . $this->key() . ' store: ' . $path
             );
         }
+
+        return $context->withPublicURL(
+            normalizeURLSlashes($this->rootURL . $path . $context->name())
+        );
     }
 
 

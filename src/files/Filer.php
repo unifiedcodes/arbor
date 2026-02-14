@@ -14,14 +14,14 @@ use RuntimeException;
 final class Filer
 {
     public function __construct(
-        private FileEntryInterface $entryPrototype,
+        private FileEntryInterface $fileEntry,
         private PolicyCatalog $policyCatalog
     ) {}
 
 
     public function save(mixed $input, array $options = []): FileRecord
     {
-        $fileEntry = $this->entryPrototype->withInput($input);
+        $fileEntry = $this->fileEntry->withInput($input);
 
         // create file context
         $fileContext = FileContext::fromPayload(
@@ -81,12 +81,23 @@ final class Filer
 
     protected function register(FileContext $fileContext, FilePolicyInterface $policy): FileRecord
     {
+        // physical storage
         $store = $policy->store($fileContext);
         $path = $policy->storePath($fileContext);
 
         // write in safe place.
-        // mutate filecontext.
-        // make a fileRecord from FileRecord Factory.
-        // return filerecord.
+        $fileContext = $store->write(
+            $fileContext,
+            $path
+        );
+
+        // make filerecord.
+        return FileRecord::from(
+            context: $fileContext,
+            storeKey: $store->key(),
+            path: $path,
+            publicURL: $fileContext->publicURL(),
+            namespace: ''
+        );
     }
 }

@@ -19,6 +19,7 @@ final class FileContext
     private bool $proved = false;
     private array $attributes = [];
     private ?string $name = null;
+    private ?string $publicURL = null;
 
 
     public static function fromPayload(Payload $payload): self
@@ -90,6 +91,16 @@ final class FileContext
         return $clone;
     }
 
+    public function withPublicURL(string $url): self
+    {
+        $this->assertProved();
+
+        $clone = clone $this;
+        $clone->publicURL = $url;
+
+        return $clone;
+    }
+
     public function isProved(): bool
     {
         return $this->proved;
@@ -130,6 +141,23 @@ final class FileContext
     {
         $this->assertProved();
         return $this->path;
+    }
+
+    public function hasPublicURL(): bool
+    {
+        $this->assertProved();
+        return $this->publicURL !== null;
+    }
+
+    public function publicURL(): string
+    {
+        $this->assertProved();
+
+        if ($this->publicURL === null) {
+            throw new LogicException('Public URL is not set for this file');
+        }
+
+        return $this->publicURL;
     }
 
     public function hash(): string

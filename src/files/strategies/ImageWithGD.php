@@ -3,7 +3,7 @@
 namespace Arbor\files\strategies;
 
 use Arbor\files\ingress\FileContext;
-use Arbor\files\FilePathResolver;
+use Arbor\files\ingress\IngressNormalizer;
 use RuntimeException;
 use finfo;
 
@@ -29,7 +29,7 @@ final class ImageWithGD implements FileStrategyInterface
 
         // ---- resolve source path ----
         $source = $context->getPayload()->source;
-        $path = FilePathResolver::resolve($source);
+        $path = IngressNormalizer::getPath($source);
 
         // ---- real MIME detection ----
         $finfo = new finfo(FILEINFO_MIME_TYPE);

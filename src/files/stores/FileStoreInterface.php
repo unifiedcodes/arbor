@@ -8,7 +8,7 @@ use Arbor\files\ingress\FileContext;
 
 interface FileStoreInterface
 {
-    public function write(FileContext $context, string $path): void;
+    public function write(FileContext $context, string $path): FileContext;
 
     public function read(string $path): mixed;
 

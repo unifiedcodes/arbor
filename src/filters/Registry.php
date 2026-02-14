@@ -147,7 +147,7 @@ class Registry
         }
 
         // Store stage with 'test' as the method to call
-        $this->stages[$name] = [$stage, 'test'];
+        $this->stages[$name] = [$stage, 'process'];
     }
 
     /**
@@ -164,14 +164,25 @@ class Registry
     protected function registerStageList(StageListInterface $stageList): void
     {
         // Iterate through all stages provided by the stage list
-        foreach ($stageList->provides() as $key => $value) {
-            if (is_int($key)) {
-                // Numeric key → $value is the stage name, method name same as stage name
-                $this->stages[$value] = [$stageList, $value];
-            } else {
-                // String key → $key is the stage name, $value is the method name
-                $this->stages[$key] = [$stageList, $value];
+        foreach ($stageList->provides() as $name => $method) {
+
+            if (is_int($name)) {
+                $name = $method;
             }
+
+            if (isset($this->stages[$name])) {
+                throw new InvalidArgumentException(
+                    "A stage named '{$name}' is already registered."
+                );
+            }
+
+            if (!is_callable([$stageList, $method])) {
+                throw new InvalidArgumentException(
+                    "Stage method '{$method}' is not callable or does not exist on " . get_class($stageList)
+                );
+            }
+
+            $this->stages[$name] = [$stageList, $method];
         }
     }
 
@@ -205,7 +216,7 @@ class Registry
      * filtering logic for that particular stage.
      * 
      * @param array $filters Array of stage names to resolve
-     * @return array Array of resolved stages, indexed by stage name
+     * @return array Array of resolved stages
      * @throws InvalidArgumentException If any stage name is not registered
      */
     public function resolveAll(array $filters): array

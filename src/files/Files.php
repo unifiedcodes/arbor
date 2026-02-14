@@ -3,7 +3,7 @@
 namespace Arbor\files;
 
 
-use Arbor\files\recordStores\FileRecordStoreInterface;
+use Arbor\files\record\FileRecordStoreInterface;
 use Arbor\files\entries\FileEntryInterface;
 use Arbor\files\FilesKeeper;
 use Arbor\files\Filer;
@@ -18,13 +18,13 @@ class Files
 
 
     public function __construct(
-        private FileEntryInterface $entryPrototype,
-        private ?FileRecordStoreInterface $recordStore
+        private FileEntryInterface $fileEntry,
+        private ?FileRecordStoreInterface $recordStore = null
     ) {
         $this->policyCatalog = new PolicyCatalog();
 
-        $this->filer = new Filer($entryPrototype, $this->policyCatalog);
-        $this->filesKeeper = new FilesKeeper();
+        $this->filer = new Filer($fileEntry, $this->policyCatalog);
+        $this->filesKeeper = new FilesKeeper($recordStore);
     }
 
 
@@ -37,6 +37,10 @@ class Files
     public function save(mixed $input, array $options = []): FileRecord
     {
         // consume options needed before policy resolution
-        return $this->filer->save($input, $options);
+        $fileRecord = $this->filer->save($input, $options);
+
+        $fileRecord = $this->filesKeeper->save($fileRecord);
+
+        return $fileRecord;
     }
 }

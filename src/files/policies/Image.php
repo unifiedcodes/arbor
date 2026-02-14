@@ -78,7 +78,7 @@ final class Image extends FilePolicy implements FilePolicyInterface
     }
 
     /**
-     * Logical namespace for storage paths.
+     * Logical namespace for policy.
      */
     public function namespace(): string
     {

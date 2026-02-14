@@ -4,6 +4,7 @@ namespace Arbor\storage;
 
 
 use Arbor\storage\stores\StoreInterface;
+use Arbor\storage\Registry;
 
 
 class Storage
@@ -17,8 +18,19 @@ class Storage
     }
 
 
-    public function mount(string $scheme, StoreInterface $store)
-    {
-        $this->registry->register($scheme, $store);
+    public function mount(
+        string $schemeName,
+        StoreInterface $store,
+        string $root = '',
+        ?string $baseUrl = null,
+        bool $public = false
+    ) {
+        $this->registry->register(
+            $schemeName,
+            $store,
+            $root,
+            $baseUrl,
+            $public
+        );
     }
 }

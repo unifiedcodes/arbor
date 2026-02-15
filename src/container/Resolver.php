@@ -33,7 +33,16 @@ class Resolver
     /**
      * @var array Supported primitive types.
      */
-    private array $primitive_types = ['string', 'int', 'float', 'bool', 'array', 'callable', 'iterable', 'mixed'];
+    private array $primitive_types = [
+        'string',
+        'int',
+        'float',
+        'bool',
+        'array',
+        'callable',
+        'iterable',
+        'mixed'
+    ];
 
     /**
      * Resolver constructor.
@@ -342,9 +351,9 @@ class Resolver
     {
         foreach ($attributes as $attribute) {
             $instance = $attribute->newInstance();
-            
+
             $this->invokeMethod($instance, 'require');
-            
+
             return $instance->resolve();
         }
 

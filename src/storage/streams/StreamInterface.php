@@ -5,6 +5,8 @@ namespace Arbor\storage\streams;
 
 interface StreamInterface
 {
+    public function resource();
+
     public function read(int $length): string;
 
     public function write(string $bytes): int;

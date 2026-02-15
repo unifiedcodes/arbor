@@ -4,11 +4,9 @@ namespace Arbor\files\policies;
 
 use Arbor\facades\Config;
 use Arbor\files\ingress\FileContext;
-use Arbor\files\stores\FileStoreInterface;
 use Arbor\files\strategies\FileStrategyInterface;
 use Arbor\files\strategies\ImageWithGD;
-use Arbor\files\recordStores\FileRecordStoreInterface;
-use Arbor\files\stores\LocalStore;
+use Arbor\storage\Uri;
 
 
 final class Image extends FilePolicy implements FilePolicyInterface
@@ -64,17 +62,9 @@ final class Image extends FilePolicy implements FilePolicyInterface
     /**
      * Storage target for images.
      */
-    public function store(FileContext $context): FileStoreInterface
+    public function uri(FileContext $context): Uri
     {
-        return new LocalStore(
-            Config::get('root.uri'),
-            Config::get('root.dir'),
-        );
-    }
-
-    public function storePath(FileContext $context): string
-    {
-        return Config::get('root.uploads_path');
+        return Uri::fromString('local://uploads/');
     }
 
     /**

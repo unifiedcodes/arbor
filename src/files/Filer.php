@@ -8,6 +8,8 @@ use Arbor\files\ingress\FileContext;
 use Arbor\files\policies\FilePolicyInterface;
 use Arbor\files\PolicyCatalog;
 use Arbor\files\record\FileRecord;
+use Arbor\facades\Storage;
+use Arbor\storage\Path;
 use RuntimeException;
 
 
@@ -45,7 +47,7 @@ final class Filer
 
 
         // store the file.
-        return $this->register($fileContext, $policy);
+        return $this->persist($fileContext, $policy);
 
         // generate variants.
 
@@ -79,23 +81,27 @@ final class Filer
     }
 
 
-    protected function register(FileContext $fileContext, FilePolicyInterface $policy): FileRecord
+    protected function persist(FileContext $fileContext, FilePolicyInterface $policy): FileRecord
     {
-        // physical storage
-        $store = $policy->store($fileContext);
-        $path = $policy->storePath($fileContext);
+        // policy->uri
+        $uri = $policy->uri($fileContext);
 
-        // write in safe place.
-        $fileContext = $store->write(
-            $fileContext,
-            $path
-        );
+        // uri->scheme
+        $scheme = Storage::store($uri->scheme());
+
+        // scheme->store
+        $store = $scheme->store();
+
+        // uri->absolutepath.
+        $absolutePath = Path::absolutePath($scheme, $uri->path());
+
+        $store->write($absolutePath, $fileContext->stream());
 
         // make filerecord.
         return FileRecord::from(
             context: $fileContext,
             storeKey: $store->key(),
-            path: $path,
+            path: $absolutePath,
             publicURL: $fileContext->publicURL(),
             namespace: ''
         );

@@ -10,27 +10,6 @@ use RuntimeException;
 
 class Path
 {
-    public static function parseUri(string $uri): array
-    {
-        if (!str_contains($uri, '://')) {
-            throw new InvalidArgumentException("Invalid URI: {$uri}");
-        }
-
-        [$scheme, $path] = explode('://', $uri, 2);
-
-        if ($scheme === '') {
-            throw new InvalidArgumentException("URI scheme missing: {$uri}");
-        }
-
-        $path = self::normalizeRelativePath($path);
-
-        return [
-            'scheme' => $scheme,
-            'path'   => $path
-        ];
-    }
-
-
     public static function uri(Scheme $scheme, string $relativePath): string
     {
         return $scheme->name() . '://' . ltrim($relativePath, '/');

@@ -38,31 +38,33 @@ class Storage
         );
     }
 
-    protected function resolveStore(string $uri): StoreInterface
+
+    protected function normalizeUri(string|Uri $uri): Uri
     {
-        $parsed = Path::parseUri($uri);
-
-        $scheme = $this->registry->resolve($parsed['scheme']);
-
-        return $scheme->store();
+        return $uri instanceof Uri
+            ? $uri
+            : Uri::fromString($uri);
     }
 
-    // path methods
-    public function url(string $uri): string
-    {
-        $parsed = Path::parseUri($uri);
 
-        return Path::publicUrl($parsed['scheme'], $parsed['path']);
+    // path methods
+    public function url(string|Uri $uri): string
+    {
+        $uri = $this->normalizeUri($uri);
+
+        $scheme = $this->registry->resolve($uri->scheme());
+
+        return Path::publicUrl($scheme, $uri->path());
     }
 
 
     // IO methods
-    public function read(string $uri): StreamInterface
+    public function read(string|Uri $uri): StreamInterface
     {
-        $parsed = Path::parseUri($uri);
-        $scheme = $this->registry->resolve($parsed['scheme']);
+        $uri = $this->normalizeUri($uri);
+        $scheme = $this->registry->resolve($uri->scheme());
 
-        $absolutePath = Path::absolutePath($scheme, $parsed['path']);
+        $absolutePath = Path::absolutePath($scheme, $uri->path());
 
         $stream = $scheme->store()->read($absolutePath);
 
@@ -70,12 +72,12 @@ class Storage
     }
 
 
-    public function write(string $uri, string $contents): bool
+    public function write(string|Uri $uri, string $contents): bool
     {
-        $parsed = Path::parseUri($uri);
-        $scheme = $this->registry->resolve($parsed['scheme']);
+        $uri = $this->normalizeUri($uri);
+        $scheme = $this->registry->resolve($uri->scheme());
 
-        $absolutePath = Path::absolutePath($scheme, $parsed['path']);
+        $absolutePath = Path::absolutePath($scheme, $uri->path());
 
         $stream = StreamFactory::fromString($contents);
 
@@ -85,11 +87,12 @@ class Storage
     }
 
 
-    public function append(string $uri, string $contents): bool
+    public function append(string|Uri $uri, string $contents): bool
     {
-        $parsed = Path::parseUri($uri);
-        $scheme = $this->registry->resolve($parsed['scheme']);
-        $absolutePath = Path::absolutePath($scheme, $parsed['path']);
+        $uri = $this->normalizeUri($uri);
+        $scheme = $this->registry->resolve($uri->scheme());
+
+        $absolutePath = Path::absolutePath($scheme, $uri->path());
 
         if (!$scheme->store()->exists($absolutePath)) {
             return $this->write($uri, $contents);
@@ -98,8 +101,12 @@ class Storage
         $existing = $scheme->store()->read($absolutePath);
         $out = StreamFactory::empty();
 
-        while (!$existing->eof()) {
-            $out->write($existing->read(8192));
+        try {
+            while (!$existing->eof()) {
+                $out->write($existing->read(8192));
+            }
+        } finally {
+            $existing->close();
         }
 
         $out->write($contents);
@@ -110,12 +117,12 @@ class Storage
     }
 
 
-    public function delete(string $uri): bool
+    public function delete(string|Uri $uri): bool
     {
-        $parsed = Path::parseUri($uri);
-        $scheme = $this->registry->resolve($parsed['scheme']);
+        $uri = $this->normalizeUri($uri);
+        $scheme = $this->registry->resolve($uri->scheme());
 
-        $absolutePath = Path::absolutePath($scheme, $parsed['path']);
+        $absolutePath = Path::absolutePath($scheme, $uri->path());
 
         $scheme->store()->delete($absolutePath);
 
@@ -123,38 +130,42 @@ class Storage
     }
 
 
-    public function copy(string $source, string $destination): bool
+    public function copy(string|Uri $source, string $destination): bool
     {
-        $sourceParsed = Path::parseUri($source);
-        $destParsed   = Path::parseUri($destination);
+        $source = $this->normalizeUri($source);
+        $destination   = $this->normalizeUri($destination);
 
-        $sourceScheme = $this->registry->resolve($sourceParsed['scheme']);
-        $destScheme   = $this->registry->resolve($destParsed['scheme']);
+        $sourceScheme = $this->registry->resolve($source->scheme());
+        $destScheme   = $this->registry->resolve($destination->scheme());
 
-        $sourcePath = Path::absolutePath($sourceScheme, $sourceParsed['path']);
-        $destPath   = Path::absolutePath($destScheme, $destParsed['path']);
+        $sourcePath = Path::absolutePath($sourceScheme, $source->path());
+        $destPath   = Path::absolutePath($destScheme, $destination->path());
 
 
         $stream = $sourceScheme->store()->read($sourcePath);
-        $destScheme->store()->write($destPath, $stream);
+        try {
+            $destScheme->store()->write($destPath, $stream);
+        } finally {
+            $stream->close();
+        }
 
         return true;
     }
 
 
-    public function move(string $source, string $destination): bool
+    public function move(string|Uri $source, string $destination): bool
     {
-        $sourceParsed = Path::parseUri($source);
-        $destParsed   = Path::parseUri($destination);
+        $source = $this->normalizeUri($source);
+        $destination   = $this->normalizeUri($destination);
 
-        $sourceScheme = $this->registry->resolve($sourceParsed['scheme']);
-        $destScheme   = $this->registry->resolve($destParsed['scheme']);
+        $sourceScheme = $this->registry->resolve($source->scheme());
+        $destScheme   = $this->registry->resolve($destination->scheme());
 
-        $sourcePath = Path::absolutePath($sourceScheme, $sourceParsed['path']);
-        $destPath   = Path::absolutePath($destScheme, $destParsed['path']);
+        $sourcePath = Path::absolutePath($sourceScheme, $source->path());
+        $destPath   = Path::absolutePath($destScheme, $destination->path());
 
         // same scheme → rename
-        if ($sourceParsed['scheme'] === $destParsed['scheme']) {
+        if ($source->scheme() === $destination->scheme()) {
             $sourceScheme->store()->rename($sourcePath, $destPath);
             return true;
         }
@@ -167,23 +178,23 @@ class Storage
     }
 
 
-    public function exists(string $uri): bool
+    public function exists(string|Uri $uri): bool
     {
-        $parsed = Path::parseUri($uri);
-        $scheme = $this->registry->resolve($parsed['scheme']);
+        $uri = $this->normalizeUri($uri);
+        $scheme = $this->registry->resolve($uri->scheme());
 
-        $absolutePath = Path::absolutePath($scheme, $parsed['path']);
+        $absolutePath = Path::absolutePath($scheme, $uri->path());
 
         return $scheme->store()->exists($absolutePath);
     }
 
 
-    public function stats(string $uri): array
+    public function stats(string|Uri $uri): array
     {
-        $parsed = Path::parseUri($uri);
-        $scheme = $this->registry->resolve($parsed['scheme']);
+        $uri = $this->normalizeUri($uri);
+        $scheme = $this->registry->resolve($uri->scheme());
 
-        $absolutePath = Path::absolutePath($scheme, $parsed['path']);
+        $absolutePath = Path::absolutePath($scheme, $uri->path());
 
         return $scheme->store()->stats($absolutePath);
     }

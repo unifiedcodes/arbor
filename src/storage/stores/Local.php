@@ -8,7 +8,7 @@ use Arbor\stream\StreamFactory;
 use RuntimeException;
 
 
-class LocalStore implements StoreInterface
+class Local implements StoreInterface
 {
     public function read(string $path): StreamInterface
     {

@@ -10,6 +10,7 @@ use Arbor\files\PolicyCatalog;
 use Arbor\files\record\FileRecord;
 use Arbor\facades\Storage;
 use Arbor\storage\Path;
+use Arbor\storage\Uri;
 use RuntimeException;
 
 
@@ -21,7 +22,7 @@ final class Filer
     ) {}
 
 
-    public function save(mixed $input, array $options = []): FileRecord
+    public function save(mixed $input, array $options = [])
     {
         $fileEntry = $this->fileEntry->withInput($input);
 
@@ -81,13 +82,18 @@ final class Filer
     }
 
 
-    protected function persist(FileContext $fileContext, FilePolicyInterface $policy): FileRecord
+    protected function persist(FileContext $fileContext, FilePolicyInterface $policy)
     {
         // policy->uri
         $uri = $policy->uri($fileContext);
 
+        // context->filename
+        $fileName = $fileContext->filename();
+
+        $uri = $uri->withFileName($fileName);
+
         // uri->scheme
-        $scheme = Storage::store($uri->scheme());
+        $scheme = Storage::scheme($uri->scheme());
 
         // scheme->store
         $store = $scheme->store();
@@ -95,15 +101,17 @@ final class Filer
         // uri->absolutepath.
         $absolutePath = Path::absolutePath($scheme, $uri->path());
 
-        $store->write($absolutePath, $fileContext->stream());
+        // store->write
+        $store->write(
+            $absolutePath,
+            $fileContext->stream()
+        );
 
         // make filerecord.
         return FileRecord::from(
             context: $fileContext,
-            storeKey: $store->key(),
-            path: $absolutePath,
-            publicURL: $fileContext->publicURL(),
-            namespace: ''
+            uri: $uri->toString(),
+            publicUrl: Path::publicUrl($scheme, $uri->path()),
         );
     }
 }

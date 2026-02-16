@@ -8,7 +8,7 @@ use Arbor\http\components\Cookies;
 use Arbor\http\components\Attributes;
 use Arbor\http\components\UploadedFile;
 use InvalidArgumentException;
-use Arbor\storage\streams\StreamInterface;
+use Arbor\stream\StreamInterface;
 
 /**
  * ServerRequest class represents an HTTP request as received by a server.
@@ -74,20 +74,28 @@ class ServerRequest extends Request
      * @param array<string, mixed> $uploadedFiles Uploaded files
      */
     public function __construct(
-        string $method = 'GET',
-        ?Uri $uri = null,
-        Headers|array $headers = [],
-        StreamInterface|string|null $body = null,
-        ?Attributes $attributes = null,
-        string $version = '1.1',
-        array $serverParams = [],
-        ?Cookies $cookies = null,
+        Uri $uri,
+        Headers $headers,
+        Attributes $attributes,
+
+        array $serverParams,
         array $queryParams = [],
         array $parsedBody = [],
         array $uploadedFiles = [],
+        ?Cookies $cookies = null,
+
+        ?StreamInterface $body = null,
+        string $method = 'GET',
+        string $version = '1.1',
     ) {
-        // Construct the parent Request class
-        parent::__construct($method, $uri, $headers, $body, $attributes, $version);
+        parent::__construct(
+            uri: $uri,
+            headers: $headers,
+            attributes: $attributes,
+            body: $body,
+            method: $method,
+            version: $version,
+        );
 
         // Initialize server request specific properties
         $this->serverParams = $serverParams;
@@ -96,7 +104,7 @@ class ServerRequest extends Request
         $this->parsedBody = $parsedBody;
 
         // Normalize the uploaded files array to UploadedFile instances
-        $this->uploadedFiles = $this->normalizeFiles($uploadedFiles);
+        $this->uploadedFiles = self::normalizeFiles($uploadedFiles);
     }
 
     /**

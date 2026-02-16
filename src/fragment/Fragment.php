@@ -9,8 +9,8 @@ use Arbor\http\ServerRequest;
 use Arbor\http\HttpSubKernel;
 use InvalidArgumentException;
 use Arbor\http\components\Uri;
-use Arbor\http\traits\ResponseNormalizerTrait;
 use Arbor\facades\Container;
+use RuntimeException;
 
 /**
  * Fragment Class
@@ -24,9 +24,6 @@ use Arbor\facades\Container;
  */
 class Fragment
 {
-    use ResponseNormalizerTrait;
-
-
     /**
      * Constructor.
      *
@@ -143,12 +140,26 @@ class Fragment
     protected function fromController(string $className, string $methodName, array $parameters = []): Response
     {
         $result = Container::call([$className, $methodName], $parameters);
-        return $this->ensureValidResponse($result);
+
+        $this->assertValidResponse($result);
+
+        return $result;
     }
 
     protected function fromCallable(callable $callable, array $parameters = []): Response
     {
         $result = Container::call($callable, $parameters);
-        return $this->ensureValidResponse($result);
+
+        $this->assertValidResponse($result);
+
+        return $result;
+    }
+
+
+    protected function assertValidResponse(mixed $result)
+    {
+        if (!$result instanceof Response) {
+            throw new RuntimeException("Fragment response must be of 'Arbor\http\Response' type");
+        }
     }
 }

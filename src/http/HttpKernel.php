@@ -9,7 +9,6 @@ use Arbor\pipeline\StageInterface;
 use Arbor\http\Response;
 use Arbor\http\Request;
 use Arbor\http\RequestContext;
-use Arbor\http\traits\ResponseNormalizerTrait;
 use Arbor\exception\ExceptionKernel;
 use Arbor\facades\Scope;
 use Arbor\execution\ExecutionContext;
@@ -24,8 +23,6 @@ use Exception;
  */
 class HttpKernel
 {
-    use ResponseNormalizerTrait;
-
     protected array $globalMiddlewareStack = [];
 
 
@@ -103,7 +100,7 @@ class HttpKernel
 
             if ($isSubRequest) {
                 // Dispatch through router directly
-                $response = $this->routerDispatch($requestContext);
+                $response = $this->routerDispatch();
             } else {
                 // Apply global middleware for main request only and dispatch.
                 $response = $this->executeGlobalMiddlewares($requestContext);

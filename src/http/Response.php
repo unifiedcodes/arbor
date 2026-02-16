@@ -2,10 +2,9 @@
 
 namespace Arbor\http;
 
-use Arbor\storage\streams\StreamInterface;
+use Arbor\stream\StreamInterface;
 use Arbor\http\components\Headers;
-use Arbor\http\traits\HeaderTrait;
-use Arbor\http\traits\BodyTrait;
+use Arbor\http\components\HeaderTrait;
 use RuntimeException;
 
 /**
@@ -21,7 +20,9 @@ use RuntimeException;
 class Response
 {
     use HeaderTrait;
-    use BodyTrait;
+
+    protected ?StreamInterface $body = null;
+
 
     /**
      * HTTP protocol version
@@ -109,7 +110,7 @@ class Response
      * @param string $reasonPhrase Reason phrase (when empty, will use the standard phrase)
      */
     public function __construct(
-        StreamInterface|string|null $body = null,
+        ?StreamInterface $body = null,
         int $statusCode = 200,
         array|Headers $headers = [],
         string $protocolVersion = '1.1',
@@ -118,16 +119,14 @@ class Response
         $this->statusCode = $statusCode;
 
         // Ensures body is a Stream instance (implementation in BodyTrait)
-        $this->body = $this->ensureStreamBody($body);
+        $this->body = $body;
 
         $this->protocolVersion = $protocolVersion;
 
         // Set headers using Headers class
-        if ($headers instanceof Headers) {
-            $this->headers = $headers;
-        } else {
-            $this->headers = new Headers($headers);
-        }
+        $this->headers = $headers instanceof Headers
+            ? $headers
+            : new Headers($headers);
 
         // Set reason phrase, use standard if not provided
         if ($reasonPhrase === '' && isset(self::$phrases[$this->statusCode])) {
@@ -136,6 +135,21 @@ class Response
             $this->reasonPhrase = $reasonPhrase;
         }
     }
+
+
+    public function getBody(): ?StreamInterface
+    {
+        return $this->body;
+    }
+
+
+    public function withBody(StreamInterface|null $body): static
+    {
+        $new = clone $this;
+        $new->body = $body;
+        return $new;
+    }
+
 
     /**
      * Gets the HTTP protocol version
@@ -202,27 +216,6 @@ class Response
         return $this->reasonPhrase;
     }
 
-    /**
-     * Returns the string representation of the response
-     * 
-     * Formats the status line, headers, and body into a complete HTTP response string.
-     *
-     * @return string The formatted HTTP response
-     */
-    public function __toString(): string
-    {
-        $statusLine = sprintf('HTTP/%s %d %s', $this->protocolVersion, $this->statusCode, $this->reasonPhrase);
-
-        $headers = '';
-        foreach ($this->getHeaders() as $name => $values) {
-            foreach ((array) $values as $value) {
-                $headers .= $name . ': ' . $value . "\r\n";
-            }
-        }
-
-        return $statusLine . "\r\n" . $headers . "\r\n" . (string) $this->body;
-    }
-
 
     /**
      * Sends the response to the client
@@ -240,7 +233,16 @@ class Response
         }
 
         // Status line
-        header(sprintf('HTTP/%s %d %s', $this->protocolVersion, $this->statusCode, $this->reasonPhrase), true, $this->statusCode);
+        header(
+            sprintf(
+                'HTTP/%s %d %s',
+                $this->protocolVersion,
+                $this->statusCode,
+                $this->reasonPhrase
+            ),
+            true,
+            $this->statusCode
+        );
 
         // Headers
         foreach ($this->getHeaders() as $name => $values) {
@@ -249,6 +251,16 @@ class Response
             }
         }
 
-        echo (string) $this->body;
+        if ($this->body === null) {
+            return;
+        }
+
+        if ($this->body->isSeekable()) {
+            $this->body->rewind();
+        }
+
+        while (!$this->body->eof()) {
+            echo $this->body->read(8192);
+        }
     }
 }

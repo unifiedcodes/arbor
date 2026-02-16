@@ -6,6 +6,7 @@ use Arbor\http\HttpKernel;
 use Arbor\http\Request;
 use Arbor\http\RequestFactory;
 use Arbor\http\Response;
+use Arbor\stream\StreamFactory;
 
 /**
  * Convenience subclass of HttpKernel for creating and handling internal sub-requests.
@@ -36,7 +37,9 @@ class HttpSubKernel extends HttpKernel
             uri: $uri,
             method: $method,
             headers: $headers,
-            body: $body,
+            body: $body !== ''
+                ? StreamFactory::fromString($body)
+                : null,
             attributes: $attributes,
             version: $version
         );

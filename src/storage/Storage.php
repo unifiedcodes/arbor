@@ -6,8 +6,8 @@ namespace Arbor\storage;
 use Arbor\storage\stores\StoreInterface;
 use Arbor\storage\Registry;
 use Arbor\storage\Path;
-use Arbor\storage\streams\StreamInterface;
-use Arbor\storage\streams\StreamFactory;
+use Arbor\stream\contracts\StreamInterface;
+use Arbor\stream\StreamFactory;
 
 
 class Storage

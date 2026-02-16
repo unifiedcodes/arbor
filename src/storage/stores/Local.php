@@ -3,8 +3,9 @@
 namespace Arbor\storage\stores;
 
 
-use Arbor\storage\streams\StreamInterface;
-use Arbor\storage\streams\StreamFactory;
+use Arbor\stream\contracts\ResourceStreamInterface;
+use Arbor\stream\contracts\StreamInterface;
+use Arbor\stream\StreamFactory;
 use RuntimeException;
 
 
@@ -32,8 +33,21 @@ class LocalStore implements StoreInterface
             throw new RuntimeException("Unable to open file for writing: {$path}");
         }
 
-        stream_copy_to_stream($data->resource(), $target);
-        fclose($target);
+        try {
+            if ($data instanceof ResourceStreamInterface) {
+                stream_copy_to_stream($data->resource(), $target);
+                return;
+            }
+
+            while (!$data->eof()) {
+                $chunk = $data->read(8192);
+                if ($chunk !== '') {
+                    fwrite($target, $chunk);
+                }
+            }
+        } finally {
+            fclose($target);
+        }
     }
 
 

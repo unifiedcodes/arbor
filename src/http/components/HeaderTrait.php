@@ -1,6 +1,6 @@
 <?php
 
-namespace Arbor\http\traits;
+namespace Arbor\http\components;
 
 use Arbor\http\components\Headers;
 use LogicException;

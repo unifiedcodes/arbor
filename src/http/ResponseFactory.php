@@ -3,7 +3,8 @@
 namespace Arbor\http;
 
 use Arbor\http\components\Headers;
-use Arbor\storage\streams\StreamInterface;
+use Arbor\stream\StreamInterface;
+use Arbor\stream\StreamFactory;
 use RuntimeException;
 use InvalidArgumentException;
 
@@ -28,6 +29,20 @@ class ResponseFactory
         return ($headers instanceof Headers) ? $headers->toArray() : $headers;
     }
 
+
+    protected static function normalizeBody(StreamInterface|string|null $body): ?StreamInterface
+    {
+        if ($body === null) {
+            return null;
+        }
+
+        if ($body instanceof StreamInterface) {
+            return StreamFactory::toRewindable($body);
+        }
+
+        return StreamFactory::fromString($body);
+    }
+
     /**
      * Creates a generic HTTP response with customizable parameters
      *
@@ -46,7 +61,7 @@ class ResponseFactory
         string $reasonPhrase = ''
     ): Response {
         return new Response(
-            body: $body,
+            body: self::normalizeBody($body),
             statusCode: $statusCode,
             headers: self::ensureHeaderIsArray($headers),
             protocolVersion: $protocolVersion,
@@ -68,8 +83,8 @@ class ResponseFactory
         int $statusCode = 200,
         array|Headers $headers = []
     ): Response {
-        $jsonContent = json_encode($data);
-        if ($jsonContent === false) {
+        $json = json_encode($data);
+        if ($json === false) {
             throw new RuntimeException('Failed to encode data as JSON');
         }
 
@@ -77,7 +92,7 @@ class ResponseFactory
         $headers['Content-Type'] = 'application/json';
 
         return new Response(
-            body: $jsonContent,
+            body: StreamFactory::fromString($json),
             statusCode: $statusCode,
             headers: $headers
         );
@@ -100,7 +115,7 @@ class ResponseFactory
         $headers['Content-Type'] = 'text/html; charset=utf-8';
 
         return new Response(
-            body: $html,
+            body: StreamFactory::fromString($html),
             statusCode: $statusCode,
             headers: $headers
         );
@@ -123,7 +138,7 @@ class ResponseFactory
         $headers['Content-Type'] = 'text/plain; charset=utf-8';
 
         return new Response(
-            body: $text,
+            body: StreamFactory::fromString($text),
             statusCode: $statusCode,
             headers: $headers
         );
@@ -151,9 +166,8 @@ class ResponseFactory
 
         // Append parameters to the URL
         if (!empty($parameters)) {
-            $queryString = http_build_query($parameters);
             $separator = str_contains($location, '?') ? '&' : '?';
-            $location .= $separator . $queryString;
+            $location .= $separator . http_build_query($parameters);
         }
 
 
@@ -200,6 +214,9 @@ class ResponseFactory
         $headers['Content-Type'] = 'application/json';
 
         return new Response(
+            body: StreamFactory::fromString(
+                json_encode(['error' => $reasonPhrase ?: 'Error'], JSON_THROW_ON_ERROR)
+            ),
             statusCode: $statusCode,
             headers: $headers,
             reasonPhrase: $reasonPhrase
@@ -223,7 +240,7 @@ class ResponseFactory
         $headers['Content-Type'] = 'text/html; charset=utf-8';
 
         return new Response(
-            body: $templateContent,
+            body: StreamFactory::fromString($templateContent),
             statusCode: $statusCode,
             headers: $headers
         );

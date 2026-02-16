@@ -8,8 +8,8 @@ use Arbor\http\components\Headers;
 use Arbor\http\components\Cookies;
 use Arbor\http\components\Attributes;
 
-use Arbor\storage\streams\StreamFactory;
-use Arbor\storage\streams\StreamInterface;
+use Arbor\stream\StreamFactory;
+use Arbor\stream\StreamInterface;
 
 /**
  * Class RequestFactory
@@ -31,33 +31,21 @@ class RequestFactory
      */
     public static function fromGlobals(): ServerRequest
     {
-        $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
-        $uri = RequestFactory::URIfromGlobals($_SERVER);
-        $headers = RequestFactory::HeadersFromGlobals($_SERVER);
-
-        $body = StreamFactory::fromResource(
-            fopen('php://input', 'rb')
-        );;
-
-        $cookies = new Cookies($_COOKIE);
-        $version = isset($_SERVER['SERVER_PROTOCOL']) ? str_replace('HTTP/', '', $_SERVER['SERVER_PROTOCOL']) : '1.1';
-        $attributes = new Attributes();
-
         return new ServerRequest(
-            // Request construct params
-            $method,
-            $uri,
-            $headers,
-            $body,
-            $attributes,
-            $version,
+            // base request.
+            method: $_SERVER['REQUEST_METHOD'] ?? 'GET',
+            uri: self::URIfromGlobals($_SERVER),
+            headers: self::HeadersFromGlobals($_SERVER),
+            body: StreamFactory::fromPhpInput(),
+            attributes: new Attributes(),
+            version: self::protocolVersion($_SERVER),
 
-            // ServerRequest construct params
-            $_SERVER,
-            $cookies,
-            $_GET,
-            $_POST,
-            $_FILES
+            // server specific data.
+            serverParams: $_SERVER,
+            cookies: new Cookies($_COOKIE),
+            queryParams: $_GET,
+            parsedBody: $_POST,
+            uploadedFiles: $_FILES
         );
     }
 
@@ -67,27 +55,29 @@ class RequestFactory
      * @param string $uri The request URI
      * @param string $method The HTTP method
      * @param array<string, string|array<string>> $headers HTTP headers
-     * @param string $body Request body content
+     * @param ?StreamInterface $body Request body content
      * @param array<string, mixed> $attributes Request attributes
      * @param string|null $version HTTP protocol version
      * 
      * @return Request The created request object
      */
-    public function make(
+    public static function make(
         string $uri,
         string $method = 'GET',
-        array $headers = [],
-        string $body = '',
-        array $attributes = [],
+        Headers|array $headers = [],
+        ?StreamInterface $body = null,
+        Attributes|array|null $attributes = null,
         ?string $version = null,
     ): Request {
         return new Request(
-            $method,
-            $uri,
-            $headers,
-            $body,
-            $attributes,
-            $version
+            method: $method,
+            uri: new Uri($uri),
+            headers: $headers instanceof Headers ? $headers : new Headers($headers),
+            body: $body,
+            attributes: $attributes instanceof Attributes
+                ? $attributes
+                : new Attributes($attributes ?? []),
+            version: $version ?? '1.1'
         );
     }
 
@@ -97,16 +87,24 @@ class RequestFactory
      * @param array<string, mixed> $data Array containing request parameters
      * @return Request The created request object
      */
-    public function fromArray(array $data): Request
+    public static function fromArray(array $data): Request
     {
-        return RequestFactory::make(
-            uri: $data['uri'] ?? '',
+        return self::make(
+            uri: $data['uri'] instanceof Uri ? $data['uri'] : new Uri($data['uri'] ?? '/'),
             method: $data['method'] ?? 'GET',
             headers: $data['headers'] ?? [],
-            body: $data['body'] ?? '',
-            attributes: $data['attributes'] ?? [],
+            body: $data['body'] ?? null,
+            attributes: $data['attributes'] ?? null,
             version: $data['version'] ?? null,
         );
+    }
+
+
+    protected static function protocolVersion(array $server): string
+    {
+        return isset($server['SERVER_PROTOCOL'])
+            ? str_replace('HTTP/', '', $server['SERVER_PROTOCOL'])
+            : '1.1';
     }
 
     /**
@@ -119,19 +117,13 @@ class RequestFactory
     {
         $scheme = (!empty($server['HTTPS']) && $server['HTTPS'] !== 'off') ? 'https' : 'http';
         $host = $server['HTTP_HOST'] ?? $server['SERVER_NAME'] ?? 'localhost';
-        $port = isset($server['SERVER_PORT']) ? ':' . $server['SERVER_PORT'] : '';
-        $requestUri = $server['REQUEST_URI'] ?? '/';
-        $query = isset($server['QUERY_STRING']) ? '?' . $server['QUERY_STRING'] : '';
 
-        // Combine full URI string
-        $uriString = "{$scheme}://{$host}{$port}{$requestUri}";
+        $port = $server['SERVER_PORT'] ?? null;
+        $portPart = ($port && !in_array((int)$port, [80, 443], true)) ? ':' . $port : '';
 
-        // Fallback if REQUEST_URI doesn't contain query string
-        if ($query && !str_contains($uriString, '?')) {
-            $uriString .= $query;
-        }
+        $uri = $server['REQUEST_URI'] ?? '/';
 
-        return new Uri($uriString);
+        return new Uri("{$scheme}://{$host}{$portPart}{$uri}");
     }
 
     /**

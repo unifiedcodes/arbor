@@ -6,10 +6,9 @@ namespace Arbor\http;
 use Arbor\http\components\Headers;
 use Arbor\http\components\Uri;
 use Arbor\http\components\Attributes;
-use Arbor\storage\streams\StreamInterface;
-use Arbor\http\traits\HeaderTrait;
-use Arbor\http\traits\BodyTrait;
+use Arbor\http\components\HeaderTrait;
 use InvalidArgumentException;
+use Arbor\stream\StreamInterface;
 
 /**
  * Request class representing an HTTP request message.
@@ -23,7 +22,8 @@ use InvalidArgumentException;
 class Request
 {
     use HeaderTrait;
-    use BodyTrait;
+
+    protected ?StreamInterface $body = null;
 
     /**
      * HTTP protocol version
@@ -66,50 +66,41 @@ class Request
      * Creates a new Request instance with the provided parameters.
      *
      * @param string $method HTTP method (GET, POST, etc.)
-     * @param Uri|string|null $uri URI for the request
-     * @param Headers|array $headers Request headers
-     * @param Stream|string|null $body Request body
-     * @param Attributes|array $attributes Request attributes
-     * @param string|null $version Protocol version
+     * @param Uri $uri URI for the request
+     * @param Headers $headers Request headers
+     * @param StreamInterface $body Request body
+     * @param Attributes $attributes Request attributes
+     * @param string $version Protocol version
      * 
      * @throws InvalidArgumentException If the method is invalid
      */
     public function __construct(
+        Uri $uri,
+        Headers $headers,
+        Attributes $attributes,
+        ?StreamInterface $body,
         string $method = 'GET',
-        Uri|string|null $uri = null,
-        Headers|array $headers = [],
-        StreamInterface|string|null $body = null,
-        Attributes|array $attributes = [],
-        ?string $version = '1.1',
+        string $version = '1.1',
     ) {
-        // Convert string URI to Uri object if needed
-        if (!$uri instanceof Uri) {
-            $uri = new Uri($uri ?? '');
-        }
-
-        // Convert array to Headers object if needed
-        if (!$headers instanceof Headers) {
-            $headers = new Headers((array) $headers);
-        }
-
-        // Convert array to Attributes object if needed
-        if (!$attributes instanceof Attributes) {
-            $attributes = new Attributes((array) $attributes);
-        }
-
-        $this->attributes = $attributes;
         $this->method = $this->filterMethod($method);
         $this->uri = $uri;
         $this->headers = $headers;
+        $this->body = $body;
+        $this->attributes = $attributes;
+        $this->protocolVersion = $version;
+    }
 
-        // ensureStreamBody is from BodyTrait
-        $this->body = $this->ensureStreamBody($body);
-        $this->protocolVersion = $version ?? '1.1';
 
-        // Set Host header if not already present and URI has a host
-        if (!$this->hasHeader('Host') && $this->uri->getHost()) {
-            $this->updateHostHeaderFromUri();
-        }
+    public function getBody(): ?StreamInterface
+    {
+        return $this->body;
+    }
+
+    public function withBody(?StreamInterface $body): self
+    {
+        $new = clone $this;
+        $new->body = $body;
+        return $new;
     }
 
     /**
@@ -125,7 +116,7 @@ class Request
             if ($port) {
                 $host .= ':' . $port;
             }
-            $this->headers->set('Host', $host);
+            $this->headers = $this->headers->withHeader('Host', $host);
         }
     }
 

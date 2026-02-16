@@ -135,7 +135,7 @@ final class RequestContext
      */
     public function isAjax(): bool
     {
-        return strtolower($this->getHeader('X-Requested-With') ?? '') === 'xmlhttprequest';
+        return strtolower($this->request->getHeaderLine('X-Requested-With') ?? '') === 'xmlhttprequest';
     }
 
     /**
@@ -145,7 +145,7 @@ final class RequestContext
      */
     public function expectsJson(): bool
     {
-        $accept = $this->getHeader('Accept');
+        $accept = $this->request->getHeaderLine('Accept');
         return str_contains($accept, 'application/json');
     }
 
@@ -157,7 +157,7 @@ final class RequestContext
     public function isFormSubmission(): bool
     {
         return in_array($this->getMethod(), ['POST', 'PUT', 'PATCH']) &&
-            str_starts_with($this->getHeader('Content-Type') ?? '', 'application/x-www-form-urlencoded');
+            str_starts_with($this->request->getHeaderLine('Content-Type') ?? '', 'application/x-www-form-urlencoded');
     }
 
     /**

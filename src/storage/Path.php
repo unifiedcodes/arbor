@@ -4,7 +4,6 @@ namespace Arbor\storage;
 
 
 use Arbor\storage\Scheme;
-use InvalidArgumentException;
 use RuntimeException;
 
 

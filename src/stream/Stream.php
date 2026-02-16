@@ -181,6 +181,8 @@ final class Stream implements StreamInterface
      */
     public function detach()
     {
+        $this->assertAttached();
+
         $resource = $this->resource;
         $this->resource = null;
 
@@ -261,6 +263,17 @@ final class Stream implements StreamInterface
         }
 
         rewind($this->resource);
+    }
+
+    /**
+     * Returns the underlying PHP stream resource.
+     *
+     * @return resource
+     */
+    public function resource()
+    {
+        $this->assertAttached();
+        return $this->resource;
     }
 
 

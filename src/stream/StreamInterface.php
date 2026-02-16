@@ -119,4 +119,11 @@ interface StreamInterface
      * @return int|false The current position in the stream, or false if the position cannot be determined.
      */
     public function tell(): ?int;
+
+    /**
+     * Returns the underlying PHP stream resource.
+     *
+     * @return resource
+     */
+    public function resource();
 }

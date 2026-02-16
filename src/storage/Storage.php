@@ -6,7 +6,7 @@ namespace Arbor\storage;
 use Arbor\storage\stores\StoreInterface;
 use Arbor\storage\Registry;
 use Arbor\storage\Path;
-use Arbor\stream\contracts\StreamInterface;
+use Arbor\stream\StreamInterface;
 use Arbor\stream\StreamFactory;
 
 

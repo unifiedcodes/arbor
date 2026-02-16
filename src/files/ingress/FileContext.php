@@ -4,6 +4,7 @@ namespace Arbor\files\ingress;
 
 
 use Arbor\files\ingress\Payload;
+use Arbor\stream\StreamInterface;
 use LogicException;
 
 
@@ -14,7 +15,7 @@ final class FileContext
     private string $extension;
     private int $size;
     private string $hash;
-    private string $path;
+    private StreamInterface $stream;
     private bool $binary;
     private bool $proved = false;
     private array $attributes = [];
@@ -58,7 +59,7 @@ final class FileContext
         string $mime,
         string $extension,
         int $size,
-        string $path,
+        StreamInterface $stream,
         string $hash,
         bool $binary,
     ): self {
@@ -71,7 +72,7 @@ final class FileContext
         $clone->mime = $mime;
         $clone->extension = $extension;
         $clone->size = $size;
-        $clone->path = $path;
+        $clone->stream = $stream;
         $clone->hash = $hash;
         $clone->binary = $binary;
 
@@ -137,10 +138,10 @@ final class FileContext
         return $this->size;
     }
 
-    public function path(): string
+    public function stream(): StreamInterface
     {
         $this->assertProved();
-        return $this->path;
+        return $this->stream;
     }
 
     public function hasPublicURL(): bool

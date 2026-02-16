@@ -4,6 +4,7 @@ namespace Arbor\files\ingress;
 
 
 use Arbor\files\ingress\Payload;
+use Arbor\stream\StreamFactory;
 use Arbor\stream\StreamInterface;
 use LogicException;
 
@@ -15,12 +16,11 @@ final class FileContext
     private string $extension;
     private int $size;
     private string $hash;
-    private StreamInterface $stream;
     private bool $binary;
     private bool $proved = false;
     private array $attributes = [];
     private ?string $name = null;
-    private ?string $publicURL = null;
+    private ?string $materializedPath = null;
 
 
     public static function fromPayload(Payload $payload): self
@@ -59,9 +59,10 @@ final class FileContext
         string $mime,
         string $extension,
         int $size,
-        StreamInterface $stream,
         string $hash,
         bool $binary,
+        ?string $path = null,
+        ?StreamInterface $stream = null,
     ): self {
         if ($this->proved) {
             throw new LogicException('FileContext is already normalized');
@@ -69,22 +70,56 @@ final class FileContext
 
         $clone = clone $this;
 
+        // replace source ONLY if a new one is provided
+        if ($path !== null || $stream !== null) {
+
+            // ingress boundary: discard ingress source
+            if ($this->payload->stream) {
+                $this->payload->stream->close();
+            }
+
+            $clone->payload = new Payload(
+                name: $this->payload->name,
+                mime: $mime,
+                size: $size,
+                path: $path,
+                stream: $stream,
+                error: null,
+                moved: true,
+            );
+
+            $clone->materializedPath = null;
+        }
+
+        // finalize semantic proof
         $clone->mime = $mime;
         $clone->extension = $extension;
         $clone->size = $size;
-        $clone->stream = $stream;
         $clone->hash = $hash;
         $clone->binary = $binary;
-
-        $clone->name = pathinfo($this->originalName(), PATHINFO_FILENAME);
+        $clone->name = self::deriveBaseName($this->originalName());
         $clone->proved = true;
 
         return $clone;
     }
 
+
+    private static function deriveBaseName(string $original): string
+    {
+        return pathinfo($original, PATHINFO_FILENAME);
+    }
+
+
     public function withName(string $name): self
     {
         $this->assertProved();
+
+        // enforce invariant: logical name only
+        if (str_contains($name, '.')) {
+            throw new LogicException(
+                'Name must not contain an extension'
+            );
+        }
 
         $clone = clone $this;
         $clone->name = $name;
@@ -92,15 +127,13 @@ final class FileContext
         return $clone;
     }
 
-    public function withPublicURL(string $url): self
+
+    public function filename(): string
     {
         $this->assertProved();
-
-        $clone = clone $this;
-        $clone->publicURL = $url;
-
-        return $clone;
+        return $this->name . '.' . $this->extension;
     }
+
 
     public function isProved(): bool
     {
@@ -138,28 +171,62 @@ final class FileContext
         return $this->size;
     }
 
+    public function hasPath(): bool
+    {
+        return $this->payload->path !== null;
+    }
+
+    public function hasStream(): bool
+    {
+        return $this->payload->stream !== null;
+    }
+
     public function stream(): StreamInterface
     {
-        $this->assertProved();
-        return $this->stream;
-    }
-
-    public function hasPublicURL(): bool
-    {
-        $this->assertProved();
-        return $this->publicURL !== null;
-    }
-
-    public function publicURL(): string
-    {
-        $this->assertProved();
-
-        if ($this->publicURL === null) {
-            throw new LogicException('Public URL is not set for this file');
+        if ($this->payload->stream) {
+            return $this->payload->stream;
         }
 
-        return $this->publicURL;
+        if ($this->payload->path) {
+            return StreamFactory::fromFile($this->payload->path);
+        }
+
+        throw new LogicException('No stream available');
     }
+
+
+    public function materialize(): string
+    {
+        if ($this->payload->path) {
+            return $this->payload->path;
+        }
+
+        if ($this->materializedPath) {
+            return $this->materializedPath;
+        }
+
+        if (!$this->payload->stream) {
+            throw new LogicException('Cannot materialize without stream');
+        }
+
+        if (!$this->payload->stream->isSeekable()) {
+            throw new LogicException('Cannot materialize non-seekable stream');
+        }
+
+        $tmp = tempnam(sys_get_temp_dir(), 'ing_');
+        $out = fopen($tmp, 'wb');
+
+        $in = $this->payload->stream->resource();
+        $this->payload->stream->rewind();
+
+        stream_copy_to_stream($in, $out);
+        fclose($out);
+
+        $this->materializedPath = $tmp;
+
+        return $tmp;
+    }
+
 
     public function hash(): string
     {

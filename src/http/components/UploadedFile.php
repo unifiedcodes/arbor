@@ -2,8 +2,9 @@
 
 namespace Arbor\http\components;
 
-use Arbor\storage\streams\StreamInterface;
-use Arbor\storage\streams\StreamFactory;
+use Arbor\stream\StreamInterface;
+use Arbor\stream\StreamFactory;
+use RuntimeException;
 
 /**
  * UploadedFile
@@ -32,12 +33,12 @@ final class UploadedFile
      * This does NOT cache the stream.
      * This does NOT manage lifecycle.
      *
-     * @throws \RuntimeException if upload failed
+     * @throws RuntimeException if upload failed
      */
     public function stream(): StreamInterface
     {
         if ($this->error !== UPLOAD_ERR_OK) {
-            throw new \RuntimeException(
+            throw new RuntimeException(
                 'Cannot create stream: upload error ' . $this->error
             );
         }

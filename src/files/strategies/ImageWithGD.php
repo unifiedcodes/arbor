@@ -28,8 +28,8 @@ final class ImageWithGD implements FileStrategyInterface
         }
 
         // ---- resolve source path ----
-        $source = $context->getPayload()->source;
-        $path = IngressNormalizer::getPath($source);
+        $path = $context->materialize();
+
 
         // ---- real MIME detection ----
         $finfo = new finfo(FILEINFO_MIME_TYPE);
@@ -67,18 +67,13 @@ final class ImageWithGD implements FileStrategyInterface
 
 
         // ---- final normalization ----
-        $finalSize = filesize($safePath);
-        $hash      = hash_file('sha256', $safePath);
-        $extension = self::ALLOWED_MIME[$mime];
-
-
         return $context->normalize(
             mime: $mime,
-            extension: $extension,
-            size: $finalSize,
-            path: $safePath,
-            hash: $hash,
+            extension: self::ALLOWED_MIME[$mime],
+            size: filesize($safePath),
+            hash: hash_file('sha256', $safePath),
             binary: true,
+            path: $safePath,
         );
     }
 }

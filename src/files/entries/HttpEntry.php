@@ -5,6 +5,7 @@ namespace Arbor\files\entries;
 use Arbor\files\entries\FileEntryInterface;
 use Arbor\files\ingress\Payload;
 use Arbor\http\components\UploadedFile;
+use Arbor\stream\StreamFactory;
 use RuntimeException;
 
 
@@ -44,7 +45,8 @@ final class HttpEntry implements FileEntryInterface
             name: $file['name'],
             mime: $file['type'] ?? 'application/octet-stream',
             size: (int) $file['size'],
-            source: $file['tmp_name'],
+            path: $file['tmp_name'],
+            stream: StreamFactory::fromFile($file['tmp_name']),
             error: $file['error'] ?? null,
             moved: false
         );
@@ -54,13 +56,14 @@ final class HttpEntry implements FileEntryInterface
     protected function fromUploadedFile(): Payload
     {
         return new Payload(
-            name: $this->file->getClientFilename(),
-            mime: $this->file->getClientMediaType() ?? 'application/octet-stream',
-            size: $this->file->getSize(),
-            source: $this->file->getStream(),
-            error: $this->file->getError(),
-            extension: $this->file->getClientExtension(),
-            moved: $this->file->isMoved()
+            name: $this->file->clientFilename,
+            mime: $this->file->clientMediaType ?? 'application/octet-stream',
+            size: $this->file->size,
+            path: $this->file->tmpPath,
+            stream: $this->file->stream(),
+            error: $this->file->error,
+            extension: $this->file->clientExtension(),
+            moved: false
         );
     }
 }

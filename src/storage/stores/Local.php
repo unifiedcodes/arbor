@@ -3,8 +3,7 @@
 namespace Arbor\storage\stores;
 
 
-use Arbor\stream\contracts\ResourceStreamInterface;
-use Arbor\stream\contracts\StreamInterface;
+use Arbor\stream\StreamInterface;
 use Arbor\stream\StreamFactory;
 use RuntimeException;
 
@@ -34,17 +33,14 @@ class LocalStore implements StoreInterface
         }
 
         try {
-            if ($data instanceof ResourceStreamInterface) {
-                stream_copy_to_stream($data->resource(), $target);
-                return;
+            $source = $data->detach();
+
+            if (!is_resource($source)) {
+                throw new RuntimeException('Cannot write from a detached or closed stream');
             }
 
-            while (!$data->eof()) {
-                $chunk = $data->read(8192);
-                if ($chunk !== '') {
-                    fwrite($target, $chunk);
-                }
-            }
+            stream_copy_to_stream($source, $target);
+            fclose($source);
         } finally {
             fclose($target);
         }

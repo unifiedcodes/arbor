@@ -3,8 +3,7 @@
 namespace Arbor\storage\stores;
 
 
-use Arbor\stream\contracts\ResourceStreamInterface;
-use Arbor\stream\contracts\StreamInterface;
+use Arbor\stream\StreamInterface;
 
 
 interface StoreInterface

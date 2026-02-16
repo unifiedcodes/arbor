@@ -2,6 +2,7 @@
 
 namespace Arbor\files\ingress;
 
+use Arbor\storage\streams\Stream;
 
 final class Payload
 {
@@ -9,7 +10,7 @@ final class Payload
         public readonly string  $name,
         public readonly ?string $mime,
         public readonly int     $size,
-        public readonly mixed   $source,
+        public readonly Stream   $source,
         public readonly ?int    $error = null,
         public readonly ?string $extension = null,
         public readonly bool   $moved = false,

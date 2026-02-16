@@ -6,10 +6,10 @@ namespace Arbor\http;
 use Arbor\http\components\Headers;
 use Arbor\http\components\Uri;
 use Arbor\http\components\Attributes;
-use Arbor\http\components\Stream;
+use Arbor\storage\streams\StreamInterface;
 use Arbor\http\traits\HeaderTrait;
 use Arbor\http\traits\BodyTrait;
-
+use InvalidArgumentException;
 
 /**
  * Request class representing an HTTP request message.
@@ -72,13 +72,13 @@ class Request
      * @param Attributes|array $attributes Request attributes
      * @param string|null $version Protocol version
      * 
-     * @throws \InvalidArgumentException If the method is invalid
+     * @throws InvalidArgumentException If the method is invalid
      */
     public function __construct(
         string $method = 'GET',
         Uri|string|null $uri = null,
         Headers|array $headers = [],
-        Stream|string|null $body = null,
+        StreamInterface|string|null $body = null,
         Attributes|array $attributes = [],
         ?string $version = '1.1',
     ) {
@@ -212,7 +212,7 @@ class Request
      * 
      * @param string $method The HTTP method
      * @return self
-     * @throws \InvalidArgumentException For invalid HTTP methods
+     * @throws InvalidArgumentException For invalid HTTP methods
      */
     public function withMethod(string $method): self
     {
@@ -265,12 +265,12 @@ class Request
      * 
      * @param string $method The HTTP method
      * @return string The normalized HTTP method
-     * @throws \InvalidArgumentException For invalid HTTP methods
+     * @throws InvalidArgumentException For invalid HTTP methods
      */
     protected function filterMethod(string $method): string
     {
         if (empty($method)) {
-            throw new \InvalidArgumentException('Method must be a non-empty string');
+            throw new InvalidArgumentException('Method must be a non-empty string');
         }
 
         return strtoupper($method);

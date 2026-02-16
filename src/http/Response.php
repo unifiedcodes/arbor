@@ -2,10 +2,11 @@
 
 namespace Arbor\http;
 
-use Arbor\http\components\Stream;
+use Arbor\storage\streams\StreamInterface;
 use Arbor\http\components\Headers;
 use Arbor\http\traits\HeaderTrait;
 use Arbor\http\traits\BodyTrait;
+use RuntimeException;
 
 /**
  * HTTP Response class
@@ -101,14 +102,14 @@ class Response
      *
      * Creates a new HTTP response with the specified body, status code, headers, protocol, and reason phrase.
      *
-     * @param Stream|string|null $body Response body content
+     * @param StreamInterface|string|null $body Response body content
      * @param int $statusCode HTTP status code
      * @param array<string,string|string[]>|Headers $headers Response headers
      * @param string $protocolVersion HTTP protocol version
      * @param string $reasonPhrase Reason phrase (when empty, will use the standard phrase)
      */
     public function __construct(
-        Stream|string|null $body = null,
+        StreamInterface|string|null $body = null,
         int $statusCode = 200,
         array|Headers $headers = [],
         string $protocolVersion = '1.1',
@@ -229,13 +230,13 @@ class Response
      * Outputs the status line, headers, and body content to the client.
      * Throws an exception if headers have already been sent.
      *
-     * @throws \RuntimeException If headers have already been sent
+     * @throws RuntimeException If headers have already been sent
      * @return void
      */
     public function send(): void
     {
         if (headers_sent()) {
-            throw new \RuntimeException("Headers already sent.");
+            throw new RuntimeException("Headers already sent.");
         }
 
         // Status line

@@ -121,6 +121,7 @@
 │       Container.php
 │       DB.php
 │       Facade.php
+│       Files.php
 │       Flash.php
 │       Respond.php
 │       Route.php

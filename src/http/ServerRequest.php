@@ -3,12 +3,12 @@
 namespace Arbor\http;
 
 use Arbor\http\components\Uri;
-use Arbor\http\components\Stream;
 use Arbor\http\components\Headers;
 use Arbor\http\components\Cookies;
 use Arbor\http\components\Attributes;
 use Arbor\http\components\UploadedFile;
 use InvalidArgumentException;
+use Arbor\storage\streams\StreamInterface;
 
 /**
  * ServerRequest class represents an HTTP request as received by a server.
@@ -64,7 +64,7 @@ class ServerRequest extends Request
      * @param string $method HTTP method
      * @param Uri|null $uri Request URI
      * @param Headers|array<string, string|string[]> $headers Request headers
-     * @param Stream|string|null $body Request body
+     * @param StreamInterface|string|null $body Request body
      * @param Attributes|null $attributes Request attributes
      * @param string $version HTTP protocol version
      * @param array<string, mixed> $serverParams Server parameters
@@ -77,7 +77,7 @@ class ServerRequest extends Request
         string $method = 'GET',
         ?Uri $uri = null,
         Headers|array $headers = [],
-        Stream|string|null $body = null,
+        StreamInterface|string|null $body = null,
         ?Attributes $attributes = null,
         string $version = '1.1',
         array $serverParams = [],

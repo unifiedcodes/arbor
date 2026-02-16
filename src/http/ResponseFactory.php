@@ -2,8 +2,8 @@
 
 namespace Arbor\http;
 
-use Arbor\http\components\Stream;
 use Arbor\http\components\Headers;
+use Arbor\storage\streams\StreamInterface;
 use RuntimeException;
 use InvalidArgumentException;
 
@@ -31,7 +31,7 @@ class ResponseFactory
     /**
      * Creates a generic HTTP response with customizable parameters
      *
-     * @param Stream|string|null $body The response body
+     * @param StreamInterface|string|null $body The response body
      * @param int $statusCode The HTTP status code
      * @param array<string,string|string[]>|Headers $headers The response headers
      * @param string $protocolVersion The HTTP protocol version
@@ -39,7 +39,7 @@ class ResponseFactory
      * @return Response The created Response object
      */
     public static function create(
-        Stream|string|null $body = null,
+        StreamInterface|string|null $body = null,
         int $statusCode = 200,
         array|Headers $headers = [],
         string $protocolVersion = '1.1',

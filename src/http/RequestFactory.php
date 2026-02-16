@@ -5,9 +5,11 @@ namespace Arbor\http;
 use Arbor\http\ServerRequest;
 use Arbor\http\components\Uri;
 use Arbor\http\components\Headers;
-use Arbor\http\components\Stream;
 use Arbor\http\components\Cookies;
 use Arbor\http\components\Attributes;
+
+use Arbor\storage\streams\StreamFactory;
+use Arbor\storage\streams\StreamInterface;
 
 /**
  * Class RequestFactory
@@ -32,7 +34,11 @@ class RequestFactory
         $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
         $uri = RequestFactory::URIfromGlobals($_SERVER);
         $headers = RequestFactory::HeadersFromGlobals($_SERVER);
-        $body = new Stream(fopen('php://input', 'r+'));
+
+        $body = StreamFactory::fromResource(
+            fopen('php://input', 'rb')
+        );;
+
         $cookies = new Cookies($_COOKIE);
         $version = isset($_SERVER['SERVER_PROTOCOL']) ? str_replace('HTTP/', '', $_SERVER['SERVER_PROTOCOL']) : '1.1';
         $attributes = new Attributes();

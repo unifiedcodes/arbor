@@ -46,6 +46,19 @@ class Storage
             : Uri::fromString($uri);
     }
 
+    public function store(string|Uri $uri): StoreInterface
+    {
+        $uri = $this->normalizeUri($uri);
+        $scheme = $this->registry->resolve($uri->scheme());
+        return $scheme->store();
+    }
+
+
+    public function scheme(string $schemeName): Scheme
+    {
+        return $this->registry->resolve($schemeName);
+    }
+
 
     // path methods
     public function url(string|Uri $uri): string

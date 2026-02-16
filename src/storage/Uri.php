@@ -60,6 +60,37 @@ final class Uri
         return $this->path;
     }
 
+    public function withPath(string $path): self
+    {
+        return new self(
+            $this->scheme,
+            Path::normalizeRelativePath($path)
+        );
+    }
+
+
+    public function withFileName(string $fileName): self
+    {
+        $fileName = trim($fileName);
+
+        if ($fileName === '') {
+            throw new InvalidArgumentException('Filename cannot be empty');
+        }
+
+        // Disallow path injection
+        if (str_contains($fileName, '/') || str_contains($fileName, '\\')) {
+            throw new InvalidArgumentException('Filename must not contain directory separators');
+        }
+
+        $basePath = rtrim($this->path, '/') . '/';
+
+        return new self(
+            $this->scheme,
+            Path::normalizeRelativePath($basePath . $fileName)
+        );
+    }
+
+
 
     public function __toString(): string
     {

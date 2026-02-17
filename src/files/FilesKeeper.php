@@ -2,9 +2,9 @@
 
 namespace Arbor\files;
 
-use Arbor\files\record\FileRecord;
-use Arbor\files\record\FileRecordStoreInterface;
-use Arbor\files\record\NullFileRecordStore;
+use Arbor\files\contracts\FileRecordStoreInterface;
+use Arbor\files\utilities\NullFileRecordStore;
+use Arbor\files\FileRecord;
 
 class FilesKeeper
 {

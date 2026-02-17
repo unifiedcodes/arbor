@@ -1,12 +1,14 @@
 <?php
 
-namespace Arbor\files\strategies;
+namespace Arbor\files\filetypes\image;
 
+use Arbor\files\contracts\FileStrategyInterface;
 use Arbor\files\ingress\FileContext;
 use RuntimeException;
 use finfo;
 
-final class ImageWithGD implements FileStrategyInterface
+
+final class ImageStrategyGD implements FileStrategyInterface
 {
     private const MAX_SIZE = 5_000_000; // 5 MB
 

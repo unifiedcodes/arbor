@@ -1,8 +1,8 @@
 <?php
 
-namespace Arbor\files\filters;
+namespace Arbor\shared\filters;
 
-
+use Arbor\files\contracts\FileFilterInterface;
 use Arbor\files\ingress\FileContext;
 
 

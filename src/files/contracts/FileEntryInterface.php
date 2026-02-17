@@ -1,6 +1,6 @@
 <?php
 
-namespace Arbor\files\entries;
+namespace Arbor\files\contracts;
 
 use Arbor\files\ingress\Payload;
 

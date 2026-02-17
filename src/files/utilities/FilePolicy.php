@@ -1,6 +1,6 @@
 <?php
 
-namespace Arbor\files\policies;
+namespace Arbor\files\utilities;
 
 
 abstract class FilePolicy

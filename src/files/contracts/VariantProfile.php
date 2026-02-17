@@ -7,7 +7,7 @@ use Arbor\files\ingress\FileContext;
 use Arbor\storage\Uri;
 
 
-interface VariationProfile
+interface VariantInterface
 {
     public function name(): string;
 

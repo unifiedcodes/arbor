@@ -3,7 +3,6 @@
 namespace Arbor\files\strategies;
 
 use Arbor\files\ingress\FileContext;
-use Arbor\files\ingress\IngressNormalizer;
 use RuntimeException;
 use finfo;
 

@@ -21,4 +21,6 @@ interface FilePolicyInterface
     public function namespace(): string;
 
     public function mimes(): array;
+
+    public function variations(): array;
 }

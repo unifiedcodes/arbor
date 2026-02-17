@@ -89,6 +89,7 @@ final class Filer
         // context->filename
         $fileName = $fileContext->filename();
 
+        // appending filename in uri
         $uri = $uri->withFileName($fileName);
 
         // uri->scheme

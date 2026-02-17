@@ -6,12 +6,12 @@ use Arbor\files\contracts\FileStrategyInterface;
 use Arbor\files\contracts\FilePolicyInterface;
 use Arbor\files\ingress\FileContext;
 use Arbor\files\filetypes\image\ImageStrategyGD;
-use Arbor\files\utilities\FilePolicy;
+use Arbor\files\utilities\AbstractFilePolicy;
 use Arbor\facades\Config;
 use Arbor\storage\Uri;
 
 
-final class ImagePolicy extends FilePolicy implements FilePolicyInterface
+final class ImagePolicy extends AbstractFilePolicy implements FilePolicyInterface
 {
     /**
      * Default options for image uploads.

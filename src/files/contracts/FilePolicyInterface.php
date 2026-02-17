@@ -1,10 +1,10 @@
 <?php
 
-namespace Arbor\files\policies;
+namespace Arbor\files\contracts;
 
 
 use Arbor\files\ingress\FileContext;
-use Arbor\files\strategies\FileStrategyInterface;
+use Arbor\files\contracts\FileStrategyInterface;
 use Arbor\storage\Uri;
 
 

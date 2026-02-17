@@ -1,9 +1,9 @@
 <?php
 
-namespace Arbor\files\record;
+namespace Arbor\files\contracts;
 
 
-use Arbor\files\record\FileRecord;
+use Arbor\files\FileRecord;
 
 
 interface FileRecordStoreInterface

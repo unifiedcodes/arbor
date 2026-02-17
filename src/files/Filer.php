@@ -3,11 +3,11 @@
 namespace Arbor\files;
 
 
-use Arbor\files\entries\FileEntryInterface;
+use Arbor\files\contracts\FileEntryInterface;
+use Arbor\files\contracts\FilePolicyInterface;
 use Arbor\files\ingress\FileContext;
-use Arbor\files\policies\FilePolicyInterface;
 use Arbor\files\PolicyCatalog;
-use Arbor\files\record\FileRecord;
+use Arbor\files\FileRecord;
 use Arbor\facades\Storage;
 use Arbor\storage\Path;
 use RuntimeException;

@@ -2,7 +2,7 @@
 
 namespace Arbor\files;
 
-use Arbor\files\policies\FilePolicyInterface;
+use Arbor\files\contracts\FilePolicyInterface;
 use RuntimeException;
 use LogicException;
 

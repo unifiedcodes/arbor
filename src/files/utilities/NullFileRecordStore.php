@@ -1,8 +1,9 @@
 <?php
 
-namespace Arbor\files\record;
+namespace Arbor\files\utilities;
 
-use Arbor\files\record\FileRecord;
+use Arbor\files\FileRecord;
+use Arbor\files\contracts\FileRecordStoreInterface;
 
 
 final class NullFileRecordStore implements FileRecordStoreInterface

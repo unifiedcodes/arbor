@@ -2,7 +2,7 @@
 
 namespace Arbor\files\entries;
 
-use Arbor\files\entries\FileEntryInterface;
+use Arbor\files\contracts\FileEntryInterface;
 use Arbor\files\ingress\Payload;
 use Arbor\http\components\UploadedFile;
 use Arbor\stream\StreamFactory;

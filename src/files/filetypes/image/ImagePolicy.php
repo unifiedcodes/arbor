@@ -1,15 +1,17 @@
 <?php
 
-namespace Arbor\files\policies;
+namespace Arbor\files\filetypes\image;
 
-use Arbor\facades\Config;
+use Arbor\files\contracts\FileStrategyInterface;
+use Arbor\files\contracts\FilePolicyInterface;
 use Arbor\files\ingress\FileContext;
-use Arbor\files\strategies\FileStrategyInterface;
-use Arbor\files\strategies\ImageWithGD;
+use Arbor\files\filetypes\image\ImageStrategyGD;
+use Arbor\files\utilities\FilePolicy;
+use Arbor\facades\Config;
 use Arbor\storage\Uri;
 
 
-final class Image extends FilePolicy implements FilePolicyInterface
+final class ImagePolicy extends FilePolicy implements FilePolicyInterface
 {
     /**
      * Default options for image uploads.
@@ -38,7 +40,7 @@ final class Image extends FilePolicy implements FilePolicyInterface
      */
     public function strategy(FileContext $context): FileStrategyInterface
     {
-        return new ImageWithGD();
+        return new ImageStrategyGD();
     }
 
     /**

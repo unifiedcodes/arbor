@@ -3,11 +3,11 @@
 namespace Arbor\files;
 
 
-use Arbor\files\record\FileRecordStoreInterface;
-use Arbor\files\entries\FileEntryInterface;
+use Arbor\files\contracts\FileRecordStoreInterface;
+use Arbor\files\contracts\FileEntryInterface;
 use Arbor\files\FilesKeeper;
 use Arbor\files\Filer;
-use Arbor\files\record\FileRecord;
+use Arbor\files\FileRecord;
 
 
 class Files

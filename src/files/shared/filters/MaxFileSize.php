@@ -1,10 +1,9 @@
 <?php
 
-namespace Arbor\files\filters;
+namespace Arbor\shared\filters;
 
-
+use Arbor\files\contracts\FileFilterInterface;
 use Arbor\files\ingress\FileContext;
-use Arbor\files\filters\FileFilterInterface;
 
 
 final class MaxFileSize implements FileFilterInterface

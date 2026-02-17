@@ -1,6 +1,6 @@
 <?php
 
-namespace Arbor\files\strategies;
+namespace Arbor\files\contracts;
 
 
 use Arbor\files\ingress\FileContext;

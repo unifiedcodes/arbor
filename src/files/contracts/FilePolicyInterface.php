@@ -22,5 +22,5 @@ interface FilePolicyInterface
 
     public function mimes(): array;
 
-    public function variations(): array;
+    public function withOptions(array $options): static;
 }

@@ -11,7 +11,7 @@ trait Defaults
      */
     protected function applyDefaults(array $overrides = []): void
     {
-        $this->options = $this->resolveDefaults($overrides);
+        $this->options = $this->mergeDefaults($overrides);
     }
 
     /**
@@ -22,7 +22,7 @@ trait Defaults
     /**
      * Resolve defaults merged with overrides.
      */
-    protected function resolveDefaults(array $overrides = []): array
+    protected function mergeDefaults(array $overrides = []): array
     {
         return array_replace_recursive(
             $this->defaults(),

@@ -3,7 +3,6 @@
 namespace Arbor\files\filetypes\image;
 
 use Arbor\files\contracts\FileStrategyInterface;
-use Arbor\files\contracts\FilePolicyInterface;
 use Arbor\files\ingress\FileContext;
 use Arbor\files\filetypes\image\ImageStrategyGD;
 use Arbor\files\utilities\AbstractFilePolicy;
@@ -11,20 +10,14 @@ use Arbor\facades\Config;
 use Arbor\storage\Uri;
 
 
-final class ImagePolicy extends AbstractFilePolicy implements FilePolicyInterface
+final class ImagePolicy extends AbstractFilePolicy
 {
     /**
      * Default options for image uploads.
      */
     protected function defaults(): array
     {
-        return [
-            'mimes' => [
-                'image/jpeg',
-                'image/png',
-                'image/webp',
-            ],
-        ];
+        return [];
     }
 
     /**
@@ -32,7 +25,11 @@ final class ImagePolicy extends AbstractFilePolicy implements FilePolicyInterfac
      */
     public function mimes(): array
     {
-        return $this->option('mimes', []);
+        return [
+            'image/jpeg',
+            'image/png',
+            'image/webp',
+        ];
     }
 
     /**
@@ -75,11 +72,5 @@ final class ImagePolicy extends AbstractFilePolicy implements FilePolicyInterfac
     public function namespace(): string
     {
         return '';
-    }
-
-
-    public function variations(): array
-    {
-        return [];
     }
 }

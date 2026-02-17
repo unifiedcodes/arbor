@@ -45,13 +45,8 @@ final class Filer
         // transform the file.
         $fileContext = $this->transformFile($fileContext, $policy);
 
-
         // store the file.
         return $this->persist($fileContext, $policy);
-
-        // generate variants.
-
-        // return enriched with variants file record.
     }
 
 
@@ -111,7 +106,6 @@ final class Filer
         return FileRecord::from(
             context: $fileContext,
             uri: $uri->toString(),
-            publicUrl: Path::publicUrl($scheme, $uri->path()),
         );
     }
 }

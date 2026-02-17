@@ -10,7 +10,6 @@ use Arbor\files\PolicyCatalog;
 use Arbor\files\record\FileRecord;
 use Arbor\facades\Storage;
 use Arbor\storage\Path;
-use Arbor\storage\Uri;
 use RuntimeException;
 
 
@@ -22,7 +21,7 @@ final class Filer
     ) {}
 
 
-    public function save(mixed $input, array $options = [])
+    public function save(mixed $input, array $options = []): FileRecord
     {
         $fileEntry = $this->fileEntry->withInput($input);
 
@@ -82,7 +81,7 @@ final class Filer
     }
 
 
-    protected function persist(FileContext $fileContext, FilePolicyInterface $policy)
+    protected function persist(FileContext $fileContext, FilePolicyInterface $policy): FileRecord
     {
         // policy->uri
         $uri = $policy->uri($fileContext);

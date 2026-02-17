@@ -74,4 +74,10 @@ final class Image extends FilePolicy implements FilePolicyInterface
     {
         return '';
     }
+
+
+    public function variations(): array
+    {
+        return [];
+    }
 }

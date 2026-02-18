@@ -6,9 +6,8 @@ use Arbor\files\contracts\FileRecordStoreInterface;
 use Arbor\files\utilities\NullFileRecordStore;
 use Arbor\files\FileRecord;
 
-class FilesKeeper
+class Keeper
 {
-
     public function __construct(
         private ?FileRecordStoreInterface $recordStore
     ) {

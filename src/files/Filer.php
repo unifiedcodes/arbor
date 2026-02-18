@@ -8,9 +8,9 @@ use Arbor\files\contracts\FilePolicyInterface;
 use Arbor\files\ingress\FileContext;
 use Arbor\files\PolicyCatalog;
 use Arbor\files\FileRecord;
+use Arbor\files\Evaluator;
 use Arbor\facades\Storage;
 use Arbor\storage\Path;
-use RuntimeException;
 
 
 final class Filer
@@ -31,46 +31,49 @@ final class Filer
         );
 
         // resolve policy
-        $policy = $this->policyCatalog->resolve($fileContext->claimMime(), $options);
+        $policy = $this->resolvePolicy($fileContext, $options);
 
-        // resolve strategy from policy.
-        $strategy = $policy->strategy($fileContext);
+        // prove file
+        $fileContext = $this->prove($fileContext, $policy);
 
-        // prove the file.
-        $fileContext = $strategy->prove($fileContext);
-
-        // filter the file.
-        $this->filterFile($fileContext, $policy);
-
-        // transform the file.
-        $fileContext = $this->transformFile($fileContext, $policy);
+        // evaluation and mutation.
+        $fileContext = $this->evaluate($fileContext, $policy);
 
         // store the file.
         return $this->persist($fileContext, $policy);
     }
 
 
-    protected function filterFile(FileContext $fileContext, FilePolicyInterface $policy): void
+    protected function resolvePolicy(FileContext $fileContext, array $options = []): FilePolicyInterface
     {
-        $filters = $policy->filters($fileContext);
-
-        foreach ($filters as $filter) {
-
-            // if filter fails.
-            if (!$filter->filter($fileContext)) {
-                throw new RuntimeException($filter->errorMessage($fileContext));
-            }
-        }
+        // infer options for namespace/mime/policySelector
+        return $this->policyCatalog->resolve($fileContext->claimMime(), $options);
     }
 
 
-    protected function transformFile(FileContext $fileContext, FilePolicyInterface $policy): FileContext
+    protected function prove(FileContext $fileContext, FilePolicyInterface $policy): FileContext
     {
-        $transformers = $policy->transformers($fileContext);
+        // get strategy from policy.
+        $strategy = $policy->strategy($fileContext);
 
-        foreach ($transformers as $transformer) {
-            $fileContext = $transformer->transform($fileContext);
-        }
+        // prove the file.
+        return $strategy->prove($fileContext);
+    }
+
+
+    protected function evaluate(FileContext $fileContext, FilePolicyInterface $policy): FileContext
+    {
+        // filter the file.
+        Evaluator::filters(
+            $policy->filters($fileContext),
+            $fileContext
+        );
+
+        // transform the file.
+        $fileContext = Evaluator::transformers(
+            $policy->transformers($fileContext),
+            $fileContext
+        );
 
         return $fileContext;
     }

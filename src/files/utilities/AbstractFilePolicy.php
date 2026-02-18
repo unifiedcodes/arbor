@@ -4,12 +4,12 @@ namespace Arbor\files\utilities;
 
 
 use Arbor\files\contracts\FilePolicyInterface;
-use Arbor\support\Defaults;
+use Arbor\support\Configuration;
 
 
 abstract class AbstractFilePolicy implements FilePolicyInterface
 {
-    use Defaults;
+    use Configuration;
 
     public function __construct(array $options = [])
     {

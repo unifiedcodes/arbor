@@ -116,9 +116,7 @@ final class FileContext
 
         // enforce invariant: logical name only
         if (str_contains($name, '.')) {
-            throw new LogicException(
-                'Name must not contain an extension'
-            );
+            throw new LogicException('Name must not contain an extension');
         }
 
         $clone = clone $this;

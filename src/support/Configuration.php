@@ -2,7 +2,7 @@
 
 namespace Arbor\support;
 
-trait Defaults
+trait Configuration
 {
     protected array $options = [];
 
@@ -17,7 +17,7 @@ trait Defaults
     /**
      * Classes must define their default configuration.
      */
-    abstract protected function defaults(): array;
+    abstract protected function defaultOptions(): array;
 
     /**
      * Resolve defaults merged with overrides.
@@ -25,7 +25,7 @@ trait Defaults
     protected function mergeDefaults(array $overrides = []): array
     {
         return array_replace_recursive(
-            $this->defaults(),
+            $this->defaultOptions(),
             $overrides
         );
     }

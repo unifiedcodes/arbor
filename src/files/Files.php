@@ -5,7 +5,7 @@ namespace Arbor\files;
 
 use Arbor\files\contracts\FileRecordStoreInterface;
 use Arbor\files\contracts\FileEntryInterface;
-use Arbor\files\FilesKeeper;
+use Arbor\files\Keeper;
 use Arbor\files\Filer;
 use Arbor\files\FileRecord;
 
@@ -14,7 +14,7 @@ class Files
 {
     private PolicyCatalog $policyCatalog;
     private Filer $filer;
-    private FilesKeeper $filesKeeper;
+    private Keeper $filesKeeper;
 
 
     public function __construct(
@@ -24,7 +24,7 @@ class Files
         $this->policyCatalog = new PolicyCatalog();
 
         $this->filer = new Filer($fileEntry, $this->policyCatalog);
-        $this->filesKeeper = new FilesKeeper($recordStore);
+        $this->filesKeeper = new Keeper($recordStore);
     }
 
 

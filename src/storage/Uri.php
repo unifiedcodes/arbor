@@ -9,6 +9,7 @@ use InvalidArgumentException;
 final class Uri
 {
     private string $scheme;
+    private string $namespace;
     private string $path;
 
 

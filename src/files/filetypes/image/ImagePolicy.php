@@ -15,7 +15,7 @@ final class ImagePolicy extends AbstractFilePolicy
     /**
      * Default options for image uploads.
      */
-    protected function defaults(): array
+    protected function defaultOptions(): array
     {
         return [];
     }

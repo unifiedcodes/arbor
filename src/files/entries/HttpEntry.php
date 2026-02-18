@@ -5,7 +5,6 @@ namespace Arbor\files\entries;
 use Arbor\files\contracts\FileEntryInterface;
 use Arbor\files\ingress\Payload;
 use Arbor\http\components\UploadedFile;
-use Arbor\stream\StreamFactory;
 use RuntimeException;
 
 
@@ -46,7 +45,6 @@ final class HttpEntry implements FileEntryInterface
             mime: $file['type'] ?? 'application/octet-stream',
             size: (int) $file['size'],
             path: $file['tmp_name'],
-            stream: StreamFactory::fromFile($file['tmp_name']),
             error: $file['error'] ?? null,
             moved: false
         );
@@ -60,7 +58,6 @@ final class HttpEntry implements FileEntryInterface
             mime: $this->file->clientMediaType ?? 'application/octet-stream',
             size: $this->file->size,
             path: $this->file->tmpPath,
-            stream: $this->file->stream(),
             error: $this->file->error,
             extension: $this->file->clientExtension(),
             moved: false

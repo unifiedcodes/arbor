@@ -28,7 +28,7 @@ class Storage
         string $root = '',
         ?string $baseUrl = null,
         bool $public = false
-    ) {
+    ): void {
         $this->registry->register(
             $schemeName,
             $store,
@@ -36,6 +36,12 @@ class Storage
             $baseUrl,
             $public
         );
+    }
+
+
+    public function addNamespace(string $enumClass): void
+    {
+        $this->registry->registerNamespaceEnum($enumClass);
     }
 
 

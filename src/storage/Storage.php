@@ -39,12 +39,6 @@ class Storage
     }
 
 
-    public function addNamespace(string $enumClass): void
-    {
-        $this->registry->registerNamespaceEnum($enumClass);
-    }
-
-
     protected function normalizeUri(string|Uri $uri): Uri
     {
         return $uri instanceof Uri

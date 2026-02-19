@@ -3,12 +3,10 @@
 namespace Arbor\files\filetypes\image;
 
 
-use Arbor\facades\Config;
 use Arbor\files\contracts\FileStrategyInterface;
 use Arbor\files\ingress\FileContext;
 use Arbor\files\filetypes\image\ImageStrategyGD;
 use Arbor\files\utilities\AbstractFilePolicy;
-use Arbor\storage\Uri;
 
 
 final class ImagePolicy extends AbstractFilePolicy
@@ -59,19 +57,17 @@ final class ImagePolicy extends AbstractFilePolicy
         return [];
     }
 
-    /**
-     * Storage target for images.
-     */
-    public function uri(FileContext $context): Uri
+
+    public function scheme(): string
     {
-        return Uri::fromString('local://uploads/');
+        return 'images';
     }
 
     /**
-     * Logical namespace for policy.
+     * Storage target for images.
      */
-    public function namespace(): string
+    public function path(FileContext $context): string
     {
-        return '';
+        return '/uploads/';
     }
 }

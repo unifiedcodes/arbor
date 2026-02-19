@@ -11,7 +11,7 @@ use Arbor\files\FileRecord;
 use Arbor\files\Evaluator;
 use Arbor\facades\Storage;
 use Arbor\storage\Path;
-
+use Arbor\storage\Uri;
 
 final class Filer
 {
@@ -21,7 +21,7 @@ final class Filer
     ) {}
 
 
-    public function save(mixed $input, array $options = []): FileRecord
+    public function save(string $scheme, mixed $input, array $options = []): FileRecord
     {
         $fileEntry = $this->fileEntry->withInput($input);
 
@@ -31,7 +31,7 @@ final class Filer
         );
 
         // resolve policy
-        $policy = $this->resolvePolicy($fileContext, $options);
+        $policy = $this->resolvePolicy($scheme, $fileContext, $options);
 
         // prove file
         $fileContext = $this->prove($fileContext, $policy);
@@ -44,10 +44,10 @@ final class Filer
     }
 
 
-    protected function resolvePolicy(FileContext $fileContext, array $options = []): FilePolicyInterface
+    protected function resolvePolicy(string $scheme, FileContext $fileContext, array $options = []): FilePolicyInterface
     {
         // infer options for namespace/mime/policySelector
-        return $this->policyCatalog->resolve($fileContext->claimMime(), $options);
+        return $this->policyCatalog->resolve($scheme, $fileContext->claimMime(), $options);
     }
 
 
@@ -81,14 +81,17 @@ final class Filer
 
     protected function persist(FileContext $fileContext, FilePolicyInterface $policy): FileRecord
     {
-        // policy->uri
-        $uri = $policy->uri($fileContext);
+        // policy->scheme name
+        $schemename = $policy->scheme();
+
+        // policy->path
+        $path = $policy->path($fileContext);
 
         // context->filename
-        $fileName = $fileContext->filename();
+        $filename = $fileContext->filename();
 
-        // appending filename in uri
-        $uri = $uri->withFileName($fileName);
+        // uri
+        $uri = Uri::fromParts($schemename, $path, $filename);
 
         // uri->scheme
         $scheme = Storage::scheme($uri->scheme());

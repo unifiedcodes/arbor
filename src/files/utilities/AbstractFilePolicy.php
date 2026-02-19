@@ -3,11 +3,11 @@
 namespace Arbor\files\utilities;
 
 
-use Arbor\files\contracts\FilePolicyInterface;
+use Arbor\files\contracts\IngressPolicyInterface;
 use Arbor\support\Configuration;
 
 
-abstract class AbstractFilePolicy implements FilePolicyInterface
+abstract class AbstractFilePolicy implements IngressPolicyInterface
 {
     use Configuration;
 

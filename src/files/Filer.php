@@ -4,7 +4,7 @@ namespace Arbor\files;
 
 
 use Arbor\files\contracts\FileEntryInterface;
-use Arbor\files\contracts\FilePolicyInterface;
+use Arbor\files\contracts\IngressPolicyInterface;
 use Arbor\files\ingress\FileContext;
 use Arbor\files\PolicyCatalog;
 use Arbor\files\FileRecord;
@@ -12,6 +12,7 @@ use Arbor\files\Evaluator;
 use Arbor\facades\Storage;
 use Arbor\storage\Path;
 use Arbor\storage\Uri;
+
 
 final class Filer
 {
@@ -44,14 +45,18 @@ final class Filer
     }
 
 
-    protected function resolvePolicy(string $scheme, FileContext $fileContext, array $options = []): FilePolicyInterface
+    protected function resolvePolicy(string $scheme, FileContext $fileContext, array $options = []): IngressPolicyInterface
     {
-        // infer options for namespace/mime/policySelector
-        return $this->policyCatalog->resolve($scheme, $fileContext->claimMime(), $options);
+        return $this->policyCatalog->resolvePolicy(
+            IngressPolicyInterface::class,
+            $scheme,
+            $fileContext->claimMime(),
+            $options
+        );
     }
 
 
-    protected function prove(FileContext $fileContext, FilePolicyInterface $policy): FileContext
+    protected function prove(FileContext $fileContext, IngressPolicyInterface $policy): FileContext
     {
         // get strategy from policy.
         $strategy = $policy->strategy($fileContext);
@@ -61,7 +66,7 @@ final class Filer
     }
 
 
-    protected function evaluate(FileContext $fileContext, FilePolicyInterface $policy): FileContext
+    protected function evaluate(FileContext $fileContext, IngressPolicyInterface $policy): FileContext
     {
         // filter the file.
         Evaluator::filters(
@@ -79,7 +84,7 @@ final class Filer
     }
 
 
-    protected function persist(FileContext $fileContext, FilePolicyInterface $policy): FileRecord
+    protected function persist(FileContext $fileContext, IngressPolicyInterface $policy): FileRecord
     {
         // policy->scheme name
         $schemename = $policy->scheme();

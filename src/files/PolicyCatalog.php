@@ -11,83 +11,110 @@ use LogicException;
 final class PolicyCatalog
 {
     private array $policies = [];
-    private array $schemes = [];
-    private array $mimes = [];
+    private array $keys = [];
 
 
     public function registerPolicies(array $policies): void
     {
-        foreach ($policies as $policyFqn) {
-            $this->registerPolicy($policyFqn);
+        foreach ($policies as $fqn) {
+            $this->registerPolicy($fqn);
+            $this->registerKeys($fqn);
         }
     }
 
-
-    public function registerPolicy(string $policyFqn): void
+    public function hasPolicy(string $fqn): bool
     {
-        $policy = $this->registerPolicyInstance($policyFqn);
-
-        $this->registerScheme($policy);
-        $this->registerMimes($policy);
+        return isset($this->policies[$fqn]);
     }
 
 
-    protected function registerPolicyInstance(string $policyFqn): FilePolicyInterface
+    public function resolvePolicy(string $interfaceFqn, string $scheme, string $mime, array $options = []): FilePolicyInterface
     {
-        if (!class_exists($policyFqn)) {
+        if (!interface_exists($interfaceFqn)) {
             throw new RuntimeException(
-                "Policy class {$policyFqn} does not exist"
+                "{$interfaceFqn} does not exist."
             );
         }
 
-        if (!is_subclass_of($policyFqn, FilePolicyInterface::class)) {
+        if (!is_subclass_of($interfaceFqn, FilePolicyInterface::class)) {
             throw new RuntimeException(
-                "Policy {$policyFqn} must implement FilePolicyInterface"
+                "{$interfaceFqn} must extend FilePolicyInterface."
             );
         }
 
-        if (isset($this->policies[$policyFqn])) {
-            throw new RuntimeException("Policy already registered");
+        if (!isset($this->keys[$interfaceFqn])) {
+            throw new RuntimeException(
+                "No policies registered for {$interfaceFqn}."
+            );
         }
 
-        $policy = new $policyFqn();
-        $this->policies[$policyFqn] = $policy;
+        // prepare a key
+        $key = "{$scheme}/{$mime}";
+
+        // check if we have the key
+        if (!isset($this->keys[$interfaceFqn][$key])) {
+            throw new RuntimeException(
+                "No policy resolves scheme '{$scheme}', mime '{$key}' for {$interfaceFqn}."
+            );
+        }
+
+        $policyFqn = $this->keys[$interfaceFqn][$key];
+
+        if (!isset($this->policies[$policyFqn])) {
+            throw new RuntimeException(
+                "Policy {$policyFqn} is not registered."
+            );
+        }
+
+        $policy = $this->policies[$policyFqn];
+
+        $policy->withOptions($options);
 
         return $policy;
     }
 
 
-    protected function registerScheme(FilePolicyInterface $policy): void
+    protected function registerPolicy(string $fqn): void
     {
-        $scheme = $policy->scheme();
-
-        if ($scheme === '') {
-            return;
-        }
-
-        if (isset($this->schemes[$scheme])) {
-            throw new LogicException(
-                "Duplicate policy scheme: {$scheme}"
+        if (!class_exists($fqn)) {
+            throw new RuntimeException(
+                "Policy class {$fqn} does not exist"
             );
         }
 
-        $this->schemes[$scheme] = $policy::class;
+        if (!is_subclass_of($fqn, FilePolicyInterface::class)) {
+            throw new RuntimeException(
+                "Policy {$fqn} must implement FilePolicyInterface"
+            );
+        }
+
+        if (isset($this->policies[$fqn])) {
+            throw new RuntimeException("Policy already registered");
+        }
+
+        $policy = new $fqn();
+        $this->policies[$fqn] = $policy;
     }
 
 
-    protected function registerMimes(FilePolicyInterface $policy): void
+    protected function registerKeys(string $fqn): void
     {
+        if (!$this->hasPolicy($fqn)) {
+            throw new RuntimeException("Policy {$fqn} does not exists.");
+        }
+
+        $policy = $this->policies[$fqn];
         $scheme = $policy->scheme();
 
-        if (str_contains($scheme, '/')) {
+        if ($scheme === '' || str_contains($scheme, '/')) {
             throw new LogicException(
-                "Policy scheme must not contain '/'"
+                "invalid scheme declared by policy {$fqn}"
             );
         }
 
         foreach ($policy->mimes() as $mime) {
 
-            if (!is_string($mime) || $mime === '') {
+            if ($mime === '') {
                 throw new LogicException(
                     "Invalid mime declared by policy " . $policy::class
                 );
@@ -95,48 +122,32 @@ final class PolicyCatalog
 
             $key = "{$scheme}/{$mime}";
 
-            if (isset($this->mimes[$key])) {
+            $this->registerKey($key, $fqn);
+        }
+    }
+
+
+    protected function registerKey(string $key, string $fqn): void
+    {
+        $interfaces = class_implements($fqn);
+
+        foreach ($interfaces as $interface) {
+
+            if (!is_subclass_of($interface, FilePolicyInterface::class)) {
+                continue;
+            }
+
+            if ($interface === FilePolicyInterface::class) {
+                continue;
+            }
+
+            if (isset($this->keys[$interface][$key])) {
                 throw new LogicException(
-                    "Duplicate policy match {$key}"
+                    "Duplicate policy registration for {$interface} with key {$key}."
                 );
             }
 
-            $this->mimes[$key] = $policy::class;
+            $this->keys[$interface][$key] = $fqn;
         }
-    }
-
-
-    public function hasPolicy(string $policyFqn): bool
-    {
-        return isset($this->policies[$policyFqn]);
-    }
-
-
-    public function resolve(string $scheme, string $mime, array $options = []): FilePolicyInterface
-    {
-        if ($scheme === '') {
-            throw new LogicException('Scheme must not be empty');
-        }
-
-        if ($mime === '' || !str_contains($mime, '/')) {
-            throw new LogicException("Invalid mime '{$mime}'");
-        }
-
-        $key = "{$scheme}/{$mime}";
-
-        if (!isset($this->mimes[$key])) {
-            throw new RuntimeException(
-                "No policy resolves '{$scheme}/{$mime}'"
-            );
-        }
-
-        $policyFqn = $this->mimes[$key];
-        $policy = $this->policies[$policyFqn];
-
-        if ($options !== []) {
-            $policy = $policy->withOptions($options);
-        }
-
-        return $policy;
     }
 }

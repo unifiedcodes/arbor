@@ -2,6 +2,7 @@
 
 namespace Arbor\files;
 
+
 use Arbor\files\contracts\FilePolicyInterface;
 use RuntimeException;
 use LogicException;
@@ -10,7 +11,7 @@ use LogicException;
 final class PolicyCatalog
 {
     private array $policies = [];
-    private array $namespaces = [];
+    private array $schemes = [];
     private array $mimes = [];
 
 
@@ -26,10 +27,7 @@ final class PolicyCatalog
     {
         $policy = $this->registerPolicyInstance($policyFqn);
 
-        // Register namespace → policyFqn
-        $this->registerNamespace($policy);
-
-        // Register mimes -> policyFqn
+        $this->registerScheme($policy);
         $this->registerMimes($policy);
     }
 
@@ -48,13 +46,10 @@ final class PolicyCatalog
             );
         }
 
-        // Prevent duplicate registration
         if (isset($this->policies[$policyFqn])) {
-            throw new RuntimeException("policy already registered");
+            throw new RuntimeException("Policy already registered");
         }
 
-
-        // registering policy.
         $policy = new $policyFqn();
         $this->policies[$policyFqn] = $policy;
 
@@ -62,29 +57,31 @@ final class PolicyCatalog
     }
 
 
-    protected function registerNamespace(FilePolicyInterface $policy)
+    protected function registerScheme(FilePolicyInterface $policy): void
     {
-        $namespace = $policy->namespace();
+        $scheme = $policy->scheme();
 
-        if ($namespace !== '') {
-            if (isset($this->namespaces[$namespace])) {
-                throw new LogicException(
-                    "Duplicate policy namespace: {$namespace}"
-                );
-            }
-
-            $this->namespaces[$namespace] = $policy::class;
+        if ($scheme === '') {
+            return;
         }
+
+        if (isset($this->schemes[$scheme])) {
+            throw new LogicException(
+                "Duplicate policy scheme: {$scheme}"
+            );
+        }
+
+        $this->schemes[$scheme] = $policy::class;
     }
 
 
-    protected function registerMimes(FilePolicyInterface $policy)
+    protected function registerMimes(FilePolicyInterface $policy): void
     {
-        $namespace = $policy->namespace() ?: '*';
+        $scheme = $policy->scheme();
 
-        if (str_contains($namespace, '/')) {
+        if (str_contains($scheme, '/')) {
             throw new LogicException(
-                "Policy namespace must not contain '/'"
+                "Policy scheme must not contain '/'"
             );
         }
 
@@ -96,7 +93,7 @@ final class PolicyCatalog
                 );
             }
 
-            $key = "{$namespace}/{$mime}";
+            $key = "{$scheme}/{$mime}";
 
             if (isset($this->mimes[$key])) {
                 throw new LogicException(
@@ -115,13 +112,21 @@ final class PolicyCatalog
     }
 
 
-    public function resolve(string $selector, array $options = []): FilePolicyInterface
+    public function resolve(string $scheme, string $mime, array $options = []): FilePolicyInterface
     {
-        $key = $this->normalizeSelector($selector);
+        if ($scheme === '') {
+            throw new LogicException('Scheme must not be empty');
+        }
+
+        if ($mime === '' || !str_contains($mime, '/')) {
+            throw new LogicException("Invalid mime '{$mime}'");
+        }
+
+        $key = "{$scheme}/{$mime}";
 
         if (!isset($this->mimes[$key])) {
             throw new RuntimeException(
-                "No policy resolves '{$selector}'"
+                "No policy resolves '{$scheme}/{$mime}'"
             );
         }
 
@@ -133,24 +138,5 @@ final class PolicyCatalog
         }
 
         return $policy;
-    }
-
-
-    private function normalizeSelector(string $selector): string
-    {
-        $parts = explode('/', $selector);
-        $partsCount = count($parts);
-
-        if ($partsCount === 2) {
-            [$type, $sub] = $parts;
-            return "*/{$type}/{$sub}";
-        }
-
-        if ($partsCount === 3) {
-            [$namespace, $type, $sub] = $parts;
-            return "{$namespace}/{$type}/{$sub}";
-        }
-
-        throw new LogicException("Invalid policy selector '{$selector}'");
     }
 }

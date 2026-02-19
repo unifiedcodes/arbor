@@ -5,7 +5,6 @@ namespace Arbor\files\contracts;
 
 use Arbor\files\ingress\FileContext;
 use Arbor\files\contracts\FileStrategyInterface;
-use Arbor\storage\Uri;
 
 
 interface FilePolicyInterface
@@ -16,9 +15,9 @@ interface FilePolicyInterface
 
     public function transformers(FileContext $context): array;
 
-    public function uri(FileContext $context): Uri;
+    public function scheme(): string;
 
-    public function namespace(): string;
+    public function path(FileContext $context): string;
 
     public function mimes(): array;
 

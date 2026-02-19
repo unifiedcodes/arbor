@@ -34,10 +34,10 @@ class Files
     }
 
 
-    public function save(mixed $input, array $options = []): FileRecord
+    public function save(string $scheme, mixed $input, array $options = []): FileRecord
     {
         // consume options needed before policy resolution
-        $fileRecord = $this->filer->save($input, $options);
+        $fileRecord = $this->filer->save($scheme, $input, $options);
 
         $fileRecord = $this->filesKeeper->save($fileRecord);
 

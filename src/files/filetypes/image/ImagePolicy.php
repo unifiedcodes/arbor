@@ -8,8 +8,6 @@ use Arbor\files\contracts\FileStrategyInterface;
 use Arbor\files\ingress\FileContext;
 use Arbor\files\filetypes\image\ImageStrategyGD;
 use Arbor\files\utilities\AbstractFilePolicy;
-use Arbor\storage\namespace\DefaultNamespace;
-use Arbor\storage\namespace\NamespaceInterface;
 use Arbor\storage\Uri;
 
 
@@ -72,8 +70,8 @@ final class ImagePolicy extends AbstractFilePolicy
     /**
      * Logical namespace for policy.
      */
-    public function namespace(): NamespaceInterface
+    public function namespace(): string
     {
-        return DefaultNamespace::DEFAULT;
+        return '';
     }
 }

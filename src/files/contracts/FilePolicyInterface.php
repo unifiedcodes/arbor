@@ -3,7 +3,6 @@
 namespace Arbor\files\contracts;
 
 
-use Arbor\storage\namespace\NamespaceInterface;
 use Arbor\files\ingress\FileContext;
 use Arbor\files\contracts\FileStrategyInterface;
 use Arbor\storage\Uri;
@@ -19,7 +18,7 @@ interface FilePolicyInterface
 
     public function uri(FileContext $context): Uri;
 
-    public function namespace(): NamespaceInterface;
+    public function namespace(): string;
 
     public function mimes(): array;
 

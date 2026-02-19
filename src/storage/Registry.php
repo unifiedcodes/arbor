@@ -3,7 +3,6 @@
 namespace Arbor\storage;
 
 
-use Arbor\storage\namespace\NamespaceInterface;
 use Arbor\storage\stores\StoreInterface;
 use InvalidArgumentException;
 use Exception;
@@ -12,33 +11,6 @@ use Exception;
 class Registry
 {
     private array $schemes = [];
-    private array $namespaceEnums = [];
-
-
-    public function registerNamespaceEnum(string $enumClass): void
-    {
-        if (! enum_exists($enumClass)) {
-            throw new InvalidArgumentException("{$enumClass} is not an enum");
-        }
-
-        if (! is_subclass_of($enumClass, NamespaceInterface::class)) {
-            throw new InvalidArgumentException(
-                "{$enumClass} must implement NamespaceInterface"
-            );
-        }
-
-        if (in_array($enumClass, $this->namespaceEnums, true)) {
-            return;
-        }
-
-        $this->namespaceEnums[] = $enumClass;
-    }
-
-
-    public function hasNamespaceEnum(string $enumClass): bool
-    {
-        return in_array($enumClass, $this->namespaceEnums, true);
-    }
 
 
     public function register(

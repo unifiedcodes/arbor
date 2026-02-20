@@ -30,6 +30,27 @@ final class FileContext
         return $ctx;
     }
 
+    public static function fromProvenPayload(
+        Payload $payload,
+        string $mime,
+        string $extension,
+        int $size,
+        string $name,
+        bool $binary
+    ): self {
+        $ctx = new self();
+
+        $ctx->payload = $payload;
+        $ctx->mime = $mime;
+        $ctx->extension = $extension;
+        $ctx->size = $size;
+        $ctx->name = $name;
+        $ctx->binary = $binary;
+        $ctx->proved = true;
+
+        return $ctx;
+    }
+
     public function getPayload(): Payload
     {
         return $this->payload;

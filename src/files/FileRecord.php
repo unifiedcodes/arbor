@@ -6,7 +6,6 @@ namespace Arbor\files;
 use LogicException;
 use Arbor\files\ingress\FileContext;
 use Arbor\files\Variant;
-use Arbor\facades\Storage;
 
 
 final class FileRecord
@@ -16,8 +15,9 @@ final class FileRecord
         public readonly string $mime,
         public readonly string $extension,
         public readonly int $size,
-        public readonly string $hash,
         public readonly string $name,
+        public readonly bool $binary,
+        public readonly ?string $hash = null,
         public array $variants = [],
     ) {}
 
@@ -39,6 +39,7 @@ final class FileRecord
             size: $context->size(),
             hash: $context->hash(),
             name: $context->name(),
+            binary: $context->isBinary()
         );
     }
 
@@ -55,50 +56,5 @@ final class FileRecord
         $clone->variants = $variants;
 
         return $clone;
-    }
-
-
-    public static function hydrateFromUri(string $uri): self
-    {
-        $absolutePath = Storage::absolutePath($uri);
-
-        if (!is_file($absolutePath)) {
-            throw new LogicException(
-                "Cannot hydrate FileRecord. File not found at '{$absolutePath}'"
-            );
-        }
-
-        $size = filesize($absolutePath);
-        if ($size === false) {
-            throw new LogicException(
-                "Unable to determine file size for '{$absolutePath}'"
-            );
-        }
-
-        $mime = mime_content_type($absolutePath);
-        if ($mime === false) {
-            throw new LogicException(
-                "Unable to determine mime type for '{$absolutePath}'"
-            );
-        }
-
-        $hash = hash_file('sha256', $absolutePath);
-        if ($hash === false) {
-            throw new LogicException(
-                "Unable to determine hash for '{$absolutePath}'"
-            );
-        }
-
-        $extension = pathinfo($absolutePath, PATHINFO_EXTENSION);
-        $name = pathinfo($absolutePath, PATHINFO_FILENAME);
-
-        return new self(
-            uri: $uri,
-            mime: $mime,
-            extension: $extension,
-            size: $size,
-            hash: $hash,
-            name: $name,
-        );
     }
 }

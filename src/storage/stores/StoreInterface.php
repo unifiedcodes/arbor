@@ -2,7 +2,7 @@
 
 namespace Arbor\storage\stores;
 
-
+use Arbor\storage\Stats;
 use Arbor\stream\StreamInterface;
 
 
@@ -93,7 +93,7 @@ interface StoreInterface
      * typically includes information such as file size, MIME type, and last modified timestamp.
      *
      * @param  string $path The absolute path of the file.
-     * @return array  An associative array of file metadata.
+     * @return Stats  An associative array of file metadata.
      */
-    public function stats(string $path): array;
+    public function stats(string $path): Stats;
 }

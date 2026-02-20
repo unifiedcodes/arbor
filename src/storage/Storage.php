@@ -132,7 +132,7 @@ class Storage
      * @param  string|Uri $uri A URI string or {@see Uri} instance.
      * @return Uri
      */
-    protected function normalizeUri(string|Uri $uri): Uri
+    public function normalizeUri(string|Uri $uri): Uri
     {
         return $uri instanceof Uri
             ? $uri
@@ -347,9 +347,9 @@ class Storage
      * The shape of the returned array is determined by the underlying store implementation.
      *
      * @param  string|Uri $uri A URI string or {@see Uri} instance.
-     * @return array File metadata (e.g. size, mime type, last modified timestamp).
+     * @return Stats File metadata (e.g. size, mime type, last modified timestamp).
      */
-    public function stats(string|Uri $uri): array
+    public function stats(string|Uri $uri): Stats
     {
         [$store, $absolutePath] = $this->resolveIO($uri);
 

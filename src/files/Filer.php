@@ -30,7 +30,12 @@ final class Filer
         );
 
         // resolve policy
-        $policy = $this->resolvePolicy($scheme, $fileContext, $options);
+        $policy = $this->policyCatalog->resolvePolicy(
+            IngressPolicyInterface::class,
+            $scheme,
+            $fileContext->claimMime(),
+            $options
+        );
 
         // prove file
         $fileContext = $this->prove($fileContext, $policy);
@@ -40,17 +45,6 @@ final class Filer
 
         // store the file.
         return $this->persist($fileContext, $policy);
-    }
-
-
-    protected function resolvePolicy(string $scheme, FileContext $fileContext, array $options = []): IngressPolicyInterface
-    {
-        return $this->policyCatalog->resolvePolicy(
-            IngressPolicyInterface::class,
-            $scheme,
-            $fileContext->claimMime(),
-            $options
-        );
     }
 
 

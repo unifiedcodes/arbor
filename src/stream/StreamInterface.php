@@ -118,7 +118,7 @@ interface StreamInterface
      *
      * @return int|false The current position in the stream, or false if the position cannot be determined.
      */
-    public function tell(): ?int;
+    public function tell(): int|false;
 
     /**
      * Returns the underlying PHP stream resource.
@@ -126,4 +126,18 @@ interface StreamInterface
      * @return resource
      */
     public function resource();
+
+    /**
+     * Return the stream positioned at the beginning.
+     *
+     * For seekable streams, rewinds to byte 0 and returns the current instance.
+     * For non-seekable streams, asserts that the stream has not yet been consumed
+     * (i.e., the current position is 0) and returns the current instance as-is.
+     *
+     * @return self The current stream instance, positioned at the start.
+     *
+     * @throws RuntimeException If the stream is detached, closed, or is non-seekable
+     *                          and has already been partially consumed.
+     */
+    public function fromStart(): static;
 }

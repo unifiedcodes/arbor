@@ -3,6 +3,7 @@
 namespace Arbor\files;
 
 
+use Arbor\files\contracts\FilePolicyInterface;
 use Arbor\files\contracts\FileRecordStoreInterface;
 use Arbor\files\contracts\FileEntryInterface;
 use Arbor\files\Keeper;
@@ -28,9 +29,20 @@ class Files
     }
 
 
-    public function policies(array $policies)
+    public function registerPolicies(array $policies)
     {
         $this->policyCatalog->registerPolicies($policies);
+    }
+
+
+    public function resolvePolicy(string $interfaceFqn, string $scheme, string $mime, array $options = []): FilePolicyInterface
+    {
+        return $this->policyCatalog->resolvePolicy(
+            $interfaceFqn,
+            $scheme,
+            $mime,
+            $options
+        );
     }
 
 

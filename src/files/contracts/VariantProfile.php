@@ -2,18 +2,16 @@
 
 namespace Arbor\files\contracts;
 
-
-use Arbor\files\ingress\FileContext;
-use Arbor\storage\Uri;
+use Arbor\files\FileRecord;
 
 
 interface VariantInterface
 {
     public function name(): string;
 
-    public function filters(FileContext $context): array;
+    public function filters(FileRecord $record): array;
 
-    public function transformers(FileContext $context): array;
+    public function transformers(FileRecord $record): array;
 
-    public function uri(FileContext $context): Uri;
+    public function path(): string;
 }

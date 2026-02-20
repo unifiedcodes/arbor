@@ -237,7 +237,7 @@ final class Stream implements StreamInterface
      *
      * @throws RuntimeException If the stream is detached or closed.
      */
-    public function tell(): ?int
+    public function tell(): int|false
     {
         $this->assertAttached();
         return ftell($this->resource);
@@ -289,5 +289,35 @@ final class Stream implements StreamInterface
         if (!is_resource($this->resource)) {
             throw new RuntimeException('Stream is detached or closed');
         }
+    }
+
+    /**
+     * Return the stream positioned at the beginning.
+     *
+     * For seekable streams, rewinds to byte 0 and returns the current instance.
+     * For non-seekable streams, asserts that the stream has not yet been consumed
+     * (i.e., the current position is 0) and returns the current instance as-is.
+     *
+     * @return self The current stream instance, positioned at the start.
+     *
+     * @throws RuntimeException If the stream is detached, closed, or is non-seekable
+     *                          and has already been partially consumed.
+     */
+    public function fromStart(): static
+    {
+        // rewindable stream, return after rewind.
+        if ($this->isSeekable()) {
+            $this->rewind();
+            return $this;
+        }
+
+        // throw if the stream is not seekable and not fresh.
+        if ($this->tell() !== 0) {
+            throw new RuntimeException(
+                'Stream has already been partially consumed or position cannot be determined.'
+            );
+        }
+
+        return $this;
     }
 }

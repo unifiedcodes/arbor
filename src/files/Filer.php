@@ -10,8 +10,6 @@ use Arbor\files\PolicyCatalog;
 use Arbor\files\FileRecord;
 use Arbor\files\Evaluator;
 use Arbor\facades\Storage;
-use Arbor\storage\Path;
-use Arbor\storage\Uri;
 
 
 final class Filer
@@ -96,20 +94,14 @@ final class Filer
         $filename = $fileContext->filename();
 
         // uri
-        $uri = Uri::fromParts($schemename, $path, $filename);
+        $uri = Storage::uriFromParts($schemename, $path, $filename);
 
-        // uri->scheme
-        $scheme = Storage::scheme($uri->scheme());
-
-        // scheme->store
-        $store = $scheme->store();
-
-        // uri->absolutepath.
-        $absolutePath = Path::absolutePath($scheme, $uri->path());
+        // uri->store
+        $store = Storage::store($uri);
 
         // store->write
         $store->write(
-            $absolutePath,
+            Storage::absolutePath($uri),
             $fileContext->stream()
         );
 

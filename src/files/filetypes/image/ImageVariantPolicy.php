@@ -3,7 +3,7 @@
 namespace Arbor\files\filetypes\image;
 
 
-use Arbor\files\FileRecord;
+use Arbor\files\ingress\FileContext;
 use Arbor\files\utilities\BaseVariantPolicy;
 
 
@@ -14,7 +14,7 @@ final class ImageVariantPolicy extends BaseVariantPolicy
         return [];
     }
 
-    public function variants(FileRecord $fileRecord): array
+    public function variants(FileContext $context): array
     {
         return [];
     }
@@ -33,7 +33,7 @@ final class ImageVariantPolicy extends BaseVariantPolicy
         ];
     }
 
-    public function path(FileRecord $record): string
+    public function path(FileContext $context): string
     {
         return '';
     }

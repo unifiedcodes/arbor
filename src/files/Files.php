@@ -9,6 +9,7 @@ use Arbor\files\contracts\FileEntryInterface;
 use Arbor\files\Keeper;
 use Arbor\files\Filer;
 use Arbor\files\FileRecord;
+use Arbor\storage\Uri;
 
 
 class Files
@@ -16,6 +17,7 @@ class Files
     private PolicyCatalog $policyCatalog;
     private Filer $filer;
     private Keeper $filesKeeper;
+    private Variator $variator;
 
 
     public function __construct(
@@ -26,6 +28,7 @@ class Files
 
         $this->filer = new Filer($fileEntry, $this->policyCatalog);
         $this->filesKeeper = new Keeper($recordStore);
+        $this->variator = new Variator($this->policyCatalog);
     }
 
 
@@ -54,5 +57,13 @@ class Files
         $fileRecord = $this->filesKeeper->save($fileRecord);
 
         return $fileRecord;
+    }
+
+
+    public function createVariations(string|Uri $uri)
+    {
+        $variations = $this->variator->generate($uri);
+
+        print_r($variations);
     }
 }

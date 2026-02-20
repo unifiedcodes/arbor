@@ -6,6 +6,7 @@ namespace Arbor\storage\stores;
 use Arbor\stream\StreamInterface;
 use Arbor\stream\StreamFactory;
 use RuntimeException;
+use Arbor\storage\Stats;
 
 
 /**
@@ -175,11 +176,11 @@ class Local implements StoreInterface
      * - `inode`       — Inode number of the file.
      *
      * @param  string $path The absolute filesystem path of the resource.
-     * @return array  An associative array of file metadata.
+     * @return Stats  An associative array of file metadata.
      *
      * @throws RuntimeException If the path does not exist or stat information cannot be read.
      */
-    public function stats(string $path): array
+    public function stats(string $path): Stats
     {
         if (!file_exists($path)) {
             throw new RuntimeException("Path not found: {$path}");
@@ -202,17 +203,23 @@ class Local implements StoreInterface
             }
         }
 
-        return [
-            'path'        => $path,
-            'type'        => $isFile ? 'file' : 'directory',
-            'size'        => $isFile ? filesize($path) : 0,
-            'mime'        => $mime,
-            'modified'    => $stat['mtime'],
-            'created'     => $stat['ctime'],
-            'accessed'    => $stat['atime'],
-            'permissions' => substr(sprintf('%o', fileperms($path)), -4),
-            'inode'       => $stat['ino'],
-        ];
+        $name = basename($path);
+        $extension = $isFile ? pathinfo($path, PATHINFO_EXTENSION) : null;
+
+        return new Stats(
+            name: $name,
+            extension: $extension,
+            path: $path,
+            type: $isFile ? 'file' : 'directory',
+            size: $isFile ? filesize($path) : 0,
+            mime: $mime,
+            modified: $stat['mtime'],
+            created: $stat['ctime'],
+            accessed: $stat['atime'],
+            permissions: substr(sprintf('%o', fileperms($path)), -4),
+            inode: $stat['ino'] ?? null,
+            binary: !str_starts_with($mime, 'text/')
+        );
     }
 
 

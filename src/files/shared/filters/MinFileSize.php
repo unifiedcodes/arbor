@@ -4,7 +4,7 @@ namespace Arbor\shared\filters;
 
 use Arbor\files\contracts\FileFilterInterface;
 use Arbor\files\ingress\FileContext;
-
+use LogicException;
 
 final class MinFileSize implements FileFilterInterface
 {
@@ -12,13 +12,10 @@ final class MinFileSize implements FileFilterInterface
         private int $minBytes
     ) {}
 
-    public function filter(FileContext $context): bool
+    public function filter(FileContext $context)
     {
-        return $context->size() >= $this->minBytes;
-    }
-
-    public function errorMessage(FileContext $context): string
-    {
-        return 'File size is too small';
+        if ($context->size() < $this->minBytes) {
+            throw new LogicException('File size is too small');
+        }
     }
 }

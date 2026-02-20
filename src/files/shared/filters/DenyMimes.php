@@ -4,7 +4,7 @@ namespace Arbor\shared\filters;
 
 use Arbor\files\contracts\FileFilterInterface;
 use Arbor\files\ingress\FileContext;
-
+use LogicException;
 
 final class DenyMimes implements FileFilterInterface
 {
@@ -12,17 +12,14 @@ final class DenyMimes implements FileFilterInterface
         private array $deniedMimes
     ) {}
 
-    public function filter(FileContext $context): bool
+    public function filter(FileContext $context)
     {
-        return !in_array(
+        if (in_array(
             $context->mime(),
             $this->deniedMimes,
             true
-        );
-    }
-
-    public function errorMessage(FileContext $context): string
-    {
-        return 'File MIME type is forbidden';
+        )) {
+            throw new LogicException('File MIME type is forbidden');
+        }
     }
 }

@@ -130,19 +130,7 @@ final class StreamFactory
      */
     public static function toRewindable(StreamInterface $stream): StreamInterface
     {
-        // rewindable stream, return after rewind.
-        if ($stream->isSeekable()) {
-            $stream->rewind();
-            return $stream;
-        }
-
-        // non - rewindable stream, must start from 0.
-
-        $pos = $stream->tell();
-
-        if ($pos !== false && $pos !== 0) {
-            throw new RuntimeException('Cannot make stream rewindable after it has been partially read');
-        }
+        $stream = $stream->fromStart();
 
         $resource = fopen('php://temp', 'wb+');
 

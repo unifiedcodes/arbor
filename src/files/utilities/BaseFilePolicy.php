@@ -2,12 +2,11 @@
 
 namespace Arbor\files\utilities;
 
-
-use Arbor\files\contracts\IngressPolicyInterface;
+use Arbor\files\contracts\FilePolicyInterface;
 use Arbor\support\Configuration;
 
 
-abstract class AbstractFilePolicy implements IngressPolicyInterface
+abstract class BaseFilePolicy implements FilePolicyInterface
 {
     use Configuration;
 

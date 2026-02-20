@@ -33,6 +33,8 @@ class Local implements StoreInterface
         }
 
         try {
+            $data->fromStart();
+
             $source = $data->detach();
 
             if (!is_resource($source)) {
@@ -126,5 +128,33 @@ class Local implements StoreInterface
             'permissions' => substr(sprintf('%o', fileperms($path)), -4),
             'inode'       => $stat['ino'],
         ];
+    }
+
+
+    public function append(string $path, StreamInterface $data): void
+    {
+        $data->fromStart();
+
+        $handle = fopen($path, 'ab');
+
+        if ($handle === false) {
+            throw new RuntimeException("Unable to open file for writing: {$path}");
+        }
+
+        while (!$data->eof()) {
+            fwrite($handle, $data->read(8192));
+        }
+
+        fclose($handle);
+    }
+
+
+    public function copy(string $from, string $to): void
+    {
+        if (!copy($from, $to)) {
+            throw new RuntimeException(
+                "Failed to copy file from '{$from}' to '{$to}'"
+            );
+        }
     }
 }

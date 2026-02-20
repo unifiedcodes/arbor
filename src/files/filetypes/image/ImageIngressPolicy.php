@@ -6,10 +6,10 @@ namespace Arbor\files\filetypes\image;
 use Arbor\files\contracts\FileStrategyInterface;
 use Arbor\files\ingress\FileContext;
 use Arbor\files\filetypes\image\ImageStrategyGD;
-use Arbor\files\utilities\AbstractFilePolicy;
+use Arbor\files\utilities\BaseIngressPolicy;
 
 
-final class ImagePolicy extends AbstractFilePolicy
+final class ImageIngressPolicy extends BaseIngressPolicy
 {
     /**
      * Default options for image uploads.

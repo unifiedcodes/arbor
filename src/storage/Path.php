@@ -9,12 +9,6 @@ use RuntimeException;
 
 class Path
 {
-    public static function uri(Scheme $scheme, string $relativePath): string
-    {
-        return $scheme->name() . '://' . ltrim($relativePath, '/');
-    }
-
-
     public static function absolutePath(Scheme $scheme, string $relativePath): string
     {
         $relativePath = self::normalizeRelativePath($relativePath);

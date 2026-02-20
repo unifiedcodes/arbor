@@ -14,9 +14,7 @@ final class Evaluator
     public static function filters(array $filters, FileContext $subject): void
     {
         foreach ($filters as $filter) {
-            if (!$filter->filter($subject)) {
-                throw new RuntimeException($filter->errorMessage($subject));
-            }
+            $filter->filter($subject);
         }
     }
 

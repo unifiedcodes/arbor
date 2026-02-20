@@ -4,7 +4,7 @@ namespace Arbor\shared\filters;
 
 use Arbor\files\contracts\FileFilterInterface;
 use Arbor\files\ingress\FileContext;
-
+use LogicException;
 
 final class FilenameLength implements FileFilterInterface
 {
@@ -12,13 +12,10 @@ final class FilenameLength implements FileFilterInterface
         private int $maxLength
     ) {}
 
-    public function filter(FileContext $context): bool
+    public function filter(FileContext $context)
     {
-        return mb_strlen($context->originalName()) <= $this->maxLength;
-    }
-
-    public function errorMessage(FileContext $context): string
-    {
-        return 'File name is too long';
+        if (mb_strlen($context->originalName()) > $this->maxLength) {
+            throw new LogicException('File name is too long');
+        }
     }
 }

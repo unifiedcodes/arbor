@@ -4,17 +4,14 @@ namespace Arbor\shared\filters;
 
 use Arbor\files\contracts\FileFilterInterface;
 use Arbor\files\ingress\FileContext;
-
+use LogicException;
 
 final class TextOnlyFilter implements FileFilterInterface
 {
-    public function filter(FileContext $context): bool
+    public function filter(FileContext $context)
     {
-        return !$context->isBinary();
-    }
-
-    public function errorMessage(FileContext $context): string
-    {
-        return 'Binary files are not allowed';
+        if ($context->isBinary()) {
+            throw new LogicException('Binary files are not allowed');
+        }
     }
 }

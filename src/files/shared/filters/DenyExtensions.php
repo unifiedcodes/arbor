@@ -4,7 +4,7 @@ namespace Arbor\shared\filters;
 
 use Arbor\files\contracts\FileFilterInterface;
 use Arbor\files\ingress\FileContext;
-
+use LogicException;
 
 final class DenyExtensions implements FileFilterInterface
 {
@@ -12,17 +12,14 @@ final class DenyExtensions implements FileFilterInterface
         private array $deniedExtensions
     ) {}
 
-    public function filter(FileContext $context): bool
+    public function filter(FileContext $context)
     {
-        return !in_array(
+        if (in_array(
             strtolower($context->extension()),
             $this->deniedExtensions,
             true
-        );
-    }
-
-    public function errorMessage(FileContext $context): string
-    {
-        return 'File extension is forbidden';
+        )) {
+            throw new LogicException('File extension is forbidden');
+        }
     }
 }

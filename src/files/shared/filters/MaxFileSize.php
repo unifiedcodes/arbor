@@ -4,7 +4,7 @@ namespace Arbor\shared\filters;
 
 use Arbor\files\contracts\FileFilterInterface;
 use Arbor\files\ingress\FileContext;
-
+use LogicException;
 
 final class MaxFileSize implements FileFilterInterface
 {
@@ -12,13 +12,10 @@ final class MaxFileSize implements FileFilterInterface
         private int $maxBytes
     ) {}
 
-    public function filter(FileContext $context): bool
+    public function filter(FileContext $context)
     {
-        return $context->size() <= $this->maxBytes;
-    }
-
-    public function errorMessage(FileContext $context): string
-    {
-        return 'File size exceeds allowed limit';
+        if ($context->size() > $this->maxBytes) {
+            throw new LogicException('File size exceeds allowed limit');
+        }
     }
 }

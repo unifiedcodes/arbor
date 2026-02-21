@@ -4,7 +4,7 @@ namespace Arbor\files\state;
 
 
 use Arbor\files\state\FileContext;
-use Arbor\files\state\Variant;
+use Arbor\files\state\VariantRecord;
 use LogicException;
 
 
@@ -47,7 +47,7 @@ final class FileRecord
     public function withVariants(array $variants): self
     {
         foreach ($variants as $key => $variant) {
-            if (!is_string($key) || !$variant instanceof Variant) {
+            if (!is_string($key) || !$variant instanceof VariantRecord) {
                 throw new LogicException('Variants must be array<string, VariantRecord>');
             }
         }

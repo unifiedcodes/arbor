@@ -3,7 +3,7 @@
 namespace Arbor\files\state;
 
 
-final class Variant
+final class VariantRecord
 {
     public function __construct(
         public readonly string $name,
@@ -11,6 +11,6 @@ final class Variant
         public readonly string $mime,
         public readonly string $extension,
         public readonly int $size,
-        public readonly string $hash,
+        public readonly ?string $hash = null,
     ) {}
 }

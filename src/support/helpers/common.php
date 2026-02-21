@@ -192,3 +192,21 @@ if (!function_exists('config')) {
         return Config::get($key);
     }
 }
+
+
+if (!function_exists('joinPath')) {
+    function joinPath(string ...$segments): string
+    {
+        $clean = [];
+
+        foreach ($segments as $segment) {
+            if ($segment === '' || $segment === null) {
+                continue;
+            }
+
+            $clean[] = trim($segment, "/\\");
+        }
+
+        return implode('/', $clean);
+    }
+}

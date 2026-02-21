@@ -20,7 +20,7 @@ final class Evaluator
     /**
      * Execute transformers (reducer).
      */
-    public static function transformers(array $transformers, FileContext $subject): mixed
+    public static function transformers(array $transformers, FileContext $subject): FileContext
     {
         foreach ($transformers as $transformer) {
             $subject = $transformer->transform($subject);

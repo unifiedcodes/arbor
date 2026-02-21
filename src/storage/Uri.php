@@ -88,13 +88,18 @@ final class Uri
     {
         $scheme = self::assertValidScheme($scheme);
 
-        // normalizing path formatting.
+        // Normalize base path
         $path = self::sanatizePath($path);
 
-        // using filename if provided.
         if ($fileName !== null) {
             $fileName = self::assertValidFileName($fileName);
-            $path = rtrim($path, '/') . '/' . $fileName;
+
+            // Avoid creating leading slash when base path is empty
+            if ($path !== '') {
+                $path .= '/';
+            }
+
+            $path .= $fileName;
         }
 
         return new self(

@@ -33,13 +33,16 @@ class Variator
             $options
         );
 
+
         if (!$policy instanceof VariantsPolicyInterface) {
             throw new RuntimeException("variant policy must implement VariantPolicyInterface");
         }
 
-        $variants = $this->generateVariants(
-            $policy->variants($fileContext)
-        );
+        $variantProfiles = $policy->variants($fileContext);
+
+        print_r($variantProfiles);
+
+        $variants = $this->generateVariants($variantProfiles);
 
         return $variants;
     }

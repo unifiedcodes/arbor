@@ -16,13 +16,18 @@ final class Hydrator
 {
     public static function fromPayload(Payload $payload): FileContext
     {
+        [$name, $extension] = self::normalizeName(
+            $payload->name,
+            $payload->extension
+        );
+
         // creates unsafe filecontext.
         return new FileContext(
             stream: $payload->stream,
             path: $payload->path,
-            name: $payload->name,
+            name: $name,
+            extension: $extension,
             mime: $payload->mime,
-            extension: $payload->extension,
             size: $payload->size,
             isBinary: null,
             hash: $payload->hash,
@@ -64,12 +69,17 @@ final class Hydrator
             );
         }
 
+        [$resolvedName, $resolvedExtension] = self::normalizeName(
+            self::resolve($name, $ctx->name()),
+            self::resolve($extension, $ctx->inspectExtension())
+        );
+
         return new FileContext(
             stream: $resolvedStream,
             path: $resolvedPath,
-            name: self::resolve($name, $ctx->name()),
+            name: $resolvedName,
+            extension: $resolvedExtension,
             mime: self::require($mime, $ctx->inspectMime(), 'mime'),
-            extension: self::require($extension, $ctx->inspectExtension(), 'extension'),
             size: self::require($size, $ctx->inspectSize(), 'size'),
             isBinary: self::require($isBinary, $ctx->inspectBinary(), 'isBinary'),
             hash: self::resolve($hash, $ctx->hash()),
@@ -104,12 +114,20 @@ final class Hydrator
 
     public static function fromFileStat(Stats $stat): FileContext
     {
+        $extension = self::require($stat->extension, null, 'extension');
+        $name = self::require($stat->name, null, 'name');
+
+        [$name, $extension] = self::normalizeName(
+            $name,
+            $extension
+        );
+
         return new FileContext(
             stream: null,
             path: self::require($stat->path, null, 'path'),
-            name: self::require($stat->name, null, 'name'),
             mime: self::require($stat->mime, null, 'mime'),
-            extension: self::require($stat->extension, null, 'extension'),
+            name: $name,
+            extension: $extension,
             size: self::require($stat->size, null, 'size'),
             isBinary: self::require($stat->binary, null, 'isBinary'),
             hash: null,
@@ -177,5 +195,35 @@ final class Hydrator
             proved: $context->isProved(),
             metadata: $context->metadata(),
         );
+    }
+
+
+    private static function normalizeName(
+        ?string $rawName,
+        ?string $rawExtension
+    ): array {
+        if ($rawName === null && $rawExtension === null) {
+            return [null, null];
+        }
+
+        // If name exists, extract from it
+        if ($rawName !== null) {
+            $info = pathinfo($rawName);
+
+            $name = $info['filename'] ?? $rawName;
+            $extensionFromName = $info['extension'] ?? null;
+
+            // Prefer explicit extension override if provided
+            $extension = $rawExtension ?? $extensionFromName;
+
+            if ($extension !== null) {
+                $extension = ltrim($extension, '.');
+            }
+
+            return [$name, $extension];
+        }
+
+        // If only extension exists
+        return [null, ltrim($rawExtension, '.')];
     }
 }

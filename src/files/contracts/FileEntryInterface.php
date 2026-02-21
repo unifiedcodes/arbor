@@ -2,7 +2,7 @@
 
 namespace Arbor\files\contracts;
 
-use Arbor\files\ingress\Payload;
+use Arbor\files\state\Payload;
 
 interface FileEntryInterface
 {

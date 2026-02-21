@@ -3,7 +3,7 @@
 namespace Arbor\shared\filters;
 
 use Arbor\files\contracts\FileFilterInterface;
-use Arbor\files\ingress\FileContext;
+use Arbor\files\state\FileContext;
 use LogicException;
 
 final class BinaryOnly implements FileFilterInterface

@@ -5,9 +5,9 @@ namespace Arbor\files;
 
 use Arbor\files\contracts\FileEntryInterface;
 use Arbor\files\contracts\IngressPolicyInterface;
-use Arbor\files\ingress\FileContext;
+use Arbor\files\state\FileContext;
 use Arbor\files\PolicyCatalog;
-use Arbor\files\FileRecord;
+use Arbor\files\state\FileRecord;
 use Arbor\files\Evaluator;
 use Arbor\facades\Storage;
 
@@ -25,15 +25,13 @@ final class Filer
         $fileEntry = $this->fileEntry->withInput($input);
 
         // create file context
-        $fileContext = FileContext::fromPayload(
-            $fileEntry->toPayload()
-        );
+        $fileContext = Hydrator::fromPayload($fileEntry->toPayload());
 
         // resolve policy
         $policy = $this->policyCatalog->resolvePolicy(
             IngressPolicyInterface::class,
             $scheme,
-            $fileContext->claimMime(),
+            $fileContext->inspectMime(),
             $options
         );
 
@@ -90,16 +88,13 @@ final class Filer
         // uri
         $uri = Storage::uriFromParts($schemename, $path, $filename);
 
-        // uri->store
-        $store = Storage::store($uri);
+        // context -> stream
+        $fileContext = Hydrator::ensureStream($fileContext);
 
-        // store->write
-        $store->write(
-            Storage::absolutePath($uri),
-            $fileContext->stream()
-        );
+        // stream -> write
+        Storage::write($uri, $fileContext->stream());
 
-        // make filerecord.
+        // context -> filerecord.
         return FileRecord::from(
             context: $fileContext,
             uri: $uri->toString(),

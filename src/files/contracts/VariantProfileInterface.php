@@ -6,7 +6,7 @@ use Arbor\files\state\FileContext;
 
 interface VariantProfileInterface
 {
-    public function name(): string;
+    public function nameSuffix(): string;
 
     public function filters(FileContext $context): array;
 

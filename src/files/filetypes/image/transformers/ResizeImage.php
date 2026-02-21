@@ -1,11 +1,11 @@
 <?php
 
-namespace Arbor\files\transformers;
+namespace Arbor\files\filetypes\image\transformers;
 
 
 use Arbor\files\contracts\FileTransformerInterface;
-use Arbor\files\ingress\FileContext;
-use Arbor\facades\Storage;
+use Arbor\files\state\FileContext;
+use Arbor\files\Hydrator;
 use Arbor\stream\StreamFactory;
 use RuntimeException;
 use GdImage;
@@ -14,13 +14,16 @@ use GdImage;
 final class ResizeImage implements FileTransformerInterface
 {
     public function __construct(
-        private int $maxWidth = 300,
-        private int $maxHeight = 300
+        private readonly int $width,
+        private readonly int $height,
+        private readonly bool $preserveAspectRatio = true
     ) {}
+
 
     public function transform(FileContext $context): FileContext
     {
-        $sourcePath = $context->materialize();
+        $context = Hydrator::ensurePath($context);
+        $sourcePath = $context->path();
 
         $info = getimagesize($sourcePath);
 
@@ -28,34 +31,29 @@ final class ResizeImage implements FileTransformerInterface
             throw new RuntimeException('Invalid image file.');
         }
 
-        [$width, $height, $type] = $info;
+        [$originalWidth, $originalHeight, $type] = $info;
 
-        if ($width <= 0 || $height <= 0) {
+        if ($originalWidth <= 0 || $originalHeight <= 0) {
             throw new RuntimeException('Invalid image dimensions.');
         }
 
-        // ✅ Aspect ratio preserved
-        $ratio = min(
-            $this->maxWidth / $width,
-            $this->maxHeight / $height,
-            1 // no upscale
+        [$newWidth, $newHeight] = $this->calculateDimensions(
+            $originalWidth,
+            $originalHeight
         );
-
-        $newWidth  = (int) round($width * $ratio);
-        $newHeight = (int) round($height * $ratio);
 
         $source = $this->createSourceImage($sourcePath, $type);
 
-        $thumb = imagecreatetruecolor($newWidth, $newHeight);
+        $canvas = imagecreatetruecolor($newWidth, $newHeight);
 
-        if (!$thumb instanceof GdImage) {
-            throw new RuntimeException('Failed to create thumbnail.');
+        if (!$canvas instanceof GdImage) {
+            throw new RuntimeException('Failed to create image canvas.');
         }
 
-        $this->preserveTransparency($thumb, $type);
+        $this->preserveTransparency($canvas, $type);
 
         imagecopyresampled(
-            $thumb,
+            $canvas,
             $source,
             0,
             0,
@@ -63,21 +61,44 @@ final class ResizeImage implements FileTransformerInterface
             0,
             $newWidth,
             $newHeight,
-            $width,
-            $height
+            $originalWidth,
+            $originalHeight
         );
 
-        $binary = $this->renderToString($thumb, $type);
+        $binary = $this->renderToString($canvas, $type);
 
-        $thumbPath = $this->generateThumbPath($context->path());
-
-        // Convert binary to Stream
         $stream = StreamFactory::fromString($binary);
 
-        // Let Storage handle persistence
-        Storage::write($thumbPath, $stream);
+        return new FileContext(
+            stream: $stream,
+            path: null,
+            name: $context->name(),
+            extension: $context->inspectExtension(),
+            mime: $context->inspectMime(),
+            size: strlen($binary),
+            isBinary: true,
+            hash: null,
+            proved: $context->isProved(),
+            metadata: $context->metadata(),
+        );
+    }
 
-        return $context->withPath($thumbPath);
+
+    private function calculateDimensions(int $width, int $height): array
+    {
+        if (!$this->preserveAspectRatio) {
+            return [$this->width, $this->height];
+        }
+
+        $ratio = min(
+            $this->width / $width,
+            $this->height / $height
+        );
+
+        return [
+            (int) round($width * $ratio),
+            (int) round($height * $ratio),
+        ];
     }
 
     private function createSourceImage(string $path, int $type): GdImage
@@ -96,14 +117,14 @@ final class ResizeImage implements FileTransformerInterface
         return $image;
     }
 
-    private function preserveTransparency(GdImage $thumb, int $type): void
+    private function preserveTransparency(GdImage $image, int $type): void
     {
         if ($type === IMAGETYPE_PNG || $type === IMAGETYPE_WEBP) {
-            imagealphablending($thumb, false);
-            imagesavealpha($thumb, true);
+            imagealphablending($image, false);
+            imagesavealpha($image, true);
 
-            $transparent = imagecolorallocatealpha($thumb, 0, 0, 0, 127);
-            imagefill($thumb, 0, 0, $transparent);
+            $transparent = imagecolorallocatealpha($image, 0, 0, 0, 127);
+            imagefill($image, 0, 0, $transparent);
         }
     }
 
@@ -115,6 +136,7 @@ final class ResizeImage implements FileTransformerInterface
             IMAGETYPE_JPEG => imagejpeg($image, null, 85),
             IMAGETYPE_PNG  => imagepng($image),
             IMAGETYPE_WEBP => imagewebp($image, null, 85),
+            default => false,
         };
 
         if (!$success) {
@@ -123,14 +145,5 @@ final class ResizeImage implements FileTransformerInterface
         }
 
         return (string) ob_get_clean();
-    }
-
-    private function generateThumbPath(string $originalPath): string
-    {
-        $dir  = dirname($originalPath);
-        $name = pathinfo($originalPath, PATHINFO_FILENAME);
-        $ext  = pathinfo($originalPath, PATHINFO_EXTENSION);
-
-        return $dir . '/' . $name . '_thumb.' . $ext;
     }
 }

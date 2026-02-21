@@ -5,7 +5,8 @@ namespace Arbor\files\filetypes\image;
 
 use Arbor\files\state\FileContext;
 use Arbor\files\utilities\BaseVariantPolicy;
-
+use Arbor\files\filetypes\image\variants\Thumbnail;
+use Arbor\files\filetypes\image\variants\Webp;
 
 final class ImageVariantPolicy extends BaseVariantPolicy
 {
@@ -16,7 +17,10 @@ final class ImageVariantPolicy extends BaseVariantPolicy
 
     public function variants(FileContext $context): array
     {
-        return [];
+        return [
+            new Thumbnail(),
+            new Webp()
+        ];
     }
 
     public function scheme(): string
@@ -35,6 +39,6 @@ final class ImageVariantPolicy extends BaseVariantPolicy
 
     public function path(FileContext $context): string
     {
-        return '';
+        return '/uploads/';
     }
 }

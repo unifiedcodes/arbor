@@ -177,7 +177,9 @@ final class Hydrator
 
         $stream = $context->stream();
 
-        $path = Storage::writeTemp($stream);
+        $uri = Storage::writeTemp($stream);
+
+        $path = Storage::absolutePath($uri);
 
         if ($path === '') {
             throw new RuntimeException('Failed to materialize stream to temporary storage.');

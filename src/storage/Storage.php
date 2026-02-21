@@ -8,6 +8,7 @@ use Arbor\storage\Registry;
 use Arbor\storage\Path;
 use Arbor\stream\StreamInterface;
 use Arbor\stream\StreamFactory;
+use Arbor\storage\stores\Local;
 
 
 /**
@@ -31,6 +32,19 @@ class Storage
     public function __construct()
     {
         $this->registry = new Registry();
+        $this->defaultSchemes();
+    }
+
+
+    protected function defaultSchemes(): void
+    {
+        $this->addScheme(
+            'localTemp',
+            new Local(),
+            sys_get_temp_dir() . '/arbor',
+            null,
+            false
+        );
     }
 
 
@@ -217,18 +231,26 @@ class Storage
         return $stream;
     }
 
+    private function ensureStream(string|StreamInterface $data): StreamInterface
+    {
+        if ($data instanceof StreamInterface) {
+            return $data;
+        }
+
+        return StreamFactory::fromString($data);
+    }
 
     /**
      * Writes (creates or overwrites) a file at the given URI with the provided contents.
      *
      * @param  string|Uri $uri      A URI string or {@see Uri} instance.
-     * @param  string     $contents The string content to write.
+     * @param  string|StreamInterface     $contents The string content to write.
      */
-    public function write(string|Uri $uri, string $contents): void
+    public function write(string|Uri $uri, string|StreamInterface $contents): void
     {
         [$store, $absolutePath] = $this->resolveIO($uri);
 
-        $stream = StreamFactory::fromString($contents);
+        $stream = $this->ensureStream($contents);
 
         $store->write($absolutePath, $stream);
     }
@@ -238,13 +260,13 @@ class Storage
      * Appends content to an existing file at the given URI.
      *
      * @param  string|Uri $uri      A URI string or {@see Uri} instance.
-     * @param  string     $contents The string content to append.
+     * @param  string|StreamInterface     $contents The string content to append.
      */
-    public function append(string|Uri $uri, string $contents): void
+    public function append(string|Uri $uri, string|StreamInterface $contents): void
     {
         [$store, $absolutePath] = $this->resolveIO($uri);
 
-        $stream = StreamFactory::fromString($contents);
+        $stream = $this->ensureStream($contents);
 
         $store->append($absolutePath, $stream);
     }
@@ -354,5 +376,17 @@ class Storage
         [$store, $absolutePath] = $this->resolveIO($uri);
 
         return $store->stats($absolutePath);
+    }
+
+
+    public function writeTemp(StreamInterface $stream): Uri
+    {
+        $fileName = bin2hex(random_bytes(16));
+
+        $uri = $this->uriFromParts('localTemp', '', $fileName);
+
+        $this->write($uri, $stream);
+
+        return $uri;
     }
 }

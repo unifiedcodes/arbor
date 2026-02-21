@@ -4,7 +4,7 @@ namespace Arbor\files;
 
 use Arbor\files\contracts\FileRecordStoreInterface;
 use Arbor\files\utilities\NullFileRecordStore;
-use Arbor\files\FileRecord;
+use Arbor\files\state\FileRecord;
 
 class Keeper
 {

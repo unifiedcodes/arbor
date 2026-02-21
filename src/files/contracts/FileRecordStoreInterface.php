@@ -3,7 +3,7 @@
 namespace Arbor\files\contracts;
 
 
-use Arbor\files\FileRecord;
+use Arbor\files\state\FileRecord;
 
 
 interface FileRecordStoreInterface

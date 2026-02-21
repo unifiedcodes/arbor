@@ -3,7 +3,7 @@
 namespace Arbor\files\filetypes\image;
 
 
-use Arbor\files\ingress\FileContext;
+use Arbor\files\state\FileContext;
 use Arbor\files\utilities\BaseVariantPolicy;
 
 

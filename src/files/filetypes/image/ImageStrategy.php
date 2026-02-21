@@ -3,12 +3,13 @@
 namespace Arbor\files\filetypes\image;
 
 use Arbor\files\contracts\FileStrategyInterface;
-use Arbor\files\ingress\FileContext;
+use Arbor\files\Hydrator;
+use Arbor\files\state\FileContext;
 use RuntimeException;
 use finfo;
 
 
-final class ImageStrategyGD implements FileStrategyInterface
+final class ImageStrategy implements FileStrategyInterface
 {
     private const MAX_SIZE = 5_000_000; // 5 MB
 
@@ -22,14 +23,15 @@ final class ImageStrategyGD implements FileStrategyInterface
     public function prove(FileContext $context): FileContext
     {
         // ---- claimed checks ----
-        $size = $context->claimSize();
+        $size = $context->inspectSize();
 
         if ($size <= 0 || $size > self::MAX_SIZE) {
             throw new RuntimeException('Invalid image size');
         }
 
         // ---- resolve source path ----
-        $path = $context->materialize();
+        $context = Hydrator::ensurePath($context);
+        $path = $context->path();
 
 
         // ---- real MIME detection ----
@@ -68,12 +70,13 @@ final class ImageStrategyGD implements FileStrategyInterface
 
 
         // ---- final normalization ----
-        return $context->normalize(
+
+        return Hydrator::prove(
+            context: $context,
             mime: $mime,
             extension: self::ALLOWED_MIME[$mime],
             size: filesize($safePath),
-            hash: hash_file('sha256', $safePath),
-            binary: true,
+            isBinary: true,
             path: $safePath,
         );
     }

@@ -2,7 +2,7 @@
 
 namespace Arbor\files\contracts;
 
-use Arbor\files\ingress\FileContext;
+use Arbor\files\state\FileContext;
 
 interface VariantProfileInterface
 {

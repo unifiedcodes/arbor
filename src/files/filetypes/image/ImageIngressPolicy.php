@@ -4,8 +4,8 @@ namespace Arbor\files\filetypes\image;
 
 
 use Arbor\files\contracts\FileStrategyInterface;
-use Arbor\files\ingress\FileContext;
-use Arbor\files\filetypes\image\ImageStrategyGD;
+use Arbor\files\state\FileContext;
+use Arbor\files\filetypes\image\ImageStrategy;
 use Arbor\files\utilities\BaseIngressPolicy;
 
 
@@ -36,7 +36,7 @@ final class ImageIngressPolicy extends BaseIngressPolicy
      */
     public function strategy(FileContext $context): FileStrategyInterface
     {
-        return new ImageStrategyGD();
+        return new ImageStrategy();
     }
 
     /**

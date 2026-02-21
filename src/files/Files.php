@@ -8,7 +8,7 @@ use Arbor\files\contracts\FileRecordStoreInterface;
 use Arbor\files\contracts\FileEntryInterface;
 use Arbor\files\Keeper;
 use Arbor\files\Filer;
-use Arbor\files\FileRecord;
+use Arbor\files\state\FileRecord;
 use Arbor\storage\Uri;
 
 

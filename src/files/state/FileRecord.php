@@ -1,11 +1,11 @@
 <?php
 
-namespace Arbor\files;
+namespace Arbor\files\state;
 
 
+use Arbor\files\state\FileContext;
+use Arbor\files\state\Variant;
 use LogicException;
-use Arbor\files\ingress\FileContext;
-use Arbor\files\Variant;
 
 
 final class FileRecord

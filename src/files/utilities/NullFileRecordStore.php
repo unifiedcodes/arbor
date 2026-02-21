@@ -2,7 +2,7 @@
 
 namespace Arbor\files\utilities;
 
-use Arbor\files\FileRecord;
+use Arbor\files\state\FileRecord;
 use Arbor\files\contracts\FileRecordStoreInterface;
 
 

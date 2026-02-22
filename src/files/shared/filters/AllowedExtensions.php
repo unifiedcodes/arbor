@@ -31,7 +31,7 @@ final class AllowedExtensions implements FileFilterInterface
      */
     public function filter(FileContext $context)
     {
-        if (in_array(
+        if (!in_array(
             strtolower($context->extension()),
             $this->allowedExtensions,
             true

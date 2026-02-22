@@ -133,7 +133,9 @@ final class PolicyCatalog
 
         $policy = $this->policies[$policyFqn];
 
-        $policy->withOptions($options);
+        if (!empty($options)) {
+            $policy = $policy->withOptions($options);
+        }
 
         return $policy;
     }

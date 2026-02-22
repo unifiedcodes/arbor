@@ -140,4 +140,7 @@ interface StreamInterface
      *                          and has already been partially consumed.
      */
     public function fromStart(): static;
+
+
+    public function getContents(): string;
 }

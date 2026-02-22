@@ -281,23 +281,7 @@ class Renderer
         }
 
         $stream = $controllerResponse->getBody();
-
-        if ($stream === null) {
-            return '';
-        }
-
-        // Ensure we read from beginning
-        if ($stream->isSeekable()) {
-            $stream->rewind();
-        }
-
-        $html = '';
-
-        while (!$stream->eof()) {
-            $html .= $stream->read(8192);
-        }
-
-        return $html;
+        return $stream ? $stream->getContents() : '';
     }
 
     // ==========================================

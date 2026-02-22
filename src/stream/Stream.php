@@ -320,4 +320,17 @@ final class Stream implements StreamInterface
 
         return $this;
     }
+
+
+    public function getContents(): string
+    {
+        $this->fromStart();
+
+        $contents = '';
+        while (!$this->eof()) {
+            $contents .= $this->read(8192);
+        }
+
+        return $contents;
+    }
 }

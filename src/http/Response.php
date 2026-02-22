@@ -251,16 +251,23 @@ class Response
             }
         }
 
+        // Skip body for HTTP statuses that must not include one
+        if (
+            ($this->statusCode >= 100 && $this->statusCode < 200) ||
+            $this->statusCode === 204 ||
+            $this->statusCode === 304
+        ) {
+            return;
+        }
+
         if ($this->body === null) {
             return;
         }
 
-        if ($this->body->isSeekable()) {
-            $this->body->rewind();
-        }
+        $body = $this->body->fromStart();
 
-        while (!$this->body->eof()) {
-            echo $this->body->read(8192);
+        while (!$body->eof()) {
+            echo $body->read(8192);
         }
     }
 }

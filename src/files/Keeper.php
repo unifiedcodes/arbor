@@ -25,12 +25,8 @@ class Keeper
      *                                                   falls back to {@see NullFileRecordStore} if null.
      */
     public function __construct(
-        private ?FileRecordStoreInterface $recordStore
-    ) {
-        if (!$recordStore) {
-            $this->recordStore = new NullFileRecordStore();
-        }
-    }
+        private FileRecordStoreInterface $recordStore = new NullFileRecordStore()
+    ) {}
 
 
     /**

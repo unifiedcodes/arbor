@@ -3,6 +3,7 @@
 namespace Arbor\files\contracts;
 
 use Arbor\files\state\FileRecord;
+use Arbor\storage\Uri;
 
 /**
  * Defines the contract for a file record store responsible for persisting and retrieving file records.
@@ -19,7 +20,7 @@ interface FileRecordStoreInterface
      * Persist a new file record to the store.
      *
      * @param  FileRecord $record The file record to save.
-     * @return FileRecord         The saved file record, potentially with updated state (e.g., generated ID).
+     * @return FileRecord
      */
     public function save(FileRecord $record): FileRecord;
 
@@ -34,16 +35,19 @@ interface FileRecordStoreInterface
     /**
      * Retrieve a file record by its unique identifier.
      *
-     * @param  string          $id The unique identifier of the file record.
-     * @return FileRecord|null     The matching file record, or null if not found.
+     * @param  string|Uri $uri of the file.
+     * @return FileRecord|null The matching file record, or null if not found.
      */
-    public function find(string $id): ?FileRecord;
+    public function find(string|Uri $uri): ?FileRecord;
 
     /**
      * Remove a file record from the store.
      *
-     * @param  FileRecord $record The file record to delete.
+     * @param  string|Uri $uri the file to delete.
      * @return void
      */
-    public function delete(FileRecord $record): void;
+    public function delete(string|Uri $uri): void;
+
+
+    public function exists(string|Uri $uri): bool;
 }

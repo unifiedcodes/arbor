@@ -152,4 +152,27 @@ class Files
     {
         return $this->variator->generate($uri);
     }
+
+
+    public function delete(string|Uri $uri)
+    {
+        // delete the files, variations, filerecord.
+    }
+
+
+    public function update(FileRecord $updatedRecord)
+    {
+        // delegate to recordStore
+    }
+
+
+    public function exists()
+    {
+        // delegate to recordstore.
+    }
+
+    public function find()
+    {
+        // delegate to recordstore.
+    }
 }

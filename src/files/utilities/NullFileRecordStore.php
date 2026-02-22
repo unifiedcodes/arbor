@@ -4,6 +4,7 @@ namespace Arbor\files\utilities;
 
 use Arbor\files\state\FileRecord;
 use Arbor\files\contracts\FileRecordStoreInterface;
+use Arbor\storage\Uri;
 
 
 /**
@@ -30,7 +31,7 @@ final class NullFileRecordStore implements FileRecordStoreInterface
      */
     public function save(FileRecord $record): FileRecord
     {
-        // No persistence, just return the record untouched
+        // No persistence
         return $record;
     }
 
@@ -50,11 +51,11 @@ final class NullFileRecordStore implements FileRecordStoreInterface
     /**
      * Always returns null, as nothing is ever stored by this implementation.
      *
-     * @param string $id The identifier to look up.
+     * @param string|Uri identifier to look up.
      *
      * @return null Always null.
      */
-    public function find(string $id): ?FileRecord
+    public function find(string|Uri $uri): ?FileRecord
     {
         // Nothing is ever stored
         return null;
@@ -67,8 +68,14 @@ final class NullFileRecordStore implements FileRecordStoreInterface
      *
      * @return void
      */
-    public function delete(FileRecord $record): void
+    public function delete(string|Uri $uri): void
     {
         // No-op delete
+    }
+
+
+    public function exists(string|Uri $uri): bool
+    {
+        return true;
     }
 }

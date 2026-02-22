@@ -280,7 +280,24 @@ class Renderer
             throw new InvalidArgumentException('Component Controller "' . $controller . '" must return an HTML response, instead found: "' . $contentType . '"');
         }
 
-        return $controllerResponse->getBody();
+        $stream = $controllerResponse->getBody();
+
+        if ($stream === null) {
+            return '';
+        }
+
+        // Ensure we read from beginning
+        if ($stream->isSeekable()) {
+            $stream->rewind();
+        }
+
+        $html = '';
+
+        while (!$stream->eof()) {
+            $html .= $stream->read(8192);
+        }
+
+        return $html;
     }
 
     // ==========================================

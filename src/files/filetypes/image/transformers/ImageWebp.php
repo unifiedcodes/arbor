@@ -9,13 +9,36 @@ use Arbor\stream\StreamFactory;
 use RuntimeException;
 use GdImage;
 
-
+/**
+ * Transforms an image file into the WebP format using the GD extension.
+ *
+ * Accepts JPEG, PNG, and WebP source images and converts them to WebP,
+ * preserving transparency where applicable. Returns a new {@see FileContext}
+ * containing the converted image as a binary stream.
+ *
+ * @package Arbor\files\filetypes\image\transformers
+ */
 final class ImageWebp implements FileTransformerInterface
 {
+    /**
+     * @param int $quality The WebP compression quality (0–100). Defaults to 85.
+     */
     public function __construct(
         private readonly int $quality = 85
     ) {}
 
+    /**
+     * Convert the image described by the given file context into WebP format.
+     *
+     * Reads the source image from the resolved path, converts it to WebP using
+     * the GD extension, and returns a new {@see FileContext} with the resulting
+     * binary stream and updated metadata.
+     *
+     * @param  FileContext      $context The file context describing the source image.
+     * @return FileContext               A new file context containing the WebP-converted image.
+     * @throws RuntimeException          If GD WebP support is unavailable, the image is invalid,
+     *                                   the dimensions are invalid, or the conversion fails.
+     */
     public function transform(FileContext $context): FileContext
     {
         if (!function_exists('imagewebp')) {
@@ -66,6 +89,17 @@ final class ImageWebp implements FileTransformerInterface
         );
     }
 
+    /**
+     * Create a GD image resource from the given file path and image type.
+     *
+     * Supports JPEG, PNG, and WebP source formats. Transparency is preserved
+     * for PNG and WebP images by enabling alpha blending and saving the alpha channel.
+     *
+     * @param  string           $path The absolute path to the source image file.
+     * @param  int              $type The image type constant (e.g., IMAGETYPE_JPEG).
+     * @return GdImage               The loaded GD image resource.
+     * @throws RuntimeException       If the image type is unsupported or the image fails to load.
+     */
     private function createSourceImage(string $path, int $type): GdImage
     {
         $image = match ($type) {

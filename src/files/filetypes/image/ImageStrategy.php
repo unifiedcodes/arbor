@@ -8,18 +8,51 @@ use Arbor\files\state\FileContext;
 use RuntimeException;
 use finfo;
 
-
+/**
+ * Proves and sanitizes an image file context by performing multi-layered validation and re-encoding.
+ *
+ * Applies a security-focused pipeline to incoming image files, including size validation,
+ * real MIME type detection, structural integrity checks, and a decode-and-re-encode pass
+ * to strip potentially malicious payloads embedded in image files.
+ *
+ * Supports JPEG, PNG, and WebP formats with a maximum file size of 5 MB.
+ *
+ * @package Arbor\files\filetypes\image
+ */
 final class ImageStrategy implements FileStrategyInterface
 {
-    private const MAX_SIZE = 5_000_000; // 5 MB
+    /**
+     * Maximum permitted file size in bytes (5 MB).
+     */
+    private const MAX_SIZE = 5_000_000;
 
+    /**
+     * Map of allowed MIME types to their corresponding file extensions.
+     *
+     * @var array<string, string>
+     */
     private const ALLOWED_MIME = [
         'image/jpeg' => 'jpg',
         'image/png'  => 'png',
         'image/webp' => 'webp',
     ];
 
-
+    /**
+     * Prove the validity and safety of the given image file context.
+     *
+     * Executes the following validation and sanitization pipeline:
+     * - Validates the claimed file size is within the permitted bounds.
+     * - Resolves the source file path via the {@see Hydrator}.
+     * - Detects the real MIME type using {@see finfo} to catch spoofed uploads.
+     * - Validates the structural integrity of the image via {@see getimagesize()}.
+     * - Decodes and re-encodes the image using GD to strip embedded payloads.
+     * - Returns a normalized and proved {@see FileContext} pointing to the sanitized file.
+     *
+     * @param  FileContext      $context The file context describing the incoming image.
+     * @return FileContext               A new, proved file context referencing the sanitized image.
+     * @throws RuntimeException          If the file size is invalid, the MIME type is unsupported or spoofed,
+     *                                   the image structure is invalid, or the image fails to decode.
+     */
     public function prove(FileContext $context): FileContext
     {
         // ---- claimed checks ----
@@ -32,7 +65,6 @@ final class ImageStrategy implements FileStrategyInterface
         // ---- resolve source path ----
         $context = Hydrator::ensurePath($context);
         $path = $context->path();
-
 
         // ---- real MIME detection ----
         $finfo = new finfo(FILEINFO_MIME_TYPE);
@@ -68,9 +100,7 @@ final class ImageStrategy implements FileStrategyInterface
             'image/webp' => imagewebp($image, $safePath, 85),
         };
 
-
         // ---- final normalization ----
-
         return Hydrator::prove(
             context: $context,
             mime: $mime,

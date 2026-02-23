@@ -10,6 +10,7 @@ use Arbor\files\PolicyCatalog;
 use Arbor\files\state\FileRecord;
 use Arbor\files\Evaluator;
 use Arbor\facades\Storage;
+use Arbor\storage\Uri;
 
 
 /**
@@ -169,5 +170,20 @@ final class Filer
             context: $fileContext,
             uri: $uri->toString(),
         );
+    }
+
+    /**
+     * Deletes the file at the given URI from storage.
+     *
+     * Delegates directly to the underlying storage layer without interacting
+     * with any record store or variant management.
+     *
+     * @param string|Uri $uri The URI of the file to delete from storage.
+     *
+     * @return void
+     */
+    public function delete(string|Uri $uri)
+    {
+        Storage::delete($uri);
     }
 }

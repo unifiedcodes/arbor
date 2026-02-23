@@ -10,6 +10,7 @@ use Arbor\files\Keeper;
 use Arbor\files\Filer;
 use Arbor\files\state\FileRecord;
 use Arbor\storage\Uri;
+use Arbor\files\utilities\NullFileRecordStore;
 
 
 /**
@@ -45,7 +46,11 @@ class Files
         $this->policyCatalog = new PolicyCatalog();
 
         $this->filer = new Filer($fileEntry, $this->policyCatalog);
-        $this->filesKeeper = new Keeper($recordStore);
+
+        $this->filesKeeper = new Keeper(
+            $recordStore ?? new NullFileRecordStore()
+        );
+
         $this->variator = new Variator($this->policyCatalog);
     }
 
@@ -153,26 +158,81 @@ class Files
         return $this->variator->generate($uri);
     }
 
-
+    /**
+     * Deletes a file, its variants, and its persisted record from storage.
+     *
+     * Resolves the {@see FileRecord} for the given URI and, if found, removes all
+     * associated variant files via the {@see Variator}, deletes the primary file
+     * via the {@see Filer}, and finally removes the record from the {@see Keeper}.
+     * If no record exists for the given URI, the method returns silently.
+     *
+     * @param string|Uri $uri The URI of the file to delete.
+     *
+     * @return void
+     */
     public function delete(string|Uri $uri)
     {
-        // delete the files, variations, filerecord.
+        $record = $this->find($uri);
+
+        if (!$record) {
+            return;
+        }
+
+        // 1. delete variations
+        $this->variator->delete($record->variants);
+
+        // 2. delete file
+        $this->filer->delete($uri);
+
+        // 3. delete record
+        $this->filesKeeper->delete($uri);
     }
 
 
-    public function update(FileRecord $updatedRecord)
+    /**
+     * Updates an existing FileRecord in the configured store and returns the result.
+     *
+     * Delegates directly to the internal {@see Keeper}, which passes the record
+     * through to the underlying store. The returned instance should always be used
+     * in place of the original, as the store may modify the record during the update.
+     *
+     * @param FileRecord $updatedRecord The record containing the updated data to persist.
+     *
+     * @return FileRecord The updated record, which may differ from the input.
+     */
+    public function update(FileRecord $updatedRecord): FileRecord
     {
-        // delegate to recordStore
+        return $this->filesKeeper->update($updatedRecord);
     }
 
 
-    public function exists()
+    /**
+     * Determines whether a FileRecord exists in the store for the given URI.
+     *
+     * Delegates to the internal {@see Keeper} without interacting with storage directly;
+     * only record-level existence is checked.
+     *
+     * @param string|Uri $uri The URI of the file to check.
+     *
+     * @return bool True if a record exists for the given URI, false otherwise.
+     */
+    public function exists(string|Uri $uri): bool
     {
-        // delegate to recordstore.
+        return $this->filesKeeper->exists($uri);
     }
 
-    public function find()
+    /**
+     * Retrieves the FileRecord associated with the given URI, or null if not found.
+     *
+     * Delegates to the internal {@see Keeper} without interacting with storage directly;
+     * only record-level lookup is performed.
+     *
+     * @param string|Uri $uri The URI of the file whose record should be retrieved.
+     *
+     * @return FileRecord|null The matching record, or null if no record exists for the given URI.
+     */
+    public function find(string|Uri $uri): ?FileRecord
     {
-        // delegate to recordstore.
+        return $this->filesKeeper->find($uri);
     }
 }

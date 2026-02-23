@@ -39,7 +39,9 @@ final class Scope
      */
     public function leave(): void
     {
-        $this->stack->pop();
+        $depth = $this->stack->depth();
+        $frame = $this->stack->pop();
+        $frame->dispose($depth);
     }
 
     /**
@@ -121,5 +123,17 @@ final class Scope
     public function main(): ?Frame
     {
         return $this->stack->main();
+    }
+
+
+    public function registerDisposable(Disposable $disposable): void
+    {
+        $frame = $this->stack->current();
+
+        if (!$frame) {
+            throw new RuntimeException('No active scope frame');
+        }
+
+        $frame->registerDisposable($disposable);
     }
 }

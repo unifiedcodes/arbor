@@ -2,6 +2,10 @@
 
 namespace Arbor\scope;
 
+use Arbor\scope\events\DisposeError;
+use Arbor\facades\Events;
+use Throwable;
+
 /**
  * Frame class for managing a scoped collection of key-value items.
  * 
@@ -16,6 +20,9 @@ final class Frame
      * @var array
      */
     private array $items = [];
+    private array $disposables = [];
+    private bool $disposed = false;
+
 
     /**
      * Sets a value in the frame with the given key.
@@ -29,6 +36,17 @@ final class Frame
     public function set(string $key, mixed $value): void
     {
         $this->items[$key] = $value;
+    }
+
+
+    public function registerDisposable(Disposable $disposable): void
+    {
+        if ($this->disposed) {
+            $disposable->dispose();
+            return;
+        }
+
+        $this->disposables[] = $disposable;
     }
 
     /**
@@ -63,5 +81,26 @@ final class Frame
     public function all(): array
     {
         return $this->items;
+    }
+
+
+    public function dispose(int $depth = 0): void
+    {
+        if ($this->disposed) {
+            return;
+        }
+
+        foreach (array_reverse($this->disposables) as $disposable) {
+            try {
+                $disposable->dispose();
+            } catch (Throwable $e) {
+                // fire an event.
+                Events::dispatch(new DisposeError($disposable, $e, $depth));
+            }
+        }
+
+        $this->disposables = [];
+        $this->items = [];
+        $this->disposed = true;
     }
 }

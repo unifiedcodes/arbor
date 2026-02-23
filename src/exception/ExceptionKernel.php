@@ -11,6 +11,8 @@ use Arbor\http\RequestContext;
 use Arbor\facades\Scope;
 use Throwable;
 use ErrorException;
+use Arbor\exception\events\ExceptionOccurred;
+use Arbor\facades\Events;
 
 /**
  * ExceptionKernel
@@ -180,6 +182,8 @@ class ExceptionKernel
 
         $response = $this->render($exceptionContext);
 
+        $this->emitEvent($exceptionContext);
+
         return $response;
     }
 
@@ -200,5 +204,24 @@ class ExceptionKernel
         }
 
         return $this->renderer->render($exceptionContext);
+    }
+
+
+    protected function emitEvent(ExceptionContext $context): void
+    {
+        // in case of recursion of exception, log with default php function.
+
+        if (!$this->isDebug) {
+            try {
+                Events::dispatch(new ExceptionOccurred($context));
+            } catch (Throwable $e) {
+                error_log(sprintf(
+                    'Exception event dispatch failed: %s in %s:%d',
+                    $e->getMessage(),
+                    $e->getFile(),
+                    $e->getLine()
+                ));
+            }
+        }
     }
 }

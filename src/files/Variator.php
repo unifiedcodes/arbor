@@ -206,4 +206,21 @@ class Variator
 
         return $filename;
     }
+
+    /**
+     * Deletes all variant files from storage.
+     *
+     * Iterates over the provided array of variant records and removes each
+     * corresponding file from storage using its URI.
+     *
+     * @param array<VariantRecord> $variants An array of variant records whose files should be deleted.
+     *
+     * @return void
+     */
+    public function delete(array $variants): void
+    {
+        foreach ($variants as $variant) {
+            Storage::delete($variant->uri);
+        }
+    }
 }

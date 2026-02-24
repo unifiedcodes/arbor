@@ -9,46 +9,15 @@ use Arbor\fragment\Fragment;
 use InvalidArgumentException;
 use Arbor\config\ConfigValue;
 
-/**
- * HTML Renderer Class
- * 
- * Responsible for rendering HTML documents from templates, components, and controllers.
- * Supports deferred component rendering, HTML head generation, and full document assembly.
- * 
- * @package Arbor\view
- * 
- */
+
 class Renderer
 {
-    /**
-     * Fragment system instance for handling controller execution
-     */
     protected Fragment $fragment;
-
-    /**
-     * Directory path where view templates are stored
-     */
     protected string $views_dir;
-
-    /**
-     * Builder instance containing page configuration and content
-     */
     protected Builder $builder;
-
-    /**
-     * Array of components to be rendered after main body processing
-     * 
-     * @var array<string, string> Mount ID => Component mapping
-     */
     protected array $deferredComponents = [];
 
-    /**
-     * Initialize the renderer with required dependencies
-     * 
-     * @param Builder $builder The page builder instance
-     * @param string $views_dir Directory path for view templates (injected from config)
-     * @param Fragment $fragment Fragment system for controller handling
-     */
+
     public function __construct(
         Builder $builder,
         #[ConfigValue('app.views_dir')] string $views_dir,
@@ -59,21 +28,7 @@ class Renderer
         $this->builder = $builder;
     }
 
-    // ==========================================
-    // PUBLIC API METHODS
-    // ==========================================
 
-    /**
-     * Generate complete HTML document
-     * 
-     * Orchestrates the entire rendering process:
-     * 1. Renders the main body content
-     * 2. Generates HTML head section
-     * 3. Processes deferred components
-     * 4. Assembles final HTML document
-     * 
-     * @return string Complete HTML document string
-     */
     public function toHTML(): string
     {
         // Execute body first to capture any deferred components
@@ -101,15 +56,7 @@ class Renderer
         return $html;
     }
 
-    /**
-     * Register a component for deferred rendering
-     * 
-     * Creates a mount point placeholder and queues the component for later rendering.
-     * This allows components to be processed after the main template execution.
-     * 
-     * @param string $component Component identifier (template path or controller class)
-     * @return string
-     */
+
     public function useComponent(string $component): string
     {
         // Generate a unique mount identifier
@@ -123,19 +70,7 @@ class Renderer
         return $mount;
     }
 
-    // ==========================================
-    // BODY RENDERING METHODS
-    // ==========================================
 
-    /**
-     * Render the main body content
-     * 
-     * Processes the primary body content based on its type:
-     * - 'template': Renders a template file
-     * - 'html': Returns raw HTML content
-     * 
-     * @return string Rendered body HTML
-     */
     public function renderBody(): string
     {
         $body = $this->builder->getBody();
@@ -157,14 +92,7 @@ class Renderer
         return $renderedBody;
     }
 
-    /**
-     * Render additional body chunks
-     * 
-     * Processes content that should be appended to the body,
-     * with optional auto-escaping based on builder configuration.
-     * 
-     * @return string Rendered body chunks HTML
-     */
+
     protected function renderBodyChunks(): string
     {
         $html = '';
@@ -177,31 +105,13 @@ class Renderer
         return $html;
     }
 
-    // ==========================================
-    // COMPONENT RENDERING METHODS
-    // ==========================================
 
-    /**
-     * Add a component to the deferred rendering queue
-     * 
-     * @param string $mount_id Unique identifier for the mount point
-     * @param string $component Component identifier to be rendered
-     * @return void
-     */
     public function addDeferredComponent(string $mount_id, string $component): void
     {
         $this->deferredComponents[$mount_id] = $component;
     }
 
-    /**
-     * Process all deferred components
-     * 
-     * Renders each queued component and replaces its mount point
-     * placeholder in the body content.
-     * 
-     * @param string $body The body HTML containing mount points
-     * @return string Body HTML with components rendered in place
-     */
+
     public function renderDeferredComponents(string $body): string
     {
         while (!empty($this->deferredComponents)) {
@@ -224,17 +134,6 @@ class Renderer
     }
 
 
-    /**
-     * Render a single component
-     * 
-     * Determines component type and renders accordingly:
-     * - Controller class: Executes controller and returns HTML response
-     * - Template file: Renders template file
-     * 
-     * @param string $component Component identifier
-     * @return string Rendered component HTML
-     * @throws Exception When component type is invalid or not found
-     */
     public function renderComponent(string $component): string
     {
         // Check if component is a controller class
@@ -253,16 +152,7 @@ class Renderer
         throw new Exception("Invalid Component Called");
     }
 
-    /**
-     * Execute and render a controller component
-     * 
-     * Uses the fragment system to execute the controller and validates
-     * that it returns a proper HTML response.
-     * 
-     * @param string $controller Fully qualified controller class name
-     * @return string Rendered controller HTML output
-     * @throws InvalidArgumentException When controller doesn't return valid HTML response
-     */
+
     protected function renderController(string $controller): string
     {
         // Execute controller through fragment system
@@ -284,19 +174,7 @@ class Renderer
         return $stream ? $stream->getContents() : '';
     }
 
-    // ==========================================
-    // TEMPLATE RENDERING METHODS
-    // ==========================================
 
-    /**
-     * Render a template file
-     * 
-     * Includes the template file with access to builder context data,
-     * builder instance, and view renderer instance.
-     * 
-     * @param string $templateName Template file name/path
-     * @return string Rendered template HTML
-     */
     protected function renderTemplate(string $templateName): string
     {
         // ensure .php extension
@@ -319,22 +197,7 @@ class Renderer
         return $output;
     }
 
-    // ==========================================
-    // HTML HEAD GENERATION METHODS
-    // ==========================================
 
-    /**
-     * Generate HTML head section
-     * 
-     * Assembles the complete head section including:
-     * - Meta charset
-     * - Page title
-     * - Meta tags
-     * - Link tags (stylesheets, etc.)
-     * - Inline styles
-     * 
-     * @return string Complete HTML head section
-     */
     protected function renderHtmlHead(): string
     {
         $html = "<head>\n";
@@ -362,11 +225,7 @@ class Renderer
         return $html;
     }
 
-    /**
-     * Generate link tags for external resources
-     * 
-     * @return string HTML link tags
-     */
+
     protected function buildLinks(): string
     {
         $html = '';
@@ -379,17 +238,7 @@ class Renderer
         return $html;
     }
 
-    // ==========================================
-    // SCRIPT GENERATION METHODS
-    // ==========================================
 
-    /**
-     * Generate script tags for JavaScript
-     * 
-     * Builds both external script references and inline script blocks.
-     * 
-     * @return string HTML script tags
-     */
     protected function buildScripts(): string
     {
         $html = '';
@@ -408,19 +257,7 @@ class Renderer
         return $html;
     }
 
-    // ==========================================
-    // UTILITY METHODS
-    // ==========================================
 
-    /**
-     * Build HTML attributes string from array
-     * 
-     * Converts an associative array of attributes into a properly
-     * escaped HTML attributes string.
-     * 
-     * @param array<string, string> $attributes Key-value pairs of attributes
-     * @return string Formatted HTML attributes string (with leading space)
-     */
     protected function buildAttributes(array $attributes): string
     {
         $html = '';

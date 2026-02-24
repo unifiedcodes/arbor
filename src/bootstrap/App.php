@@ -10,11 +10,9 @@ use Arbor\config\Configurator;
 use Arbor\http\HttpKernel;
 use Arbor\http\RequestFactory;
 use Arbor\http\Response;
-use Arbor\router\Router;
-use Arbor\http\ServerRequest;
 use Arbor\support\Helpers;
 use Arbor\facades\Facade;
-use Arbor\exception\ExceptionKernel;
+use Arbor\http\Request;
 use Arbor\scope\Scope;
 use Arbor\scope\Stack;
 
@@ -37,16 +35,6 @@ use Arbor\scope\Stack;
  */
 class App
 {
-    /**
-     * The singleton instance of the App.
-     *
-     * Stores the single instance of the App class following the Singleton pattern.
-     * This ensures only one App instance exists throughout the application lifecycle.
-     *
-     * @var App|null The singleton App instance, null if not yet instantiated
-     */
-    protected static ?App $instance = null;
-
     /**
      * The directory where configuration files are located.
      *
@@ -88,15 +76,6 @@ class App
      */
     protected Configurator $configurator;
 
-    /**
-     * The Server Request Instance.
-     *
-     * Represents the current HTTP request being processed, containing all
-     * request data including headers, parameters, body, and server variables.
-     *
-     * @var ServerRequest Current HTTP request object
-     */
-    protected ServerRequest $request;
 
     /**
      * Application-specific configuration files array.
@@ -120,6 +99,15 @@ class App
     protected ServiceContainer $container;
 
     /**
+     * flag to track if the application is already booted.
+     */
+    protected bool $booted = false;
+
+
+    // HTTP kernel
+    protected ?HttpKernel $httpKernel = null;
+
+    /**
      * App constructor.
      *
      * Initializes the dependency injection container and prepares the application
@@ -133,29 +121,6 @@ class App
         $this->container = new ServiceContainer();
     }
 
-    /**
-     * Retrieve the singleton App instance.
-     *
-     * Implements the Singleton pattern by returning the single App instance.
-     * Throws an exception if the instance hasn't been created yet, ensuring
-     * proper initialization order.
-     *
-     * @return App The singleton App instance
-     * @throws Exception If App has not been instantiated yet
-     * 
-     * @example
-     * ```php
-     * $app = App::instance();
-     * $config = $app->getConfig('database.host');
-     * ```
-     */
-    public static function instance(): App
-    {
-        if (self::$instance === null) {
-            throw new Exception("App instance has not been initialized.");
-        }
-        return self::$instance;
-    }
 
     /**
      * Set the configuration directory.
@@ -256,36 +221,31 @@ class App
      */
     public function boot(): self
     {
-        // Set error display contextually
-        $this->errorsDisplay();
+        if ($this->booted ?? false) {
+            return $this;
+        }
 
-        // Bind Scope & Stack Service
-        $this->bindScope();
+        $this->booted = true;
 
-        // Bind Exception Handler
-        $this->bindExceptionHandler();
+        // Emergency error safety
+        $this->bootEarlyExceptionHandler();
 
-        // load helper functions.
+        // Helpers
         Helpers::load();
 
-        // since facades share only one instance of container
-        // set cotnainer instance to facade,
-        // and every facade will be able to access container.
+        // Facade container
         Facade::setContainer($this->container);
 
-        // load environment specific global configuration
+        // Config
         $this->loadConfig();
-
-        // detect Root URI and insert in config.
         $this->setRootURI();
-
-        // load environment specific app configuration
         $this->scopeConfig();
-
-        // compile configurations
         $this->finalizeConfig();
 
-        // load service providers
+        // Scope
+        $this->bindScope();
+
+        // Providers
         $this->loadProviders();
 
         return $this;
@@ -328,32 +288,12 @@ class App
         $this->configurator->set('root.uri', $this->rootURI);
     }
 
-    /**
-     * Configure environment-specific PHP settings.
-     *
-     * Sets up error reporting and display based on the current environment:
-     * - Production: Disables error display and reporting for security
-     * - Non-production: Enables full error display and reporting for debugging
-     *
-     * @return void
-     * 
-     * @internal This method is called automatically during boot()
-     */
-    protected function errorsDisplay(): void
+
+    protected function bootEarlyExceptionHandler()
     {
-        if ($this->isDebug()) {
-            ini_set('display_errors', '1');
-            error_reporting(E_ALL);
-        } else {
-            ini_set('display_errors', '0');
-        }
+        (new EarlyExceptionHandler())->bind($this->isDebug());
     }
 
-
-    protected function bindExceptionHandler()
-    {
-        (new ExceptionKernel($this->isDebug()))->bind();
-    }
 
     /**
      * Load the configuration and bind it as a singleton in the container.
@@ -448,7 +388,7 @@ class App
     protected function loadProviders(): void
     {
         // Retrieve providers from the configuration.
-        $providers = $this->configurator ? $this->configurator->get('providers', []) : [];
+        $providers = $this->configurator->get('providers', []);
 
         // Register providers through the container.
         $this->container->registerProviders($providers);
@@ -475,51 +415,23 @@ class App
         return $this->environment === 'development';
     }
 
-    /**
-     * Handle an incoming HTTP request.
-     *
-     * Processes an HTTP request through the complete request lifecycle:
-     * 1. Creates ServerRequest from PHP globals
-     * 2. Resolves Router instance from container
-     * 3. Determines debug mode
-     * 4. Creates HttpKernel with dependencies
-     * 5. Processes request through kernel
-     * 6. Returns HTTP response
-     *
-     * This method represents the main entry point for handling web requests.
-     *
-     * @return Response The HTTP response to send to the client
-     * 
-     * @example
-     * ```php
-     * $app = new App();
-     * $response = $app->withConfig('/config')
-     *                 ->boot()
-     *                 ->handleHTTP();
-     * $response->send();
-     * ```
-     */
+
+
     public function handleHTTP(): Response
     {
         $request = RequestFactory::fromGlobals();
 
-        // Auto Resolve a Router instance from the container.
-        $router = $this->container->make(Router::class);
+        $kernel = $this->container->make(HttpKernel::class);
 
-        // Resolve the Kernel with the Router as a dependency.
-        $kernel = $this->container->make(
-            HttpKernel::class,
-            [
-                'router' => $router,
-                'baseURI' => $this->getConfig('root.uri'),
-                'isDebug' => $this->getConfig('root.is_debug')
-            ]
-        );
-
-        $kernel->useMiddlewares($this->getConfig('middlewares', []));
-
-        // Process the request through the Kernel and return the response.
         return $kernel->handle($request);
+    }
+
+
+    public function handleSubHttp(Request $request): Response
+    {
+        return $this->container
+            ->make(HttpKernel::class)
+            ->handle($request, true);
     }
 
     /**

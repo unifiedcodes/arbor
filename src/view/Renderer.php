@@ -5,14 +5,12 @@ namespace Arbor\view;
 use Exception;
 use Arbor\view\Builder;
 use Arbor\http\Response;
-use Arbor\fragment\Fragment;
 use InvalidArgumentException;
 use Arbor\config\ConfigValue;
-
+use Arbor\facades\Container;
 
 class Renderer
 {
-    protected Fragment $fragment;
     protected string $views_dir;
     protected Builder $builder;
     protected array $deferredComponents = [];
@@ -21,9 +19,7 @@ class Renderer
     public function __construct(
         Builder $builder,
         #[ConfigValue('app.views_dir')] string $views_dir,
-        Fragment $fragment
     ) {
-        $this->fragment = $fragment;
         $this->views_dir = $views_dir;
         $this->builder = $builder;
     }
@@ -156,12 +152,10 @@ class Renderer
     protected function renderController(string $controller): string
     {
         // Execute controller through fragment system
-        $controllerResponse = $this->fragment->controller($controller, ['parentBuilder' => $this->builder]);
-
-        // Validate response object
-        if (!$controllerResponse instanceof Response) {
-            throw new InvalidArgumentException('Controller did not return a valid Response object.');
-        }
+        $controllerResponse = $this->controllerDispatcher(
+            $controller,
+            ['parentBuilder' => $this->builder]
+        );
 
         // Validate content type
         $contentType = $controllerResponse->getHeaderLine('Content-Type');
@@ -269,5 +263,11 @@ class Renderer
         }
 
         return $html;
+    }
+
+
+    protected function controllerDispatcher($controller, $parameters): Response
+    {
+        return Container::call($controller, $parameters);
     }
 }

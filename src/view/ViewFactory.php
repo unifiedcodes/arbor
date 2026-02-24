@@ -5,7 +5,6 @@ namespace Arbor\view;
 use Closure;
 use Exception;
 use Arbor\view\Builder;
-use Arbor\fragment\Fragment;
 use Arbor\config\ConfigValue;
 
 final class ViewFactory
@@ -13,10 +12,6 @@ final class ViewFactory
     protected array $presets = [];
 
     protected array $resolved = [];
-
-    protected string $view_dir;
-
-    protected Fragment $fragment;
 
     protected string|null $defaultPreset = null;
 
@@ -28,12 +23,8 @@ final class ViewFactory
 
     public function __construct(
         #[ConfigValue('app.views_dir')]
-        string $view_dir,
-        Fragment $fragment,
-    ) {
-        $this->view_dir = $view_dir;
-        $this->fragment = $fragment;
-    }
+        protected string $view_dir,
+    ) {}
 
     public function setConfig(array $config): void
     {
@@ -104,7 +95,7 @@ final class ViewFactory
 
     protected function resolveConfiguratorStack(array $configurators): Builder
     {
-        $builder = new Builder($this->view_dir, $this->fragment);
+        $builder = new Builder($this->view_dir);
 
         $builder->set('shared', $this->sharedData);
 

@@ -141,12 +141,22 @@ class Registry
      */
     protected function isParameterNode(string $segment): ?array
     {
-        // Matches {id}, {id?}, {id*}
-        if (preg_match('/^\{(\w+)([?*])?\}$/', $segment, $matches)) {
+        if (preg_match('/^\{(\w+)(\*?\??)\}$/', $segment, $matches)) {
+            $name = $matches[1];
+            $modifiers = $matches[2] ?? '';
+
+            $isGreedy = str_contains($modifiers, '*');
+            $isOptional = str_contains($modifiers, '?');
+
+            // Reject invalid order like ?*
+            if ($modifiers === '?*') {
+                throw new Exception("Invalid parameter syntax: $segment");
+            }
+
             return [
-                'name' => $matches[1],
-                'isOptional' => isset($matches[2]) && $matches[2] === '?',
-                'isGreedy'   => isset($matches[2]) && $matches[2] === '*',
+                'name' => $name,
+                'isOptional' => $isOptional,
+                'isGreedy' => $isGreedy,
             ];
         }
 

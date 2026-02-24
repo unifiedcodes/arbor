@@ -2,6 +2,7 @@
 
 namespace Arbor\fragment;
 
+
 use Stringable;
 use Arbor\router\Router;
 use Arbor\http\Response;

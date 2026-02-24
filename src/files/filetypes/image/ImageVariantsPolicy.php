@@ -3,7 +3,7 @@
 namespace Arbor\files\filetypes\image;
 
 use Arbor\files\state\FileContext;
-use Arbor\files\utilities\BaseVariantPolicy;
+use Arbor\files\utilities\BaseVariantsPolicy;
 use Arbor\files\filetypes\image\variants\Thumbnail;
 use Arbor\files\filetypes\image\variants\Webp;
 
@@ -16,7 +16,7 @@ use Arbor\files\filetypes\image\variants\Webp;
  *
  * @package Arbor\files\filetypes\image
  */
-final class ImageVariantPolicy extends BaseVariantPolicy
+final class ImageVariantsPolicy extends BaseVariantsPolicy
 {
     /**
      * Return the default options for this variant policy.

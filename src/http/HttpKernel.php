@@ -25,10 +25,7 @@ class HttpKernel
 {
     protected array $globalMiddlewareStack = [];
 
-
     public function __construct(
-        // keep requestFactory because httpSubkernel uses it to spawn sub requests.
-        protected RequestFactory $requestFactory,
         protected Pipeline $pipeline,
         protected Router $router,
 
@@ -142,7 +139,7 @@ class HttpKernel
      * @param RequestContext $requestContext
      * @return Response
      */
-    protected function executeGlobalMiddlewares(RequestContext $requestContext): Response
+    protected function executeGlobalMiddlewares(): Response
     {
         return $this->pipeline
             ->through($this->globalMiddlewareStack)

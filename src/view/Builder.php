@@ -3,7 +3,6 @@
 namespace Arbor\view;
 
 use Exception;
-use Arbor\fragment\Fragment;
 use InvalidArgumentException;
 use Arbor\config\ConfigValue;
 
@@ -39,15 +38,11 @@ class Builder
 
     protected string $view_dir = '';
 
-    protected Fragment $fragment;
-
     public function __construct(
         #[ConfigValue('app.views_dir')]
         string $view_dir,
-        Fragment $fragment
     ) {
         $this->view_dir = $view_dir;
-        $this->fragment = $fragment;
     }
 
     public function setRoot(Builder $root): static
@@ -385,11 +380,11 @@ class Builder
 
     public function toHtml(): string
     {
-        return (new Renderer($this, $this->view_dir, $this->fragment))->toHTML($this);
+        return (new Renderer($this, $this->view_dir))->toHTML($this);
     }
 
     public function toPartialHtml(): string
     {
-        return (new Renderer($this, $this->view_dir, $this->fragment))->renderBody();
+        return (new Renderer($this, $this->view_dir))->renderBody();
     }
 }

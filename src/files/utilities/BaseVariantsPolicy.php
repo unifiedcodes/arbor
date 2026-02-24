@@ -17,4 +17,4 @@ use Arbor\files\contracts\VariantsPolicyInterface;
  *
  * @package Arbor\files\utilities
  */
-abstract class BaseVariantPolicy extends BaseFilePolicy implements VariantsPolicyInterface {}
+abstract class BaseVariantsPolicy extends BaseFilePolicy implements VariantsPolicyInterface {}

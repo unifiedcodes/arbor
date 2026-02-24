@@ -108,9 +108,9 @@ class Renderer
      * This allows components to be processed after the main template execution.
      * 
      * @param string $component Component identifier (template path or controller class)
-     * @return void
+     * @return string
      */
-    public function useComponent(string $component): void
+    public function useComponent(string $component): string
     {
         // Generate a unique mount identifier
         $mount_id = bin2hex(random_bytes(8));
@@ -120,7 +120,7 @@ class Renderer
 
         // Output mount point placeholder
         $mount = "<!--componentmount-{$mount_id}-->";
-        echo $mount;
+        return $mount;
     }
 
     // ==========================================

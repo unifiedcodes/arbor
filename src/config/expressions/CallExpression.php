@@ -26,7 +26,7 @@ final class CallExpression implements ExpressionInterface
      * @param array<int, mixed> $args Additional arguments to pass to the callback
      */
     public function __construct(
-        protected readonly string $value,
+        protected readonly mixed $value,
         protected readonly Closure|string $callback,
         protected readonly array $args = []
     ) {}

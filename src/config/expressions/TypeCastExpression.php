@@ -59,17 +59,42 @@ final class TypeCastExpression implements ExpressionInterface
     private function castValue(mixed $value): mixed
     {
         return match ($this->type) {
-            'string', 'str'  => (string) $value,
-            'int', 'integer' => (int) $value,
+            'string', 'str'   => (string) $value,
+            'int', 'integer'  => (int) $value,
             'float', 'double' => (float) $value,
             'bool', 'boolean' => (bool) $value,
-            'array'          => (array) $value,
-            'json'           => $this->castJson($value),
+            'array'           => (array) $value,
+            'json'            => $this->castJsonSafe($value),
 
             default => throw new InvalidArgumentException(
                 "Unknown cast type '{$this->type}'"
             )
         };
+    }
+
+    private function castJsonSafe(mixed $value): string
+    {
+        $result = null;
+        $error  = JSON_ERROR_NONE;
+
+        if (is_string($value)) {
+            json_decode($value);
+
+            if (json_last_error() === JSON_ERROR_NONE) {
+                return $value; // already valid JSON
+            }
+        }
+
+        $result = json_encode($value);
+        $error  = ($result === false) ? json_last_error() : JSON_ERROR_NONE;
+
+        if ($error !== JSON_ERROR_NONE) {
+            throw new RuntimeException(
+                'JSON cast failed: ' . json_last_error_msg()
+            );
+        }
+
+        return $result;
     }
 
     /**

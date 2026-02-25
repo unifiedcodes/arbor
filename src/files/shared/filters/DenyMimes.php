@@ -14,12 +14,19 @@ use LogicException;
  */
 final class DenyMimes implements FileFilterInterface
 {
+    private array $deniedMimes;
+
     /**
      * @param array $deniedMimes A list of forbidden MIME types (e.g. ['application/x-php', 'application/x-executable']).
      */
     public function __construct(
-        private array $deniedMimes
-    ) {}
+        array $deniedMimes
+    ) {
+        $this->deniedMimes = array_map(
+            fn($ext) => strtolower($ext),
+            $deniedMimes
+        );
+    }
 
     /**
      * Validates that the MIME type of the file in the given context is not forbidden.
@@ -31,7 +38,7 @@ final class DenyMimes implements FileFilterInterface
     public function filter(FileContext $context)
     {
         if (in_array(
-            $context->mime(),
+            strtolower($context->mime()),
             $this->deniedMimes,
             true
         )) {

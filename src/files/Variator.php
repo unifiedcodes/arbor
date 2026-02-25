@@ -167,6 +167,10 @@ class Variator
 
         $stream = $fileContext->stream();
 
+        if ($stream === null) {
+            throw new RuntimeException('Cannot persist variant: stream not available.');
+        }
+
         if ($stream->isSeekable()) {
             $stream->rewind();
         }

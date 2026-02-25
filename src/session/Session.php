@@ -418,8 +418,13 @@ class Session implements SessionInterface
         $this->config = array_merge($this->config, $config);
 
         if ($this->isStarted()) {
+            if (isset($config['lifetime'])) {
+                ini_set('session.gc_maxlifetime', (string)$config['lifetime']);
+                ini_set('session.cookie_lifetime', (string)$config['lifetime']);
+            }
+
             // Only update settings that can be changed during runtime
-            $runtimeSettings = ['lifetime', 'path', 'domain', 'secure', 'httponly', 'samesite'];
+            $runtimeSettings = ['path', 'domain', 'secure', 'httponly', 'samesite'];
 
             foreach ($runtimeSettings as $setting) {
                 if (isset($config[$setting])) {

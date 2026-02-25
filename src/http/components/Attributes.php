@@ -59,7 +59,9 @@ class Attributes
      */
     public function get(string $key, mixed $default = null): mixed
     {
-        return $this->items[$key] ?? $default;
+        return array_key_exists($key, $this->items)
+            ? $this->items[$key]
+            : $default;
     }
 
     /**

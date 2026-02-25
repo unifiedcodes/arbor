@@ -80,6 +80,10 @@ if (!function_exists('relativeURL')) {
      */
     function relativeURL(string $path, array $params = []): string
     {
+        if (!class_exists(Config::class)) {
+            throw new RuntimeException('Config facade not available.');
+        }
+
         $base = Config::get('root.uri', '/');
         $path = ltrim($path, '/');
 
@@ -127,6 +131,10 @@ if (!function_exists('routeURL')) {
      */
     function routeURL(string $name, array $params = []): string
     {
+        if (!class_exists(Route::class)) {
+            throw new RuntimeException('Route facade not available.');
+        }
+
         return Route::url($name, $params);
     }
 }
@@ -160,6 +168,10 @@ if (!function_exists('assets')) {
      */
     function assets(string $path): string
     {
+        if (!class_exists(Config::class)) {
+            throw new RuntimeException('Config facade not available.');
+        }
+
         $base = rtrim(Config::get('root.uri', '/'), '/');
         $assetDir = trim(Config::get('app.assets_dir', 'assets'), '/');
         $path = ltrim($path, '/');
@@ -200,6 +212,10 @@ if (!function_exists('statics')) {
      */
     function statics(string $path): string
     {
+        if (!class_exists(Config::class)) {
+            throw new RuntimeException('Config facade not available.');
+        }
+
         $base = rtrim(Config::get('root.uri', '/'), '/');
         $root_statics_dir = Config::get('root.statics_dir', 'statics');
         $staticDir = trim(Config::get('app.statics_dir', $root_statics_dir), '/');

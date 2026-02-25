@@ -303,6 +303,7 @@ class Storage
         // Same store → delegate to store's copy method.
         if ($sourceStore === $destinationStore) {
             $sourceStore->copy($sourcePath, $destinationPath);
+            return;
         }
 
         // Cross-store → read+write
@@ -334,6 +335,7 @@ class Storage
         // Same store → rename
         if ($sourceStore === $destinationStore) {
             $sourceStore->rename($sourcePath, $destinationPath);
+            return;
         }
 
         // Cross-store → copy then delete

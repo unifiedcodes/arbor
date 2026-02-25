@@ -30,6 +30,10 @@ class HTML
 
         $css = file_get_contents(__DIR__ . '/exception.css');
 
+        if ($css === false) {
+            $css = '';
+        }
+
         return "
             <!doctype html>
             <html id='errorpage'>
@@ -96,14 +100,26 @@ class HTML
     {
         $exceptionsHtml = '';
 
+        $trace = $exception['trace'] ?? [];
+
+        if (!is_array($trace)) {
+            return $exceptionsHtml;
+        }
+
         foreach ($exceptions as $level => $exception) {
             $traceHtml = '';
 
             foreach ($exception['trace'] as $frame) {
+                $class    = $frame['class'] ?? '';
+                $type     = $frame['type'] ?? '';
+                $function = $frame['function'] ?? '';
+                $file     = $frame['file'] ?? '[internal]';
+                $line     = $frame['line'] ?? 0;
+
                 $traceHtml .= "
                     <li>
-                        <strong>{$frame['class']}{$frame['type']}{$frame['function']}</strong>
-                        <div>{$frame['file']}:{$frame['line']}</div>
+                        <strong>{$class}{$type}{$function}</strong>
+                        <div>{$file}:{$line}</div>
                     </li>
                 ";
             }

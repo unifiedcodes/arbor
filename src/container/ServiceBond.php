@@ -45,7 +45,10 @@ class ServiceBond
      */
     public function __construct(string $fqn, mixed $resolver, bool $isShared = false)
     {
-        $this->assertStaticResolver($resolver);
+        if ($resolver instanceof Closure) {
+            $this->assertStaticResolver($resolver);
+        }
+
         $this->fqn = $fqn;
         $this->resolver = $resolver;
         $this->isShared = $isShared;
@@ -89,9 +92,12 @@ class ServiceBond
      * @param callable $resolver
      * @return self
      */
-    public function setResolver(callable $resolver): self
+    public function setResolver(mixed $resolver): self
     {
-        $this->assertStaticResolver($resolver);
+        if ($resolver instanceof Closure) {
+            $this->assertStaticResolver($resolver);
+        }
+
         $this->resolver = $resolver;
         return $this;
     }

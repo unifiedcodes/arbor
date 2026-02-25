@@ -8,6 +8,7 @@ use Arbor\facades\Respond;
 use Arbor\facades\Route;
 use Arbor\http\RequestContext;
 use Arbor\facades\Scope;
+use RuntimeException;
 
 /**
  * Renderer class responsible for rendering exceptions into HTTP responses.
@@ -118,7 +119,14 @@ class Renderer
         );
 
         if ($errorRoute !== null) {
-            return Route::dispatch($errorRoute);
+
+            $response = Route::dispatch($errorRoute);
+
+            if (!$response instanceof Response) {
+                throw new RuntimeException('Error route must return Response');
+            }
+
+            return $response;
         }
 
         // 4. Fallback to default error response

@@ -139,7 +139,16 @@ final class StreamFactory
         }
 
         while (!$stream->eof()) {
-            fwrite($resource, $stream->read(8192));
+            $chunk = $stream->read(8192);
+            if ($chunk === '') {
+                break;
+            }
+
+            $written = fwrite($resource, $chunk);
+
+            if ($written === false || $written !== strlen($chunk)) {
+                throw new RuntimeException('Failed to write to temporary stream');
+            }
         }
 
         rewind($resource);

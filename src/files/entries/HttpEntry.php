@@ -33,6 +33,14 @@ final class HttpEntry implements FileEntryInterface
      */
     public function withInput(mixed $input): static
     {
+        if (
+            !is_array($input) &&
+            !$input instanceof UploadedFile &&
+            $input !== null
+        ) {
+            throw new RuntimeException('Invalid uploaded file input type');
+        }
+
         $clone = clone $this;
         $clone->file = $input;
 
@@ -69,11 +77,17 @@ final class HttpEntry implements FileEntryInterface
      */
     protected function fromRawFile(array $file): Payload
     {
+        if (
+            !isset($file['name'], $file['size'], $file['tmp_name'])
+        ) {
+            throw new RuntimeException('Invalid raw uploaded file structure');
+        }
+
         return new Payload(
-            name: $file['name'],
+            name: (string) $file['name'],
             mime: $file['type'] ?? 'application/octet-stream',
             size: (int) $file['size'],
-            path: $file['tmp_name'],
+            path: (string) $file['tmp_name'],
         );
     }
 

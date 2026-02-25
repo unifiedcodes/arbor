@@ -151,7 +151,7 @@ class Evaluator
                     $input,
                     $ruleNode['rule'],
                     $ruleNode['params'] ?? [],
-                    $ruleNode['negate']
+                    $ruleNode['negate'] ?? false
                 );
 
                 if (!$evaluatedRule) {

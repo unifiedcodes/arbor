@@ -181,7 +181,9 @@ final class Stream implements StreamInterface
      */
     public function detach()
     {
-        $this->assertAttached();
+        if (!is_resource($this->resource)) {
+            return null;
+        }
 
         $resource = $this->resource;
         $this->resource = null;
@@ -311,8 +313,9 @@ final class Stream implements StreamInterface
             return $this;
         }
 
-        // throw if the stream is not seekable and not fresh.
-        if ($this->tell() !== 0) {
+        $pos = $this->tell();
+
+        if ($pos === false || $pos !== 0) {
             throw new RuntimeException(
                 'Stream has already been partially consumed or position cannot be determined.'
             );

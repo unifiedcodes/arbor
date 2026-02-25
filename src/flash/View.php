@@ -96,7 +96,9 @@ class View
             '{message}' => htmlspecialchars($message, ENT_QUOTES, 'UTF-8'),
             '{type}' => $type,
             '{class}' => $cssClass,
-            '{timestamp}' => $messageData['timestamp'] ?? time(),
+            '{timestamp}' => is_array($messageData) && isset($messageData['timestamp'])
+                ? $messageData['timestamp']
+                : time(),
         ];
 
         // Add custom data fields as template replacements

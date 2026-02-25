@@ -23,7 +23,7 @@ if (!function_exists('value_at')) {
         foreach (explode('.', $key) as $segment) {
             if (is_array($target) && array_key_exists($segment, $target)) {
                 $target = $target[$segment];
-            } elseif (is_object($target) && isset($target->{$segment})) {
+            } elseif (is_object($target) && property_exists($target, $segment)) {
                 $target = $target->{$segment};
             } else {
                 return $default;

@@ -162,15 +162,25 @@ class Registry
      */
     protected function registerRuleList(RuleListInterface $ruleList): void
     {
-        // Iterate through all rules provided by the rule list
         foreach ($ruleList->provides() as $key => $value) {
+
+            // Determine rule name and method name
             if (is_int($key)) {
-                // Numeric key → $value is the rule name, method name same as rule name
-                $this->rules[$value] = [$ruleList, $value];
+                $name = $value;
+                $method = $value;
             } else {
-                // String key → $key is the rule name, $value is the method name
-                $this->rules[$key] = [$ruleList, $value];
+                $name = $key;
+                $method = $value;
             }
+
+            // Prevent duplicate rule registration
+            if (isset($this->rules[$name])) {
+                throw new InvalidArgumentException(
+                    "A rule named : '$name' is already registered."
+                );
+            }
+
+            $this->rules[$name] = [$ruleList, $method];
         }
     }
 

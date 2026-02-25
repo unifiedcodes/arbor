@@ -4,6 +4,7 @@ namespace Arbor\facades;
 
 use Arbor\facades\Facade;
 use Arbor\database\Database;
+use Exception;
 
 /**
  * Facade for the Arbor Database service.
@@ -54,8 +55,12 @@ class DB extends Facade
      */
     public static function on(string $name): Database
     {
-        /** @var DatabaseResolver $resolver */
         $instance = static::resolveInstance();
+
+        if (!method_exists($instance, 'get')) {
+            throw new \Exception('DatabaseResolver instance is invalid.');
+        }
+
         return $instance->get($name);
     }
 
@@ -83,6 +88,10 @@ class DB extends Facade
         // get default database object.
         $instance = static::resolveInstance();
         $db = $instance->get();
+
+        if (!method_exists($db, $method)) {
+            throw new Exception("Method '{$method}' does not exist on database instance.");
+        }
 
         return $db->$method(...$args);
     }

@@ -262,6 +262,10 @@ final class Hydrator
 
         $path = $context->path();
 
+        if ($path === null) {
+            throw new RuntimeException('Cannot ensure stream: no path available.');
+        }
+
         $stream = StreamFactory::fromFile($path);
 
         return new FileContext(
@@ -303,6 +307,10 @@ final class Hydrator
         }
 
         $stream = $context->stream();
+
+        if ($stream === null) {
+            throw new RuntimeException('Cannot ensure path: no stream available.');
+        }
 
         $uri = Storage::writeTemp($stream);
 

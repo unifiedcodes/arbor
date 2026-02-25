@@ -15,6 +15,8 @@ use Arbor\facades\Facade;
 use Arbor\http\Request;
 use Arbor\scope\Scope;
 use Arbor\scope\Stack;
+use Arbor\bootstrap\EarlyExceptionHandler;
+use RuntimeException;
 
 /**
  * Class App
@@ -419,6 +421,10 @@ class App
 
     public function handleHTTP(): Response
     {
+        if (!$this->booted) {
+            throw new RuntimeException('Application must be booted before handling HTTP.');
+        }
+
         $request = RequestFactory::fromGlobals();
 
         $kernel = $this->container->make(HttpKernel::class);
@@ -429,6 +435,10 @@ class App
 
     public function handleSubHttp(Request $request): Response
     {
+        if (!$this->booted) {
+            throw new RuntimeException('Application must be booted before handling HTTP.');
+        }
+
         return $this->container
             ->make(HttpKernel::class)
             ->handle($request, true);

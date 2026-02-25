@@ -42,15 +42,15 @@ final class FileContext
      * @throws RuntimeException If $proved is true but any core metadata field is null.
      */
     public function __construct(
+        private readonly string $mime,
+        private readonly int $size,
+        private readonly bool $proved,
         private readonly ?StreamInterface $stream,
         private readonly ?string $path,
         private readonly ?string $name,
-        private readonly ?string $mime,
         private readonly ?string $extension,
-        private readonly ?int $size,
         private readonly ?bool $isBinary,
         private readonly ?string $hash,
-        private readonly bool $proved,
         private array $metadata = [],
     ) {
         // Source invariant (always required)
@@ -312,7 +312,7 @@ final class FileContext
      *
      * @return string|null The MIME type, or null if not yet determined.
      */
-    public function inspectMime(): ?string
+    public function inspectMime(): string
     {
         return $this->mime;
     }

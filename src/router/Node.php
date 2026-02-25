@@ -251,7 +251,7 @@ class Node
     public function withoutChildren(): Node
     {
         $newNode = clone $this;
-        unset($newNode->children);
+        $newNode->children = [];
         return $newNode;
     }
 

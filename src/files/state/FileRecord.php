@@ -68,13 +68,19 @@ final class FileRecord
             );
         }
 
+        $name = $context->name();
+
+        if ($name === null) {
+            throw new LogicException('Proved FileContext must contain a name to create FileRecord');
+        }
+
         return new self(
             uri: $uri,
             mime: $context->mime(),
             extension: $context->extension(),
             size: $context->size(),
             hash: $context->hash(),
-            name: $context->name(),
+            name: $name,
             binary: $context->isBinary()
         );
     }

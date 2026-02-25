@@ -38,7 +38,7 @@ class Flasher
      * 
      * @var View
      */
-    protected view $view;
+    protected View $view;
 
     /**
      * Initialize the Flasher with message and view handlers

@@ -76,6 +76,6 @@ final class NullFileRecordStore implements FileRecordStoreInterface
 
     public function exists(string|Uri $uri): bool
     {
-        return true;
+        return false;
     }
 }

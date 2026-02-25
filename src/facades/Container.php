@@ -3,6 +3,8 @@
 namespace Arbor\facades;
 
 use Arbor\facades\Facade;
+use Arbor\container\ContainerInterface;
+use Exception;
 
 
 class Container extends Facade
@@ -14,6 +16,10 @@ class Container extends Facade
      */
     protected static function getAccessor(): string|object
     {
+        if (!static::$container instanceof ContainerInterface) {
+            throw new Exception('Container is not set.');
+        }
+
         return static::$container;
     }
 }

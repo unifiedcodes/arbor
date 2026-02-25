@@ -90,7 +90,9 @@ class RequestFactory
     public static function fromArray(array $data): Request
     {
         return self::make(
-            uri: $data['uri'] instanceof Uri ? $data['uri'] : new Uri($data['uri'] ?? '/'),
+            uri: $data['uri'] instanceof Uri
+                ? (string) $data['uri']
+                : ($data['uri'] ?? '/'),
             method: $data['method'] ?? 'GET',
             headers: $data['headers'] ?? [],
             body: $data['body'] ?? null,

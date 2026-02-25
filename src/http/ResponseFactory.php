@@ -264,7 +264,7 @@ class ResponseFactory
 
         // If body is null, Response will automatically fallback to its phrase map
         return new Response(
-            body: $body,
+            body: self::normalizeBody($body),
             statusCode: $statusCode,
             headers: $headers
         );

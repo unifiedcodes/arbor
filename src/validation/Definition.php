@@ -29,7 +29,7 @@ class Definition
      *
      * @var array
      */
-    protected array $definition;
+    protected array $definition = [];
 
     /**
      * Flag to determine if validation should stop on first failure
@@ -81,7 +81,7 @@ class Definition
 
     public function hasDefinition(): bool
     {
-        return empty($this->definition);
+        return !empty($this->definition);
     }
 
     /**

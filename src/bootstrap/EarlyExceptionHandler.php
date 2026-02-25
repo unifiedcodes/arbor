@@ -3,9 +3,8 @@
 namespace Arbor\bootstrap;
 
 
-namespace Arbor\bootstrap;
-
 use ErrorException;
+
 
 class EarlyExceptionHandler
 {

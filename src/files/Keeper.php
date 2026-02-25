@@ -36,7 +36,7 @@ class Keeper
      * a generated ID); the returned instance should always be used in place of the
      * original.
      *
-     * @param FileRecord $fileRecord The record to persist.
+     * @param FileRecord $FileRecord The record to persist.
      *
      * @return FileRecord The persisted record, which may differ from the input.
      */
@@ -55,7 +55,7 @@ class Keeper
      *
      * @return FileRecord The updated record, which may differ from the input.
      */
-    public function update(Filerecord $record): Filerecord
+    public function update(FileRecord $record): FileRecord
     {
         return $this->recordStore->update($record);
     }
@@ -67,7 +67,7 @@ class Keeper
      *
      * @return FileRecord|null The matching record, or null if no record exists for the given URI.
      */
-    public function find(string|Uri $uri): ?Filerecord
+    public function find(string|Uri $uri): ?FileRecord
     {
         return $this->recordStore->find($uri);
     }

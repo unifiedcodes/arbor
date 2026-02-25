@@ -22,7 +22,7 @@ class Registry
      *
      * @var string[]
      */
-    private array $allowedVerbs = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'ANY'];
+    private array $allowedVerbs = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'ANY', 'HEAD'];
 
     /**
      * The root node of the route tree.
@@ -121,11 +121,16 @@ class Registry
             return;
         }
 
-        if (is_array($handler) && count($handler) === 2 && class_exists($handler[0]) && method_exists($handler[0], $handler[1])) {
+        if (
+            is_array($handler)
+            && count($handler) === 2
+            && class_exists($handler[0])
+            && method_exists($handler[0], $handler[1])
+        ) {
             return;
         }
 
-        throw new \InvalidArgumentException('Invalid route handler provided.');
+        throw new InvalidArgumentException('Invalid route handler provided.');
     }
 
 
@@ -213,7 +218,13 @@ class Registry
      */
     protected function getSegments(string $path): array
     {
-        return explode('/', trim($path, '/'));
+        $trimmed = trim($path, '/');
+
+        if ($trimmed === '') {
+            return [];
+        }
+
+        return explode('/', $trimmed);
     }
 
     /**

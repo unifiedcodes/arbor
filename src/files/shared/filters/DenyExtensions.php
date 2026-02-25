@@ -14,13 +14,19 @@ use LogicException;
  */
 final class DenyExtensions implements FileFilterInterface
 {
+    private array $deniedExtensions;
     /**
      * @param array $deniedExtensions A list of forbidden file extensions (e.g. ['php', 'exe', 'sh']).
      *                                Comparisons are performed in a case-insensitive manner.
      */
     public function __construct(
-        private array $deniedExtensions
-    ) {}
+        array $deniedExtensions
+    ) {
+        $this->deniedExtensions = array_map(
+            fn($ext) => strtolower($ext),
+            $deniedExtensions
+        );
+    }
 
     /**
      * Validates that the file extension in the given context is not forbidden.

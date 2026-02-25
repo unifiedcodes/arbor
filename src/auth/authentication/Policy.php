@@ -38,7 +38,7 @@ class Policy
         $this->registry->validate($token);
 
         if (
-            $this->hasExpiryPolicy !== null
+            $this->hasExpiryPolicy
             && $token->isExpired()
         ) {
             throw new RuntimeException("Token is expired");

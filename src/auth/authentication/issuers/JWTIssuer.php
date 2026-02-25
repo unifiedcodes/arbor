@@ -183,7 +183,7 @@ final class JWTIssuer implements TokenIssuerInterface
      *
      * @throws InvalidArgumentException If JWT is malformed, algorithm is unsupported, or signature is invalid
      */
-    private function verify($verficationKey, string $jwt): array
+    private function verify(string $verficationKey, string $jwt): array
     {
         $parts = explode('.', $jwt);
 

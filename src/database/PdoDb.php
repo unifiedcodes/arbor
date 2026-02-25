@@ -7,6 +7,7 @@ use Exception;
 use PDOStatement;
 use Arbor\database\utility\PlaceholderParser;
 use Arbor\database\connection\Connection;
+use Throwable;
 
 /**
  * PdoDb - Database abstraction layer for PDO connections
@@ -191,7 +192,7 @@ class PdoDb
             $this->commit();
 
             return $result;
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             // Rollback on error
             if ($this->inTransaction()) {
                 $this->rollBack();
@@ -235,6 +236,10 @@ class PdoDb
 
         $this->statement = $this->pdo->prepare($this->sql);
 
+        if (!$this->statement) {
+            throw new Exception("could not prepare given statement");
+        }
+
         return $this;
     }
 
@@ -247,7 +252,7 @@ class PdoDb
     protected function ensureValidStatement(): void
     {
         if (!$this->statement || !$this->statement instanceof PDOStatement) {
-            throw new Exception('Binding values require a valid PDOStatement, invalid or empty statement found!');
+            throw new Exception('invalid or empty statement found!');
         }
     }
 
@@ -275,6 +280,7 @@ class PdoDb
      */
     public function fetchAll(?int $mode = null): array
     {
+        $this->ensureValidStatement();
         $fetchMode = $mode ?? $this->fetchMode;
         return $this->statement->fetchAll($fetchMode);
     }
@@ -287,6 +293,7 @@ class PdoDb
      */
     public function fetch(?int $mode = null): mixed
     {
+        $this->ensureValidStatement();
         $fetchMode = $mode ?? $this->fetchMode;
         return $this->statement->fetch($fetchMode);
     }
@@ -298,6 +305,7 @@ class PdoDb
      */
     public function fetchColumn(int $colIndex = 0): mixed
     {
+        $this->ensureValidStatement();
         return $this->statement->fetchColumn($colIndex);
     }
 
@@ -308,6 +316,7 @@ class PdoDb
      */
     public function rowCount(): int
     {
+        $this->ensureValidStatement();
         return $this->statement->rowCount();
     }
 

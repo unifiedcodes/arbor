@@ -97,7 +97,7 @@ abstract class BaseModel implements ArrayAccess, JsonSerializable
      */
     public static function setResolver(DatabaseResolver $databaseResolver): void
     {
-        self::$databaseResolver = $databaseResolver;
+        static::$databaseResolver = $databaseResolver;
     }
 
     /**
@@ -113,12 +113,12 @@ abstract class BaseModel implements ArrayAccess, JsonSerializable
     public static function getDatabase(?string $name = null): Database
     {
         if (!static::$databaseResolver) {
-            $modelName = self::class;
+            $modelName = static::class;
             throw new RuntimeException("Cannot initiate Model '{$modelName}' — no DatabaseResolver set.");
         }
 
         $connName = $name
-            ?? static::$connection
+            ?? (static::$connection ?: null)
             ?? static::$databaseResolver->getDefault();
 
         return static::$databaseResolver->get($connName);
@@ -130,7 +130,7 @@ abstract class BaseModel implements ArrayAccess, JsonSerializable
      * @param string $name The connection name to use
      * @return void
      */
-    public static function setConnection($name)
+    public static function setConnection(string $name)
     {
         static::$connection = $name;
     }
@@ -199,7 +199,7 @@ abstract class BaseModel implements ArrayAccess, JsonSerializable
     public static function getTableName(): string
     {
         if (!static::$tableName) {
-            $modelName = self::class;
+            $modelName = static::class;
             throw new RuntimeException("Model '{$modelName}' does not define its table name.");
         }
 
@@ -232,8 +232,13 @@ abstract class BaseModel implements ArrayAccess, JsonSerializable
      * @param bool $is True if the model exists in the database, false otherwise
      * @return void
      */
-    public function exists(bool $is): void
+    public function setExists(bool $is): void
     {
         $this->exists = $is;
+    }
+
+    public function exists(): bool
+    {
+        return $this->exists;
     }
 }

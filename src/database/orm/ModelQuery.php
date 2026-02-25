@@ -137,7 +137,7 @@ class ModelQuery
         $primaryKey = $class::getPrimaryKey();
         $model->setAttribute($primaryKey, $id);
 
-        $model->exists = true;
+        $model->setExists(true);
         $model->syncOriginal();
 
         return $model;

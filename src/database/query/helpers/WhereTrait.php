@@ -262,7 +262,7 @@ trait WhereTrait
      * $query->whereBetween('created_at', 
      *     ['2023-01-01', '2023-12-31']);              // WHERE created_at BETWEEN '2023-01-01' AND '2023-12-31'
      */
-    public function whereBetween(string $column, mixed $values): static
+    public function whereBetween(string $column, array $values): static
     {
         $this->validBetweenValues($values);
 

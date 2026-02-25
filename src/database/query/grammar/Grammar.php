@@ -399,10 +399,9 @@ abstract class Grammar
         // early returning
         if ($left instanceof Builder && $type === 'nested') {
 
-            $sql .= $negate ? "NOT " : '';
-            $sql = '(' . $this->conditionList($left->getProperties('wheres')) . ')';
+            $nested = '(' . $this->conditionList($left->getProperties('wheres')) . ')';
 
-            return $sql;
+            return $negate ? "NOT $nested" : $nested;
         }
 
         // if left is string, consider an identifier
@@ -426,7 +425,7 @@ abstract class Grammar
             $to = $this->value($right[1]);
         }
         // compile value normally.
-        else {
+        elseif ($type !== 'null') {
             $right = $this->value($right);
         }
 
@@ -447,6 +446,13 @@ abstract class Grammar
             case 'in':
                 $sql = "$left IN $right";
                 break;
+
+            case 'raw':
+                $sql = (string) $left;
+                break;
+
+            case 'null':
+                return "$left $operator NULL";
         }
 
 

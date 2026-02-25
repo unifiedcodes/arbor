@@ -220,6 +220,7 @@ final class Auth
      */
     public function definedAbilities(): array
     {
+        $this->haveAuthorizer();
         return $this->authorizer->abilityIds();
     }
 }

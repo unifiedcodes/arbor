@@ -119,6 +119,7 @@ final class AuthContext
         return new self(
             token: $this->token,
             registry: $this->registry,
+            abilities: $this->abilities,
             attributes: array_merge($this->attributes, [$key => $value])
         );
     }

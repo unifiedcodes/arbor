@@ -68,10 +68,10 @@ class NullTokenStore implements TokenStoreInterface
      *
      * This is a no-op implementation that performs no revocation.
      *
-     * @param string|int $tokenId The ID of the token to revoke
+     * @param string $tokenId The ID of the token to revoke
      * @return void
      */
-    public function revoke(string|int $tokenId): void
+    public function revoke(string $tokenId): void
     {
         // no-op
     }

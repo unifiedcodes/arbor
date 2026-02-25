@@ -32,7 +32,11 @@ final class OpaqueIssuer implements TokenIssuerInterface
         private ?int $ttl = null,
         private int $tokenByteLength = 32,
         private string $hashAlgo = 'sha256'
-    ) {}
+    ) {
+        if (!in_array($this->hashAlgo, hash_algos(), true)) {
+            throw new InvalidArgumentException('Invalid hash algorithm.');
+        }
+    }
 
     /**
      * Issues a new opaque token with the given claims
@@ -90,7 +94,7 @@ final class OpaqueIssuer implements TokenIssuerInterface
      *
      * @throws InvalidArgumentException If the token is empty or shorter than 32 characters.
      */
-    public function parse(string $rawToken): Token
+    public function parse(string $rawToken, ?string $key = null): Token
     {
         if ($rawToken === '' || strlen($rawToken) < 32) {
             throw new InvalidArgumentException('Invalid opaque token.');
@@ -152,6 +156,11 @@ final class OpaqueIssuer implements TokenIssuerInterface
     private function tokenId(string $token): string
     {
         $hash = hash($this->hashAlgo, $token, true);
+
+        if ($hash === false) {
+            throw new InvalidArgumentException('Invalid hash algorithm.');
+        }
+
         return $this->base64UrlEncode($hash);
     }
 

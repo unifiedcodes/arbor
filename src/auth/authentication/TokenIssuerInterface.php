@@ -36,7 +36,7 @@ interface TokenIssuerInterface
      *
      * @return Token The parsed and validated token object.
      */
-    public function parse(string $raw): Token;
+    public function parse(string $raw, ?string $key = null): Token;
 
     /**
      * Retrieves the token expiry time.

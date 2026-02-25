@@ -180,6 +180,8 @@ class Database
      */
     public function getPdoDb(): PdoDb
     {
+        $this->connection ?? $this->withConnection();
+
         return new PdoDb($this->connection, new PlaceholderParser());
     }
 

@@ -167,7 +167,7 @@ abstract class Model extends BaseModel
      *
      * @return bool True if the save operation was successful, false otherwise
      */
-    public function save()
+    public function save(): bool
     {
         $query = static::query();
         $primaryKey = static::getPrimaryKey();
@@ -195,6 +195,8 @@ abstract class Model extends BaseModel
         $this->setAttribute($primaryKey, $id);
         $this->exists = true;
         $this->syncOriginal();
+
+        return true;
     }
 
     /**

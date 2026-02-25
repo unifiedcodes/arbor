@@ -451,6 +451,11 @@ class QueryBuilder extends Builder
     public function value(string $column)
     {
         $row = $this->first();
+
+        if (!is_array($row)) {
+            return null;
+        }
+
         return $row[$column] ?? null;
     }
 

@@ -43,6 +43,12 @@ final class UploadedFile
             );
         }
 
+        if ($this->tmpPath === '' || !is_file($this->tmpPath) || !is_readable($this->tmpPath)) {
+            throw new RuntimeException(
+                'Cannot create stream: invalid or missing temporary file.'
+            );
+        }
+
         return StreamFactory::fromFile($this->tmpPath);
     }
 

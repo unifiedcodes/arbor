@@ -125,17 +125,25 @@ class Parser
         $orGroups = explode('||', $dsl);
 
         foreach ($orGroups as $orGroup) {
-            // Split each OR group on whitespace to get individual AND-ed rules
-            $andParts = preg_split('/\s+/', trim($orGroup));
+            $trimmed = trim($orGroup);
+
+            if ($trimmed === '') {
+                continue; // skip empty OR group
+            }
+
+            $andParts = preg_split('/\s+/', $trimmed);
             $parsedGroup = [];
 
-            // Parse each individual rule within this AND group
             foreach ($andParts as $rule) {
+                if ($rule === '') {
+                    continue; // skip empty rule
+                }
                 $parsedGroup[] = $this->parseRule($rule);
             }
 
-            // Add this parsed AND group to the AST
-            $ast[] = $parsedGroup;
+            if (!empty($parsedGroup)) {
+                $ast[] = $parsedGroup;
+            }
         }
 
         return $ast;

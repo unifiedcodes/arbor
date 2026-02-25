@@ -49,7 +49,9 @@ class Cookies
      */
     public function get(string $name, mixed $default = null): mixed
     {
-        return $this->cookies[$name] ?? $default;
+        return array_key_exists($name, $this->cookies)
+            ? $this->cookies[$name]
+            : $default;
     }
 
     /**

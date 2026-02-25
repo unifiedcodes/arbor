@@ -51,6 +51,10 @@ if (!function_exists('crypto_random')) {
 if (!function_exists('random_token')) {
     function random_token(int $length, string $type = 'all'): string
     {
+        if ($length < 0) {
+            throw new InvalidArgumentException('Token length must be non-negative.');
+        }
+
         $alphabets = [
             'numeric'      => '0123456789',
             'alpha'        => 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ',
@@ -75,6 +79,10 @@ if (!function_exists('random_token')) {
             default:
                 $characters = implode('', $alphabets); // use all categories
                 break;
+        }
+
+        if ($characters === '') {
+            throw new RuntimeException('Character set cannot be empty.');
         }
 
         $token = '';
@@ -152,7 +160,7 @@ if (!function_exists('ensureDir')) {
 
         if (!is_dir($path)) {
             if (!mkdir($path, 0755, true)) {
-                throw new \RuntimeException("Failed to create directory: $path");
+                throw new RuntimeException("Failed to create directory: $path");
             }
         }
 
@@ -189,6 +197,10 @@ if (!function_exists('normalizeURLSlashes')) {
 if (!function_exists('config')) {
     function config(string $key): mixed
     {
+        if (!class_exists(Config::class)) {
+            throw new RuntimeException('Config facade not available.');
+        }
+
         return Config::get($key);
     }
 }

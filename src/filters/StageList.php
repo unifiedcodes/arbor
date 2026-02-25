@@ -66,7 +66,11 @@ class StageList implements StageListInterface
     public function lowercase(mixed $input, callable $next): mixed
     {
         if (is_string($input)) {
-            $input = mb_strtolower($input);
+            if (function_exists('mb_strtolower')) {
+                $input = mb_strtolower($input);
+            } else {
+                $input = strtolower($input);
+            }
         }
 
         return $next($input);
@@ -85,7 +89,10 @@ class StageList implements StageListInterface
     public function removeExtraSpaces(mixed $input, callable $next): mixed
     {
         if (is_string($input)) {
-            $input = preg_replace('/\s+/', ' ', $input);
+            $result = preg_replace('/\s+/', ' ', $input);
+            if ($result !== null) {
+                $input = $result;
+            }
         }
 
         return $next($input);
@@ -124,7 +131,10 @@ class StageList implements StageListInterface
     public function sanitizeNumber(mixed $input, callable $next): mixed
     {
         if (is_string($input)) {
-            $input = preg_replace('/[^\d.]/', '', $input);
+            $result = preg_replace('/[^\d.]/', '', $input);
+            if ($result !== null) {
+                $input = $result;
+            }
         }
 
         return $next($input);
@@ -181,7 +191,11 @@ class StageList implements StageListInterface
     public function uppercase(mixed $input, callable $next): mixed
     {
         if (is_string($input)) {
-            $input = mb_strtoupper($input);
+            if (function_exists('mb_strtoupper')) {
+                $input = mb_strtoupper($input);
+            } else {
+                $input = strtoupper($input);
+            }
         }
 
         return $next($input);

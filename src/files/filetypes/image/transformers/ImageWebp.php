@@ -48,6 +48,10 @@ final class ImageWebp implements FileTransformerInterface
         $context = Hydrator::ensurePath($context);
         $sourcePath = $context->path();
 
+        if ($sourcePath === null) {
+            throw new RuntimeException('Image transformation requires a valid file path.');
+        }
+
         $info = getimagesize($sourcePath);
 
         if ($info === false) {

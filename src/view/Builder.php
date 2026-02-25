@@ -380,7 +380,7 @@ class Builder
 
     public function toHtml(): string
     {
-        return (new Renderer($this, $this->view_dir))->toHTML($this);
+        return (new Renderer($this, $this->view_dir))->toHTML();
     }
 
     public function toPartialHtml(): string

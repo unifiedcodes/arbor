@@ -27,7 +27,7 @@ class URLResolver
      * @param string $frontController The front controller filename (e.g., 'index.php')
      * @return string The root URI with trailing slash (e.g., 'https://example.com/app/')
      */
-    public static function detectRootURI(string $frontController): string
+    public static function detectRootUri(string $frontController): string
     {
         $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
         $httpHost   = $_SERVER['HTTP_HOST'] ?? 'localhost';
@@ -59,7 +59,11 @@ class URLResolver
     public static function getRequestedURI(): string
     {
         $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https" : "http";
-        $host   = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'];
+
+        $host = $_SERVER['HTTP_HOST']
+            ?? $_SERVER['SERVER_NAME']
+            ?? 'localhost';
+
         $uri    = $_SERVER['REQUEST_URI'] ?? '/'; // includes path and query string
 
         return "$scheme://$host$uri";

@@ -93,8 +93,12 @@ final class PolicyCatalog
      * @throws RuntimeException If no policy matches the given scheme and MIME combination.
      * @throws RuntimeException If the matched policy FQN is not present in the policy registry.
      */
-    public function resolvePolicy(string $interfaceFqn, string $scheme, string $mime, array $options = []): FilePolicyInterface
-    {
+    public function resolvePolicy(
+        string $interfaceFqn,
+        string $scheme,
+        string $mime,
+        array $options = []
+    ): FilePolicyInterface {
         if (!interface_exists($interfaceFqn)) {
             throw new RuntimeException(
                 "{$interfaceFqn} does not exist."

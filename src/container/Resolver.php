@@ -58,7 +58,7 @@ class Resolver
      * @return mixed The resolved instance.
      * @throws Exception If a circular dependency is detected or the resolver type is unsupported.
      */
-    public function get(string $key, array $customParams = [])
+    public function get(string $key, array $customParams = []): mixed
     {
         if (in_array($key, $this->resolving, true)) {
             throw new Exception("Circular dependency detected: {$key}");
@@ -75,7 +75,7 @@ class Resolver
                 if ($bond->isShared()) {
                     $instance = $this->registry->getSharedInstance($key);
 
-                    if ($instance) {
+                    if ($instance !== null) {
                         return $instance;
                     }
 
@@ -123,7 +123,8 @@ class Resolver
 
 
         // Unsupported resolver type.
-        throw new Exception("Unsupported resolver type provided. '{$resolver}' either class doesn't exists or it's not a valid fqn");
+        $type = get_debug_type($resolver);
+        throw new Exception("Unsupported resolver type provided. Type: {$type}");
     }
 
     /**

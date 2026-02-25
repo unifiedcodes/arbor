@@ -85,7 +85,7 @@ class ExceptionKernel
      * @param Throwable $e The exception to handle
      * @return void
      */
-    public function handleException($e)
+    public function handleException(Throwable $e)
     {
         $this->handle($e)->send();
     }
@@ -137,12 +137,12 @@ class ExceptionKernel
      * 
      * @return void
      */
-    public function handleShutdown(): void
+    public function handleShutdown()
     {
         $error = error_get_last();
 
         if (!$error) {
-            return;
+            return null;
         }
 
         if (!in_array($error['type'], [
@@ -151,7 +151,7 @@ class ExceptionKernel
             E_CORE_ERROR,
             E_COMPILE_ERROR
         ], true)) {
-            return;
+            return null;
         }
 
         $exception = new ErrorException(
@@ -162,7 +162,7 @@ class ExceptionKernel
             $error['line']
         );
 
-        $this->handle($exception);
+        $this->handle($exception)->send();
     }
 
     /**
@@ -176,7 +176,11 @@ class ExceptionKernel
      */
     public function handle(Throwable $error): Response
     {
-        $requestContext = Scope::get(RequestContext::class);
+        try {
+            $requestContext = Scope::get(RequestContext::class);
+        } catch (Throwable $e) {
+            $requestContext = null;
+        }
 
         $exceptionContext = $this->normalizer->normalize($error, $requestContext);
 

@@ -14,13 +14,20 @@ use LogicException;
  */
 final class AllowedExtensions implements FileFilterInterface
 {
+    private array $allowedExtensions;
+
     /**
      * @param array $allowedExtensions A list of permitted file extensions (e.g. ['jpg', 'png', 'pdf']).
      *                                 Comparisons are performed in a case-insensitive manner.
      */
     public function __construct(
-        private array $allowedExtensions
-    ) {}
+        array $allowedExtensions
+    ) {
+        $this->allowedExtensions = array_map(
+            fn($ext) => strtolower($ext),
+            $allowedExtensions
+        );
+    }
 
     /**
      * Validates that the file extension in the given context is allowed.

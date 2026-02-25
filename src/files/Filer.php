@@ -11,6 +11,7 @@ use Arbor\files\state\FileRecord;
 use Arbor\files\Evaluator;
 use Arbor\facades\Storage;
 use Arbor\storage\Uri;
+use RuntimeException;
 
 
 /**
@@ -162,8 +163,14 @@ final class Filer
         // context -> stream
         $fileContext = Hydrator::ensureStream($fileContext);
 
+
+        $stream = $fileContext->stream();
+
+        if ($stream === null) {
+            throw new RuntimeException('Cannot persist file: stream not available.');
+        }
         // stream -> write
-        Storage::write($uri, $fileContext->stream());
+        Storage::write($uri, $stream);
 
         // context -> filerecord.
         return FileRecord::from(

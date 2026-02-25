@@ -75,6 +75,8 @@ class Registry
      */
     public function resolve(string $schemeName): Scheme
     {
+        $schemeName = self::normalizeName($schemeName);
+
         if (!isset($this->schemes[$schemeName])) {
             throw new Exception("scheme: {$schemeName} not registered in storage");
         }

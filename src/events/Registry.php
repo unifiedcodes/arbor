@@ -3,6 +3,7 @@
 namespace Arbor\events;
 
 use Arbor\events\ListenerInterface;
+use Arbor\events\EventInterface;
 use InvalidArgumentException;
 use Closure;
 

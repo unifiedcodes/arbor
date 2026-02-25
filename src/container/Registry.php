@@ -109,7 +109,7 @@ class Registry
         $fqn = $this->getFqnKey($key);
 
         // Check if the service is bound or has a shared instance.
-        return isset($this->bindings[$fqn]) || isset($this->sharedInstances[$fqn]);
+        return isset($this->bindings[$fqn]) || array_key_exists($fqn, $this->sharedInstances);
     }
 
     /**

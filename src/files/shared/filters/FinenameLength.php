@@ -30,7 +30,13 @@ final class FilenameLength implements FileFilterInterface
      */
     public function filter(FileContext $context)
     {
-        if (mb_strlen($context->name()) > $this->maxLength) {
+        $name = $context->name();
+
+        if ($name === null) {
+            throw new LogicException('File name is not available');
+        }
+
+        if (mb_strlen($name) > $this->maxLength) {
             throw new LogicException('File name is too long');
         }
     }

@@ -100,7 +100,7 @@ class HttpKernel
                 $response = $this->routerDispatch();
             } else {
                 // Apply global middleware for main request only and dispatch.
-                $response = $this->executeGlobalMiddlewares($requestContext);
+                $response = $this->executeGlobalMiddlewares();
             }
 
             // Clean up output buffers

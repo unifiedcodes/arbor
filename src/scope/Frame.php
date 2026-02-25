@@ -5,6 +5,7 @@ namespace Arbor\scope;
 use Arbor\scope\events\DisposeError;
 use Arbor\facades\Events;
 use Throwable;
+use RuntimeException;
 
 /**
  * Frame class for managing a scoped collection of key-value items.
@@ -35,12 +36,14 @@ final class Frame
      */
     public function set(string $key, mixed $value): void
     {
+        $this->assertDisposed();
         $this->items[$key] = $value;
     }
 
 
     public function registerDisposable(Disposable $disposable): void
     {
+        $this->assertDisposed();
         if ($this->disposed) {
             $disposable->dispose();
             return;
@@ -102,5 +105,13 @@ final class Frame
         $this->disposables = [];
         $this->items = [];
         $this->disposed = true;
+    }
+
+
+    protected function assertDisposed()
+    {
+        if ($this->disposed) {
+            throw new RuntimeException('Frame is already disposed');
+        }
     }
 }

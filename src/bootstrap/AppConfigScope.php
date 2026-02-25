@@ -296,6 +296,11 @@ class AppConfigScope
 
         // Iterate through all installed applications
         foreach ($this->installedApps as $app) {
+
+            if (!isset($app['uri_prefix'])) {
+                throw new Exception("Invalid app configuration: missing 'uri_prefix'.");
+            }
+
             // Check for exact URI prefix match
             if ($app['uri_prefix'] === $app_key) {
                 return $app; // Return immediately on exact match

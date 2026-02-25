@@ -245,8 +245,8 @@ class ServerRequest extends Request
                     // Single file upload
                     $normalized[$key] = new UploadedFile(
                         $value['tmp_name'],
-                        $value['size'] ?? null,
-                        $value['error'] ?? UPLOAD_ERR_OK,
+                        (int) ($value['size'] ?? 0),
+                        (int) ($value['error'] ?? UPLOAD_ERR_OK),
                         $value['name'] ?? null,
                         $value['type'] ?? null
                     );
@@ -270,8 +270,8 @@ class ServerRequest extends Request
         foreach (array_keys($files['tmp_name']) as $key) {
             $normalized[$key] = new UploadedFile(
                 $files['tmp_name'][$key],
-                $files['size'][$key] ?? null,
-                $files['error'][$key] ?? UPLOAD_ERR_OK,
+                (int) ($files['size'][$key] ?? 0),
+                (int) ($files['error'][$key] ?? UPLOAD_ERR_OK),
                 $files['name'][$key] ?? null,
                 $files['type'][$key] ?? null
             );

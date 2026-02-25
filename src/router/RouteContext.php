@@ -115,7 +115,7 @@ final class RouteContext
     /**
      * Creates a new instance with merged middlewares.
      * 
-     * Merges the provided middlewares with existing ones, maintaining uniqueness.
+     * Merges the existing middlewares with incoming ones, maintaining uniqueness.
      * New middlewares are prepended to the existing stack.
      * 
      * @param array $middlewares Additional middlewares to merge

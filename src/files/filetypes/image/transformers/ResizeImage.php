@@ -48,6 +48,10 @@ final class ResizeImage implements FileTransformerInterface
         $context = Hydrator::ensurePath($context);
         $sourcePath = $context->path();
 
+        if ($sourcePath === null) {
+            throw new RuntimeException('Image resize requires a valid file path.');
+        }
+
         $info = getimagesize($sourcePath);
 
         if ($info === false) {

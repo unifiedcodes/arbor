@@ -218,7 +218,7 @@ class Local implements StoreInterface
             accessed: $stat['atime'],
             permissions: substr(sprintf('%o', fileperms($path)), -4),
             inode: $stat['ino'] ?? null,
-            binary: !str_starts_with($mime, 'text/')
+            binary: $mime === null ? false : !str_starts_with($mime, 'text/')
         );
     }
 

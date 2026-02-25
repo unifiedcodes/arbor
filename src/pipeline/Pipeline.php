@@ -5,6 +5,8 @@ namespace Arbor\pipeline;
 
 use InvalidArgumentException;
 use Arbor\facades\Container;
+use Arbor\http\Response;
+use RuntimeException;
 
 /**
  * Class Pipeline
@@ -108,7 +110,10 @@ class Pipeline
     {
         $destination = $this->normalizeStage($destination, $customParams, true);
         $pipeline = $this->buildPipeline($destination);
-        return $pipeline($this->input);
+
+        $result = $pipeline($this->input);
+
+        return $result;
     }
 
     /**
@@ -144,13 +149,13 @@ class Pipeline
 
                 $parameters = $this->buildParameters($input, $next, $customParams, $isFinal);
 
-                $methodName = $this->methodName;
+                $instance = Container::make($stage);
 
-                if (method_exists($stage, '__invoke')) {
-                    $methodName = '__invoke';
-                }
+                $methodName = method_exists($instance, '__invoke')
+                    ? '__invoke'
+                    : $this->methodName;
 
-                return Container::call([$stage, $methodName], $parameters);
+                return Container::call([$instance, $methodName], $parameters);
             };
         }
 

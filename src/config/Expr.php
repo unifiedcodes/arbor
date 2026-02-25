@@ -39,7 +39,7 @@ class Expr
             return new CallExpression($value, $callback);
         }
 
-        if (!is_array($callback) && count($callback) !== 2) {
+        if (!is_array($callback) || count($callback) !== 2) {
             throw new InvalidArgumentException(
                 "Callback array must have exactly 2 elements: [callback, args]"
             );

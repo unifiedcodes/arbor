@@ -51,6 +51,10 @@ final class ResolverContext
      */
     public function resolve(mixed $value): mixed
     {
+        if ($this->resolver === null) {
+            throw new LogicException('Resolver not set');
+        }
+
         return ($this->resolver)($value);
     }
 

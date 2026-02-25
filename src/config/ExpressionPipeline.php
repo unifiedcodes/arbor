@@ -76,21 +76,16 @@ final class ExpressionPipeline implements ExpressionInterface
      */
     protected function pipeline(mixed $value, ResolverContext $ctx): mixed
     {
-        foreach ($this->resolvers as $class => $factory) {
+        foreach ($this->expressionStack as $expr) {
+            $class = $expr['class'];
+            $factory = $this->resolvers[$class] ?? null;
 
-            foreach ($this->expressionStack as $expr) {
-                if ($expr['class'] !== $class) {
-                    continue;
-                }
+            $expression = $factory
+                ? $factory($value, $expr['args'])
+                : new $class($value);
 
-                // Build expression via resolver factory
-                $expression = $factory
-                    ? $factory($value, $expr['args'])
-                    : new $class($value);
-
-                if ($expression instanceof ExpressionInterface) {
-                    $value = $expression->resolve($ctx);
-                }
+            if ($expression instanceof ExpressionInterface) {
+                $value = $expression->resolve($ctx);
             }
         }
 

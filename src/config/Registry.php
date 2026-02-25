@@ -4,6 +4,7 @@ namespace Arbor\config;
 
 use Arbor\support\Macros;
 use Exception;
+use stdClass;
 
 /**
  * Registry class for managing application configuration.
@@ -154,15 +155,18 @@ class Registry
     {
         $hasDefault = func_num_args() === 2;
 
-        $value = value_at(
-            $this->config,
-            $key,
-            $hasDefault ? $default : null
-        );
+        $sentinel = new stdClass();
 
-        if ($value === null && !$hasDefault) {
+        $value = value_at($this->config, $key, $sentinel);
+
+        if ($value === $sentinel) {
+            if ($hasDefault) {
+                return $default;
+            }
             throw new Exception("Config key '{$key}' not found.");
         }
+
+        return $value;
 
         return $value;
     }
@@ -178,7 +182,7 @@ class Registry
      */
     public function all(): array
     {
-        return unserialize(serialize($this->config));
+        return $this->config;
     }
 
     /**

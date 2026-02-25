@@ -47,9 +47,15 @@ final class DSLExpression implements ExpressionInterface
      */
     private function interpolateDSL(string $value, ResolverContext $ctx): string
     {
-        return preg_replace_callback('/\{([^}]+)\}/', function ($matches) use ($ctx) {
+        $result = preg_replace_callback('/\{([^}]+)\}/', function ($matches) use ($ctx) {
             return $this->resolveReferenceBlock($matches[1], $ctx);
         }, $value);
+
+        if ($result === null) {
+            throw new \RuntimeException('DSL interpolation failed.');
+        }
+
+        return $result;
     }
 
     /**
@@ -102,7 +108,7 @@ final class DSLExpression implements ExpressionInterface
     {
         try {
             // ask registry for raw value
-            $raw = $ctx->ref($key, null);
+            $raw = $ctx->ref($key);
         } catch (Throwable $th) {
             $raw = '__not_found_value__';
         }

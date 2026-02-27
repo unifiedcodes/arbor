@@ -1,8 +1,9 @@
 <?php
 
-namespace Arbor\storage;
+namespace Arbor\support\path;
 
 
+use Arbor\support\path\PathNormalizer;
 use InvalidArgumentException;
 
 
@@ -61,7 +62,7 @@ final class Uri
 
         $scheme = self::assertValidScheme($scheme);
 
-        $path = Path::normalizeRelativePath($path);
+        $path = PathNormalizer::relativePath($path);
 
         return new self(
             strtolower($scheme),
@@ -104,7 +105,7 @@ final class Uri
 
         return new self(
             $scheme,
-            Path::normalizeRelativePath($path)
+            PathNormalizer::relativePath($path)
         );
     }
 
@@ -144,7 +145,7 @@ final class Uri
 
         return new self(
             $this->scheme,
-            Path::normalizeRelativePath($path)
+            PathNormalizer::relativePath($path)
         );
     }
 
@@ -168,7 +169,7 @@ final class Uri
 
         return new self(
             $this->scheme,
-            Path::normalizeRelativePath($basePath . $fileName)
+            PathNormalizer::relativePath($basePath . $fileName)
         );
     }
 

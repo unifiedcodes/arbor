@@ -4,7 +4,7 @@ namespace Arbor\files;
 
 use Arbor\files\contracts\FileRecordStoreInterface;
 use Arbor\files\state\FileRecord;
-use Arbor\storage\Uri;
+use Arbor\support\path\Uri;
 
 /**
  * Thin wrapper around a {@see FileRecordStoreInterface} that manages the

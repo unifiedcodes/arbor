@@ -12,8 +12,7 @@ use Arbor\facades\Storage;
 use Arbor\files\state\FileContext;
 use Arbor\files\state\VariantRecord;
 use RuntimeException;
-use Arbor\storage\Uri;
-
+use Arbor\support\path\Uri;
 
 /**
  * Orchestrates the generation of file variants for a stored file.

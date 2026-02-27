@@ -9,6 +9,7 @@ use Arbor\storage\Path;
 use Arbor\stream\StreamInterface;
 use Arbor\stream\StreamFactory;
 use Arbor\storage\stores\Local;
+use Arbor\support\path\Uri;
 
 
 /**

@@ -9,7 +9,7 @@ use Arbor\files\contracts\FileEntryInterface;
 use Arbor\files\Keeper;
 use Arbor\files\Filer;
 use Arbor\files\state\FileRecord;
-use Arbor\storage\Uri;
+use Arbor\support\path\Uri;
 use Arbor\files\utilities\NullFileRecordStore;
 
 

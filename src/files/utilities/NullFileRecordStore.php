@@ -4,7 +4,7 @@ namespace Arbor\files\utilities;
 
 use Arbor\files\state\FileRecord;
 use Arbor\files\contracts\FileRecordStoreInterface;
-use Arbor\storage\Uri;
+use Arbor\support\path\Uri;
 
 
 /**

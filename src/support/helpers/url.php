@@ -52,7 +52,7 @@ if (!function_exists('url')) {
 }
 
 
-if (!function_exists('relativeURL')) {
+if (!function_exists('relativeUrl')) {
     /**
      * Generate a URL using the configured base URI and optional query parameters.
      * 
@@ -78,7 +78,7 @@ if (!function_exists('relativeURL')) {
      * @param array $params Optional associative array of query parameters
      * @return string The generated URL with base URI and query string if parameters provided
      */
-    function relativeURL(string $path, array $params = []): string
+    function relativeUrl(string $path, array $params = []): string
     {
         if (!class_exists(Config::class)) {
             throw new RuntimeException('Config facade not available.');
@@ -100,7 +100,7 @@ if (!function_exists('relativeURL')) {
 
 
 
-if (!function_exists('routeURL')) {
+if (!function_exists('routeUrl')) {
     /**
      * Generate a URL from a named route using Arbor's Route facade.
      * 
@@ -129,98 +129,12 @@ if (!function_exists('routeURL')) {
      * @param array $params Route parameters for substitution (e.g., ['id' => 12])
      * @return string The generated URL for the named route
      */
-    function routeURL(string $name, array $params = []): string
+    function routeUrl(string $name, array $params = []): string
     {
         if (!class_exists(Route::class)) {
             throw new RuntimeException('Route facade not available.');
         }
 
         return Route::url($name, $params);
-    }
-}
-
-
-if (!function_exists('assets')) {
-    /**
-     * Generate a full asset URL using the asset directory defined in config.
-     * 
-     * Constructs URLs for application assets (CSS, JavaScript, images, etc.) by
-     * combining the base URI with the configured assets directory path.
-     * 
-     * The base URI is retrieved from 'root.uri' config (defaults to '/'), and
-     * the assets directory is retrieved from 'app.assets_dir' config (defaults 
-     * to 'assets'). Both values are normalized to prevent path issues.
-     * 
-     * This function is essential for creating proper asset URLs that respect
-     * the application's directory structure and configuration, ensuring assets
-     * are loaded correctly regardless of where the application is installed.
-     * 
-     * Example: 
-     * // Assuming Config::get('root.uri') = '/sandbox' and Config::get('app.assets_dir') = 'assets'
-     * assets('css/style.css') 
-     * → /sandbox/assets/css/style.css
-     * 
-     * assets('js/app.min.js')
-     * → /sandbox/assets/js/app.min.js
-     *
-     * @param string $path The relative path to the asset within the assets directory
-     * @return string The complete URL to the asset file
-     */
-    function assets(string $path): string
-    {
-        if (!class_exists(Config::class)) {
-            throw new RuntimeException('Config facade not available.');
-        }
-
-        $base = rtrim(Config::get('root.uri', '/'), '/');
-        $assetDir = trim(Config::get('app.assets_dir', 'assets'), '/');
-        $path = ltrim($path, '/');
-
-        return "{$base}/{$assetDir}/{$path}";
-    }
-}
-
-
-if (!function_exists('statics')) {
-    /**
-     * Generate a full static URL using the static directory defined in config.
-     * 
-     * Creates URLs for static files (uploads, user-generated content, etc.) by
-     * combining the base URI with the configured static files directory.
-     * 
-     * The function uses a two-level configuration approach:
-     * 1. First tries 'app.statics_dir' from config
-     * 2. Falls back to 'root.statics_dir' (defaults to 'statics')
-     * 
-     * This allows for flexible static file directory configuration at both
-     * application and system levels. The base URI comes from 'root.uri'
-     * configuration with a fallback to '/'.
-     * 
-     * Static files typically include user uploads, generated files, cached
-     * content, or any files that are not part of the core application assets.
-     * 
-     * Example: 
-     * // Assuming Config::get('root.uri') = '/sandbox' and static dir = 'static'
-     * statics('img/logo.png') 
-     * → /sandbox/static/img/logo.png
-     * 
-     * statics('uploads/document.pdf')
-     * → /sandbox/static/uploads/document.pdf
-     *
-     * @param string $path The relative path to the static file within the statics directory
-     * @return string The complete URL to the static file
-     */
-    function statics(string $path): string
-    {
-        if (!class_exists(Config::class)) {
-            throw new RuntimeException('Config facade not available.');
-        }
-
-        $base = rtrim(Config::get('root.uri', '/'), '/');
-        $root_statics_dir = Config::get('root.statics_dir', 'statics');
-        $staticDir = trim(Config::get('app.statics_dir', $root_statics_dir), '/');
-        $path = ltrim($path, '/');
-
-        return "{$base}/{$staticDir}/{$path}";
     }
 }

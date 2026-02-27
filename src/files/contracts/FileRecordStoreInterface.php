@@ -3,7 +3,7 @@
 namespace Arbor\files\contracts;
 
 use Arbor\files\state\FileRecord;
-use Arbor\storage\Uri;
+use Arbor\support\path\Uri;
 
 /**
  * Defines the contract for a file record store responsible for persisting and retrieving file records.

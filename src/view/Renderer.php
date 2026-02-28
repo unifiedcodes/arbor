@@ -18,7 +18,7 @@ final class Renderer
     }
 
 
-    public function template(ViewStack $stack): string
+    public function document(ViewStack $stack): string
     {
         if (!$stack->hasDocument()) {
             throw new RuntimeException('Cannot render: no document set.');

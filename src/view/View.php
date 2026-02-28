@@ -57,7 +57,7 @@ class View
     }
 
 
-    public function template(string|Uri $uri, array $data = []): string
+    public function document(string|Uri $uri, array $data = []): string
     {
         $stack = Scope::get(ViewStack::class);
 
@@ -70,7 +70,7 @@ class View
         );
 
         try {
-            return $this->renderer->template($stack);
+            return $this->renderer->document($stack);
         } finally {
             $stack->reset();
         }
@@ -98,7 +98,7 @@ class View
     }
 
 
-    public function start(string|Uri $uri, array $data = []): void
+    public function startComponent(string|Uri $uri, array $data = []): void
     {
         $stack = Scope::get(ViewStack::class);
 
@@ -111,7 +111,7 @@ class View
     }
 
 
-    public function end(): void
+    public function endComponent(): void
     {
         $stack = Scope::get(ViewStack::class);
 
@@ -125,7 +125,7 @@ class View
     }
 
 
-    public function slotStart(string $name): void
+    public function startSlot(string $name): void
     {
         $stack = Scope::get(ViewStack::class);
 
@@ -189,7 +189,7 @@ class View
     }
 
 
-    public function push(string $name): void
+    public function startPush(string $name): void
     {
         $stack = Scope::get(ViewStack::class);
         $component = $stack->currentComponent();
@@ -212,18 +212,5 @@ class View
         }
 
         $component->endPush();
-    }
-
-
-    public function stack(string $name): string
-    {
-        $stack = Scope::get(ViewStack::class);
-        $component = $stack->currentRendering();
-
-        if (!$component) {
-            return '';
-        }
-
-        return $component->stack($name);
     }
 }

@@ -14,6 +14,6 @@ class View extends Facade
      */
     protected static function getAccessor(): string|object
     {
-        return 'Arbor\\view\\ViewFactory';
+        return 'Arbor\\view\\View';
     }
 }

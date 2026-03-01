@@ -75,6 +75,14 @@ if (!function_exists('component')) {
 }
 
 
+if (!function_exists('asset')) {
+    function asset(string $uri): string
+    {
+        return View::asset($uri);
+    }
+}
+
+
 if (!function_exists('escapeHtml')) {
     function esc(mixed $value): string
     {

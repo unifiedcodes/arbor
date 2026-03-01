@@ -3,17 +3,20 @@
 namespace Arbor\view;
 
 
-use Arbor\support\path\Uri;
 use Arbor\view\ViewStack;
 use Arbor\view\HtmlRenderer;
 use Arbor\view\SchemeRegistry;
 use Arbor\view\DocumentNormalizer;
 use RuntimeException;
+use Throwable;
 
 
 final class Renderer
 {
-    public function __construct(private SchemeRegistry $schemes) {}
+    public function __construct(
+        private SchemeRegistry $schemes,
+        private ?string $defaultAssetScheme = null
+    ) {}
 
 
     public function document(ViewStack $stack): string
@@ -22,13 +25,35 @@ final class Renderer
             throw new RuntimeException('Cannot render: no document set.');
         }
 
-        $document = $stack->getDocument();
+        $initialLevel = ob_get_level();
+        ob_start();
 
-        $body = $this->component($document->component(), $stack);
+        try {
+            $document = $stack->getDocument();
 
-        $html = (new DocumentNormalizer($this->schemes))->normalize($document);
+            $body = $this->component($document->component(), $stack);
 
-        return (new HtmlRenderer($html, $body))->render();
+            $html = (
+                new DocumentNormalizer(
+                    $this->schemes,
+                    $this->defaultAssetScheme
+                )
+            )->normalize($document);
+
+            $output = (new HtmlRenderer($html, $body))->render();
+
+            ob_end_clean();
+
+            return $output;
+        } catch (Throwable $e) {
+
+            // clean any buffers created during render
+            while (ob_get_level() > $initialLevel) {
+                ob_end_clean();
+            }
+
+            throw $e;
+        }
     }
 
 
@@ -36,7 +61,7 @@ final class Renderer
     {
         $data = $component->data();
 
-        $file = $this->resolveUri($component->uri());
+        $file = $this->schemes->resolveView($component->uri());
 
         $stack->pushRendering($component);
 
@@ -81,36 +106,6 @@ final class Renderer
         } finally {
             $stack->popRendering();
         }
-    }
-
-
-    private function normalizeViewFile(string $root, string $relative): string
-    {
-        $relative = ltrim($relative, '/');
-
-        // If no extension present, append .php
-        if (pathinfo($relative, PATHINFO_EXTENSION) === '') {
-            $relative .= '.php';
-        }
-
-        return normalizeFilePath($root . $relative);
-    }
-
-
-    private function resolveUri(Uri $uri): string
-    {
-        $schemeName = $uri->scheme();
-        $relative   = ltrim($uri->path(), '/');
-
-        $scheme = $this->schemes->get($schemeName);
-
-        $file = $this->normalizeViewFile($scheme->root(), $relative);
-
-        if (!is_file($file)) {
-            throw new RuntimeException("View file not found: '{$file}'");
-        }
-
-        return $file;
     }
 
 

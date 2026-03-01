@@ -309,4 +309,44 @@ final class Document
             );
         }
     }
+
+
+    public function headScript(
+        string|Uri $src,
+        array $attributes = []
+    ): static {
+        return $this->script(
+            $src,
+            $attributes,
+            'head'
+        );
+    }
+
+
+    public function bodyScript(
+        string|Uri $src,
+        array $attributes = []
+    ): static {
+        return $this->script(
+            $src,
+            $attributes,
+            'body'
+        );
+    }
+
+
+    public function headInlineScript(
+        string $content,
+        array $attributes = []
+    ): static {
+        return $this->inlineScript($content, $attributes, 'head');
+    }
+
+
+    public function bodyInlineScript(
+        string $content,
+        array $attributes = []
+    ): static {
+        return $this->inlineScript($content, $attributes, 'body');
+    }
 }

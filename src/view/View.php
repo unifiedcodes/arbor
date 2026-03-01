@@ -8,12 +8,16 @@ use Arbor\view\ViewStack;
 use Arbor\view\Renderer;
 use Arbor\facades\Scope;
 use RuntimeException;
+use Arbor\view\presets\PresetInterface;
+use Arbor\view\presets\ClosurePreset;
+use Closure;
 
 
 class View
 {
     private SchemeRegistry $schemes;
     private Renderer $renderer;
+    private array $pendingPresets = [];
 
 
     public function __construct(
@@ -66,17 +70,49 @@ class View
     }
 
 
+    public function preset(PresetInterface|Closure $preset): static
+    {
+        if ($preset instanceof Closure) {
+            $preset = new ClosurePreset($preset);
+        }
+
+        $this->pendingPresets[] = $preset;
+
+        return $this;
+    }
+
+
+    protected function applyPresets(Document $document): void
+    {
+        if (empty($this->pendingPresets)) {
+            return;
+        }
+
+        foreach ($this->pendingPresets as $preset) {
+            $preset->apply($document);
+        }
+
+        $this->pendingPresets = [];
+    }
+
+
     public function render(string|Uri $uri, array $data = []): string
     {
         $stack = Scope::get(ViewStack::class);
 
         $uri = $this->normalizeViewUri($uri);
-
         $component = new Component($uri, $data);
 
-        $stack->setDocument(
-            new Document($component, $this->defaultAssetsScheme)
+        $document = new Document(
+            $component,
+            $this->defaultAssetsScheme
         );
+
+        // apply all preset stacks.
+        $this->applyPresets($document);
+
+        // push in stack.
+        $stack->setDocument($document);
 
         try {
             return $this->renderer->document($stack);

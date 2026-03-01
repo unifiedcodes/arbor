@@ -73,3 +73,15 @@ if (!function_exists('component')) {
         return View::component($uri, $data);
     }
 }
+
+
+if (!function_exists('escapeHtml')) {
+    function esc(mixed $value): string
+    {
+        return htmlspecialchars(
+            (string) $value,
+            ENT_QUOTES | ENT_SUBSTITUTE,
+            'UTF-8'
+        );
+    }
+}

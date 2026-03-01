@@ -17,8 +17,8 @@ class View
 
 
     public function __construct(
-        private ?string $defaultScheme = null,
-        private ?string $defaultAssetsScheme = null
+        private ?string $defaultScheme = 'view',
+        private ?string $defaultAssetsScheme = 'asset'
     ) {
         $this->schemes = new SchemeRegistry();
         $this->renderer = new Renderer($this->schemes);

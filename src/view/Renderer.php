@@ -40,8 +40,44 @@ final class Renderer
 
         $stack->pushRendering($component);
 
+        $initialLevel = ob_get_level();
+
         try {
-            return $this->evaluate($file, $data);
+            $result = $this->evaluate($file, $data);
+
+            if ($component->hasOpenCaptures()) {
+
+                $open = $component->openCaptures();
+
+                $frames = array_map(function ($frame) {
+                    return "{$frame['type']} '{$frame['name']}'";
+                }, $open);
+
+                $chain = implode(' -> ', $frames);
+
+                throw new RuntimeException(
+                    "Unclosed capture(s) in component '{$file}'. "
+                        . "Open stack: {$chain}. "
+                        . "Did you forget to call endSlot() or endPush()?"
+                );
+            }
+
+            $currentLevel = ob_get_level();
+
+            if ($currentLevel !== $initialLevel) {
+
+                $difference = $currentLevel - $initialLevel;
+
+                throw new RuntimeException(
+                    "Output buffer level mismatch in component '{$file}'. "
+                        . "Expected level {$initialLevel}, got {$currentLevel}. "
+                        . "Difference: {$difference}. "
+                        . "Possible causes: missing endSlot(), missing endPush(), "
+                        . "or manual ob_start()/ob_end_*() inside template."
+                );
+            }
+
+            return $result;
         } finally {
             $stack->popRendering();
         }
@@ -82,9 +118,13 @@ final class Renderer
     {
         ob_start();
 
-        extract($data, EXTR_SKIP);
+        (function () use ($file, $data) {
+            foreach ($data as $key => $value) {
+                ${$key} = $value;
+            }
 
-        include $file;
+            include $file;
+        })();
 
         return ob_get_clean();
     }

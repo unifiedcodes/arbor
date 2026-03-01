@@ -115,10 +115,17 @@ final class HtmlRenderer
         $nonce  = $this->html->nonce();
 
         foreach ($this->html->inlineStyles() as $style) {
-            $nonceAttr = $nonce ? ' nonce="' . $this->escape($nonce) . '"' : '';
+            $content = $style['content'] ?? '';
+            $attributes = $style['attributes'] ?? [];
 
-            $output .= "<style{$nonceAttr}>\n"
-                . $style
+            if ($nonce !== null) {
+                $attributes['nonce'] = $nonce;
+            }
+
+            $output .= "<style"
+                . $this->renderAttributes($attributes)
+                . ">\n"
+                . $content
                 . "\n</style>\n";
         }
 
@@ -212,7 +219,8 @@ final class HtmlRenderer
 
         foreach ($scriptsByPlacement[$placement] as $script) {
 
-            $attributes = $script;
+            $attributes = $script['attributes'] ?? [];
+            $attributes['src'] = $script['src'];
 
             if ($nonce !== null) {
                 $attributes['nonce'] = $nonce;
@@ -240,12 +248,17 @@ final class HtmlRenderer
 
         foreach ($scriptsByPlacement[$placement] as $script) {
 
-            $nonceAttr = $nonce
-                ? ' nonce="' . $this->escape($nonce) . '"'
-                : '';
+            $content = $script['content'] ?? '';
+            $attributes = $script['attributes'] ?? [];
 
-            $output .= "<script{$nonceAttr}>\n"
-                . $script
+            if ($nonce !== null) {
+                $attributes['nonce'] = $nonce;
+            }
+
+            $output .= "<script"
+                . $this->renderAttributes($attributes)
+                . ">\n"
+                . $content
                 . "\n</script>\n";
         }
 

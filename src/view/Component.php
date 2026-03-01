@@ -44,7 +44,12 @@ final class Component
 
     public function startSlot(string $name): void
     {
-        $this->captureStack[] = ['type' => 'slot', 'name' => $name];
+        $this->captureStack[] = [
+            'type'  => 'slot',
+            'name'  => $name,
+            'level' => ob_get_level(),
+        ];
+
         ob_start();
     }
 
@@ -58,19 +63,39 @@ final class Component
         $context = array_pop($this->captureStack);
 
         if ($context['type'] !== 'slot') {
-            throw new RuntimeException('Mismatched slot ending.');
+            throw new RuntimeException(
+                "Mismatched capture ending. "
+                    . "Attempted to close slot but current capture is '{$context['type']}' '{$context['name']}'."
+            );
+        }
+
+        // buffer integrity check
+        $current = ob_get_level();
+        $expected = $context['level'] + 1;
+
+        if ($current !== $expected) {
+            throw new RuntimeException(
+                "Output buffer corruption while closing slot '{$context['name']}'. "
+                    . "Expected buffer level {$expected}, got {$current}. "
+                    . "This may indicate manual output buffer manipulation "
+                    . "inside the slot."
+            );
         }
 
         $content = ob_get_clean();
 
-        // overwrite previous stack
         $this->slots[$context['name']] = [$content];
     }
 
 
     public function startPush(string $name): void
     {
-        $this->captureStack[] = ['type' => 'push', 'name' => $name];
+        $this->captureStack[] = [
+            'type'  => 'push',
+            'name'  => $name,
+            'level' => ob_get_level(),
+        ];
+
         ob_start();
     }
 
@@ -84,14 +109,29 @@ final class Component
         $context = array_pop($this->captureStack);
 
         if ($context['type'] !== 'push') {
-            throw new RuntimeException('Mismatched push ending.');
+            throw new RuntimeException(
+                "You are trying to end a push block, "
+                    . "but the last opened block is a {$context['type']} "
+                    . "named '{$context['name']}'. "
+                    . "Please close blocks in the same order they were opened."
+            );
+        }
+
+        $current = ob_get_level();
+        $expected = $context['level'] + 1;
+
+        if ($current !== $expected) {
+            throw new RuntimeException(
+                "Output buffer corruption while closing push '{$context['name']}'. "
+                    . "Expected buffer level {$expected}, got {$current}. "
+                    . "This may indicate manual output buffer manipulation "
+                    . "inside the push."
+            );
         }
 
         $content = ob_get_clean();
 
-        // auto-create slot if missing
         $this->slots[$context['name']] ??= [];
-
         $this->slots[$context['name']][] = $content;
     }
 
@@ -105,5 +145,17 @@ final class Component
     public function endDefault(): void
     {
         $this->endSlot();
+    }
+
+
+    public function hasOpenCaptures(): bool
+    {
+        return !empty($this->captureStack);
+    }
+
+
+    public function openCaptures(): array
+    {
+        return $this->captureStack;
     }
 }

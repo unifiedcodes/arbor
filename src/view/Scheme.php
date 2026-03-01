@@ -17,7 +17,13 @@ final class Scheme
             throw new InvalidArgumentException('Scheme name cannot be empty.');
         }
 
-        $this->root = rtrim($root, '/');
+        $root = trim($root);
+
+        if ($root === '' || $root === '/') {
+            return '';
+        }
+
+        $this->root = trim($root, '/');
     }
 
     public function name(): string
@@ -37,6 +43,6 @@ final class Scheme
 
     public function isPublic(): bool
     {
-        return empty($this->baseUrl);
+        return !empty($this->baseUrl);
     }
 }

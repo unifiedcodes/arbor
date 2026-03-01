@@ -16,8 +16,10 @@ class View
     private Renderer $renderer;
 
 
-    public function __construct()
-    {
+    public function __construct(
+        private ?string $defaultScheme = null,
+        private ?string $defaultAssetsScheme = null
+    ) {
         $this->schemes = new SchemeRegistry();
         $this->renderer = new Renderer($this->schemes);
 
@@ -38,8 +40,7 @@ class View
 
     public function registerScheme(string $name, string $root, ?string $baseUrl = null): void
     {
-        $scheme = new Scheme($name, $root, $baseUrl);
-        $this->schemes->register($scheme);
+        $this->schemes->register($name, $root, $baseUrl);
     }
 
 
@@ -50,14 +51,22 @@ class View
         }
 
         if (!str_contains($uri, '://')) {
-            $uri = 'views://' . $uri;
+
+            // assert scheme is valid.
+            if ($this->defaultScheme === null || $this->defaultScheme === '') {
+                throw new RuntimeException(
+                    "Cannot resolve view : '{$uri}' without scheme, no default view scheme configured."
+                );
+            }
+
+            $uri = $this->defaultScheme . '://' . $uri;
         }
 
         return Uri::fromString($uri);
     }
 
 
-    public function document(string|Uri $uri, array $data = []): string
+    public function render(string|Uri $uri, array $data = []): string
     {
         $stack = Scope::get(ViewStack::class);
 
@@ -66,7 +75,7 @@ class View
         $component = new Component($uri, $data);
 
         $stack->setDocument(
-            new Document($component)
+            new Document($component, $this->defaultAssetsScheme)
         );
 
         try {
@@ -74,6 +83,18 @@ class View
         } finally {
             $stack->reset();
         }
+    }
+
+
+    public function document(): Document
+    {
+        $stack = Scope::get(ViewStack::class);
+
+        if (!$stack->hasDocument()) {
+            throw new RuntimeException('no document set');
+        }
+
+        return $stack->getDocument();
     }
 
 

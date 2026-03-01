@@ -47,7 +47,6 @@ class Registry
         bool $public = false
     ) {
         $schemeName = $this->normalizeName($schemeName);
-        $root = $this->normalizeRoot($root);
 
         $scheme = new Scheme(
             $schemeName,
@@ -105,27 +104,5 @@ class Registry
         }
 
         return $scheme;
-    }
-
-
-    /**
-     * Normalises a root path by stripping surrounding slashes.
-     *
-     * Paths that are empty or consist solely of "/" are stored as an empty string,
-     * indicating no root prefix. All other paths have their leading and trailing
-     * slashes removed.
-     *
-     * @param  string $root The raw root path to normalise.
-     * @return string The normalised root path, or an empty string if no root applies.
-     */
-    private static function normalizeRoot(string $root): string
-    {
-        $root = trim($root);
-
-        if ($root === '' || $root === '/') {
-            return '';
-        }
-
-        return trim($root, '/');
     }
 }

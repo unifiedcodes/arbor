@@ -1,6 +1,7 @@
 <?php
 
 use Arbor\facades\View;
+use Arbor\view\Document;
 
 
 if (!function_exists('startComponent')) {
@@ -52,10 +53,17 @@ if (!function_exists('slot')) {
     }
 }
 
-if (!function_exists('document')) {
-    function document(string $uri, array $data = []): string
+if (!function_exists('render')) {
+    function render(string $uri, array $data = []): string
     {
-        return View::document($uri, $data);
+        return View::render($uri, $data);
+    }
+}
+
+if (!function_exists('document')) {
+    function document(): Document
+    {
+        return View::document();
     }
 }
 

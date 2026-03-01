@@ -5,17 +5,15 @@ namespace Arbor\view;
 
 use Arbor\support\path\Uri;
 use Arbor\view\ViewStack;
+use Arbor\view\HtmlRenderer;
+use Arbor\view\SchemeRegistry;
+use Arbor\view\DocumentNormalizer;
 use RuntimeException;
 
 
 final class Renderer
 {
-    private SchemeRegistry $schemes;
-
-    public function __construct(SchemeRegistry $schemes)
-    {
-        $this->schemes = $schemes;
-    }
+    public function __construct(private SchemeRegistry $schemes) {}
 
 
     public function document(ViewStack $stack): string
@@ -26,9 +24,11 @@ final class Renderer
 
         $document = $stack->getDocument();
 
-        $component = $this->component($document->component(), $stack);
+        $body = $this->component($document->component(), $stack);
 
-        return $component;
+        $html = (new DocumentNormalizer($this->schemes))->normalize($document);
+
+        return (new HtmlRenderer($html, $body))->render();
     }
 
 

@@ -4,6 +4,7 @@ namespace Arbor\storage;
 
 
 use Arbor\storage\stores\StoreInterface;
+use InvalidArgumentException;
 
 
 /**
@@ -32,7 +33,19 @@ final class Scheme
         private string $root = '',
         private ?string $baseUrl = null,
         private bool $public = false
-    ) {}
+    ) {
+        if ($name === '') {
+            throw new InvalidArgumentException('Scheme name cannot be empty.');
+        }
+
+        $root = trim($root);
+
+        if ($root === '' || $root === '/') {
+            return '';
+        }
+
+        $this->root = trim($root, '/');
+    }
 
 
     /**

@@ -207,7 +207,7 @@ class AppConfigScope
         $this->setAppScope($found_app);
 
         // Load and merge the application's specific configuration files
-        $this->mergeConfig($found_app['configs_dir']);
+        $this->mergeConfig($found_app['configs_path']);
     }
 
     /**

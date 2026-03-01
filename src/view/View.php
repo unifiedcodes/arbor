@@ -24,7 +24,8 @@ class View
     public function __construct(
         bool $isDebug = false,
         private ?string $defaultScheme = 'view',
-        private ?string $defaultAssetsScheme = 'asset'
+        private ?string $defaultAssetsScheme = 'asset',
+        private ?PresetInterface $defaultPreset = null,
     ) {
         $this->schemes = new SchemeRegistry($isDebug);
 
@@ -85,8 +86,8 @@ class View
 
     protected function applyPresets(Document $document): void
     {
-        if (empty($this->pendingPresets)) {
-            return;
+        if ($this->defaultPreset !== null) {
+            $this->defaultPreset->apply($document);
         }
 
         foreach ($this->pendingPresets as $preset) {

@@ -11,6 +11,7 @@ use RuntimeException;
 use Arbor\view\presets\PresetInterface;
 use Arbor\view\presets\ClosurePreset;
 use Closure;
+use InvalidArgumentException;
 
 
 class View
@@ -21,11 +22,16 @@ class View
 
 
     public function __construct(
+        bool $isDebug = false,
         private ?string $defaultScheme = 'view',
         private ?string $defaultAssetsScheme = 'asset'
     ) {
-        $this->schemes = new SchemeRegistry();
-        $this->renderer = new Renderer($this->schemes);
+        $this->schemes = new SchemeRegistry($isDebug);
+
+        $this->renderer = new Renderer(
+            $this->schemes,
+            $defaultAssetsScheme
+        );
 
         Scope::set(ViewStack::class, new ViewStack());
     }
@@ -48,35 +54,30 @@ class View
     }
 
 
-    public function normalizeViewUri(string|Uri $uri): Uri
+    public function asset(string|Uri $uri): string
     {
-        if ($uri instanceof Uri) {
-            return $uri;
-        }
-
-        if (!str_contains($uri, '://')) {
-
-            // assert scheme is valid.
-            if ($this->defaultScheme === null || $this->defaultScheme === '') {
-                throw new RuntimeException(
-                    "Cannot resolve view : '{$uri}' without scheme, no default view scheme configured."
-                );
-            }
-
-            $uri = $this->defaultScheme . '://' . $uri;
-        }
-
-        return Uri::fromString($uri);
+        return $this->schemes->resolveAsset(
+            $uri,
+            $this->defaultAssetsScheme
+        );
     }
 
 
-    public function preset(PresetInterface|Closure $preset): static
+    public function preset(PresetInterface|Closure ...$presets): static
     {
-        if ($preset instanceof Closure) {
-            $preset = new ClosurePreset($preset);
-        }
+        foreach ($presets as $preset) {
+            if ($preset instanceof Closure) {
+                $preset = new ClosurePreset($preset);
+            }
 
-        $this->pendingPresets[] = $preset;
+            if (!$preset instanceof PresetInterface) {
+                throw new InvalidArgumentException(
+                    'Preset must implement PresetInterface or be a Closure.'
+                );
+            }
+
+            $this->pendingPresets[] = $preset;
+        }
 
         return $this;
     }
@@ -96,17 +97,22 @@ class View
     }
 
 
+    protected function getComponent(string|Uri $uri, array $data = []): Component
+    {
+        $uri = $this->schemes->normalize(
+            $uri,
+            $this->defaultScheme
+        );
+
+        return new Component($uri, $data);
+    }
+
+
     public function render(string|Uri $uri, array $data = []): string
     {
         $stack = Scope::get(ViewStack::class);
 
-        $uri = $this->normalizeViewUri($uri);
-        $component = new Component($uri, $data);
-
-        $document = new Document(
-            $component,
-            $this->defaultAssetsScheme
-        );
+        $document = new Document($this->getComponent($uri, $data));
 
         // apply all preset stacks.
         $this->applyPresets($document);
@@ -138,9 +144,7 @@ class View
     {
         $stack = Scope::get(ViewStack::class);
 
-        $uri = $this->normalizeViewUri($uri);
-
-        $component = new Component($uri, $data);
+        $component = $this->getComponent($uri, $data);
 
         $stack->pushComponent($component);
 
@@ -159,8 +163,7 @@ class View
     {
         $stack = Scope::get(ViewStack::class);
 
-        $uri = $this->normalizeViewUri($uri);
-        $component = new Component($uri, $data);
+        $component = $this->getComponent($uri, $data);
 
         $stack->pushComponent($component);
 

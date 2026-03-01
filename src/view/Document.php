@@ -27,30 +27,9 @@ final class Document
 
     public function __construct(
         private Component $component,
-        private ?string $defaultAssetsScheme = null
     ) {
         $this->scripts = array_fill_keys($this->scriptPlacements(), []);
         $this->inlineScripts = array_fill_keys($this->scriptPlacements(), []);
-    }
-
-
-    protected function normalizeUri(string|Uri $uri): Uri
-    {
-        if ($uri instanceof Uri) {
-            return $uri;
-        }
-
-        if (!str_contains($uri, '://')) {
-            if ($this->defaultAssetsScheme === null || $this->defaultAssetsScheme === '') {
-                throw new RuntimeException(
-                    "Cannot resolve asset : '{$uri}' no default assets scheme is configured."
-                );
-            }
-
-            $uri = $this->defaultAssetsScheme . '://' . $uri;
-        }
-
-        return Uri::fromString($uri);
     }
 
 
@@ -99,8 +78,6 @@ final class Document
 
     public function style(string|Uri $href, array $attributes = []): static
     {
-        $href = $this->normalizeUri($href);
-
         $this->styles[] = [
             'href' => $href,
             'attributes' => $attributes,
@@ -121,8 +98,6 @@ final class Document
         array $attributes = [],
         string $placement = 'body'
     ): static {
-        $src = $this->normalizeUri($src);
-
         $this->assertScriptPlacement($placement);
 
         $this->scripts[$placement][] = [
@@ -234,10 +209,6 @@ final class Document
 
     public function link(array $attributes): static
     {
-        if (isset($attributes['href'])) {
-            $attributes['href'] = $this->normalizeUri($attributes['href']);
-        }
-
         $this->links[] = $attributes;
 
         return $this;
@@ -251,8 +222,7 @@ final class Document
 
     public function base(string|Uri $href): static
     {
-        $this->baseHref = $this->normalizeUri($href);
-
+        $this->baseHref = $href;
         return $this;
     }
 

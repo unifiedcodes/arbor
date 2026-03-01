@@ -120,6 +120,13 @@ final class Renderer
 
         (function () use ($file, $data) {
             foreach ($data as $key => $value) {
+
+                if (!is_string($key) || !preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $key)) {
+                    throw new RuntimeException(
+                        "Invalid variable name '{$key}' passed to view."
+                    );
+                }
+
                 ${$key} = $value;
             }
 

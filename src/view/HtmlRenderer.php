@@ -4,14 +4,29 @@ namespace Arbor\view;
 
 use Arbor\view\Html;
 
+/**
+ * Renders complete HTML documents with DOCTYPE, head, and body sections.
+ * Handles meta tags, stylesheets, scripts, and HTML attributes with proper escaping.
+ */
 final class HtmlRenderer
 {
+    /**
+     * Constructor for the HtmlRenderer.
+     *
+     * @param Html $html The HTML configuration object containing metadata and attributes.
+     * @param string $body The rendered body content to include in the document.
+     */
     public function __construct(
         private Html $html,
         private string $body,
     ) {}
 
 
+    /**
+     * Renders the complete HTML document.
+     *
+     * @return string The full HTML document with DOCTYPE declaration.
+     */
     public function render(): string
     {
         return "<!DOCTYPE html>\n"
@@ -22,6 +37,11 @@ final class HtmlRenderer
     }
 
 
+    /**
+     * Renders the opening HTML tag with lang and custom attributes.
+     *
+     * @return string The rendered opening HTML tag.
+     */
     private function openHtml(): string
     {
         $attributes = array_merge(
@@ -33,6 +53,11 @@ final class HtmlRenderer
     }
 
 
+    /**
+     * Renders the complete head section with meta tags, stylesheets, and scripts.
+     *
+     * @return string The rendered head section.
+     */
     private function head(): string
     {
         return "<head>\n"
@@ -49,6 +74,11 @@ final class HtmlRenderer
     }
 
 
+    /**
+     * Renders the body section with content and scripts.
+     *
+     * @return string The rendered body section.
+     */
     private function body(): string
     {
         $attributes = $this->renderAttributes(
@@ -64,6 +94,11 @@ final class HtmlRenderer
     }
 
 
+    /**
+     * Renders the meta charset tag.
+     *
+     * @return string The rendered meta charset tag.
+     */
     private function metaCharset(): string
     {
         $charset = $this->escape($this->html->charset());
@@ -72,6 +107,11 @@ final class HtmlRenderer
     }
 
 
+    /**
+     * Renders the page title tag if a title is set.
+     *
+     * @return string The rendered title tag or empty string if not set.
+     */
     private function title(): string
     {
         $title = $this->html->title();
@@ -86,6 +126,11 @@ final class HtmlRenderer
     }
 
 
+    /**
+     * Renders all external stylesheet link tags with optional nonce attribute.
+     *
+     * @return string The rendered stylesheet link tags.
+     */
     private function styles(): string
     {
         $output = '';
@@ -109,6 +154,11 @@ final class HtmlRenderer
     }
 
 
+    /**
+     * Renders all inline style tags with optional nonce attribute.
+     *
+     * @return string The rendered inline style tags.
+     */
     private function inlineStyles(): string
     {
         $output = '';
@@ -133,6 +183,13 @@ final class HtmlRenderer
     }
 
 
+    /**
+     * Converts an associative array of attributes into HTML attribute string.
+     * Handles boolean attributes, null values, and proper escaping.
+     *
+     * @param array $attributes Associative array of attribute names and values.
+     * @return string The rendered attributes string.
+     */
     private function renderAttributes(array $attributes): string
     {
         $html = '';
@@ -160,12 +217,23 @@ final class HtmlRenderer
     }
 
 
+    /**
+     * Escapes a string for safe use in HTML content.
+     *
+     * @param string $value The string to escape.
+     * @return string The escaped string.
+     */
     private function escape(string $value): string
     {
         return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
     }
 
 
+    /**
+     * Renders the base tag if a base href is set.
+     *
+     * @return string The rendered base tag or empty string if not set.
+     */
     private function base(): string
     {
         $href = $this->html->baseHref();
@@ -180,6 +248,11 @@ final class HtmlRenderer
     }
 
 
+    /**
+     * Renders all meta tags.
+     *
+     * @return string The rendered meta tags.
+     */
     private function meta(): string
     {
         $output = '';
@@ -193,6 +266,11 @@ final class HtmlRenderer
     }
 
 
+    /**
+     * Renders all link tags (excluding stylesheets).
+     *
+     * @return string The rendered link tags.
+     */
     private function links(): string
     {
         $output = '';
@@ -206,6 +284,13 @@ final class HtmlRenderer
     }
 
 
+    /**
+     * Renders external script tags for a specific placement (head or body).
+     * Automatically adds nonce attribute if configured.
+     *
+     * @param string $placement The script placement: 'head' or 'body'.
+     * @return string The rendered script tags.
+     */
     private function renderScripts(string $placement): string
     {
         $output = '';
@@ -235,6 +320,13 @@ final class HtmlRenderer
     }
 
 
+    /**
+     * Renders inline script tags for a specific placement (head or body).
+     * Automatically adds nonce attribute if configured.
+     *
+     * @param string $placement The script placement: 'head' or 'body'.
+     * @return string The rendered inline script tags.
+     */
     private function renderInlineScripts(string $placement): string
     {
         $output = '';

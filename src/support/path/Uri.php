@@ -16,7 +16,7 @@ use InvalidArgumentException;
  * relative path semantics. All mutating methods return a new instance,
  * preserving immutability.
  *
- * @package Arbor\storage
+ * @package Arbor\support\path
  */
 final class Uri
 {

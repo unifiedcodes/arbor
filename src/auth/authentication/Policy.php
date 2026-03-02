@@ -2,7 +2,7 @@
 
 namespace Arbor\auth\authentication;
 
-use Arbor\auth\authentication\Registry;
+use Arbor\auth\authentication\Keeper;
 use Arbor\auth\authentication\Token;
 use RuntimeException;
 
@@ -18,11 +18,11 @@ class Policy
      * Constructor
      *
      * @param bool $hasExpiryPolicy Whether token expiry validation should be enforced
-     * @param Registry $registry token registry for persistance related validation
+     * @param Keeper $keeper token Keeper for persistance related validation
      */
     public function __construct(
         private bool $hasExpiryPolicy,
-        private Registry $registry,
+        private Keeper $keeper,
     ) {}
 
     /**
@@ -35,7 +35,7 @@ class Policy
      */
     public function validate(Token $token): void
     {
-        $this->registry->validate($token);
+        $this->keeper->validate($token);
 
         if (
             $this->hasExpiryPolicy

@@ -10,14 +10,14 @@ use Arbor\auth\authentication\NullAuthStore;
 use InvalidArgumentException;
 
 /**
- * Registry class for managing token storage and validation.
+ * Keeper class for managing token storage and validation.
  * 
- * This class acts as a registry for storing and retrieving authentication tokens.
+ * This class acts as a Keeper for storing and retrieving authentication tokens.
  * It provides token persistence through a TokenStoreInterface implementation and
  * validates token claims against store requirements.
  * 
  */
-class Registry
+class Keeper
 {
     /**
      * Constructor.

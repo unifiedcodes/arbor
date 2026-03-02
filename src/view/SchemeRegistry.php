@@ -17,35 +17,35 @@ final class SchemeRegistry
     ) {}
 
 
-    public function register(string $name, string $root, ?string $baseUrl = null): void
+    public function register(string $scheme, string $root, ?string $baseUrl = null): void
     {
-        $this->normalizeName($name);
+        $scheme = $this->normalizeName($scheme);
 
-        if (isset($this->schemes[$name])) {
-            throw new RuntimeException("Scheme '{$name}' already registered.");
+        if (isset($this->schemes[$scheme])) {
+            throw new RuntimeException("Scheme '{$scheme}' already registered.");
         }
 
-        $this->schemes[$name] = new Scheme($name, $root, $baseUrl);
+        $this->schemes[$scheme] = new Scheme($scheme, $root, $baseUrl);
     }
 
 
-    public function get(string $name): Scheme
+    public function get(string $scheme): Scheme
     {
-        $this->normalizeName($name);
+        $scheme = $this->normalizeName($scheme);
 
-        if (!isset($this->schemes[$name])) {
-            throw new RuntimeException("Scheme '{$name}' not found.");
+        if (!isset($this->schemes[$scheme])) {
+            throw new RuntimeException("Scheme '{$scheme}' not found.");
         }
 
-        return $this->schemes[$name];
+        return $this->schemes[$scheme];
     }
 
 
-    public function has(string $name): bool
+    public function has(string $scheme): bool
     {
-        $this->normalizeName($name);
+        $scheme = $this->normalizeName($scheme);
 
-        return isset($this->schemes[$name]);
+        return isset($this->schemes[$scheme]);
     }
 
 

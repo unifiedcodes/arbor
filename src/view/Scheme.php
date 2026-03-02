@@ -20,7 +20,7 @@ final class Scheme
         $root = trim($root);
 
         if ($root === '' || $root === '/') {
-            return '';
+            throw new InvalidArgumentException('Scheme root cannot be empty or "/".');
         }
 
         $this->root = trim($root, '/');

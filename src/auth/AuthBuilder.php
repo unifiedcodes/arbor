@@ -3,7 +3,7 @@
 namespace Arbor\auth;
 
 use Arbor\auth\authentication\TokenIssuerInterface;
-use Arbor\auth\authentication\Registry;
+use Arbor\auth\authentication\Keeper;
 use Arbor\auth\authentication\Policy;
 use Arbor\auth\authentication\TokenStoreInterface;
 use Arbor\auth\authentication\AuthorityStoreInterface;
@@ -20,7 +20,7 @@ use InvalidArgumentException;
  * - Configure token issuer (JWT or Opaque)
  * - Configure key material (for JWT)
  * - Configure token and authority stores
- * - Configure registry and policy
+ * - Configure keeper and policy
  * - Optionally configure authorizer
  *
  * Ensures required dependencies are present before building Auth.
@@ -38,9 +38,9 @@ final class AuthBuilder
     private ?Keys $keys = null;
 
     /**
-     * Authentication registry responsible for token lookup and authority resolution.
+     * Authentication keeper responsible for token lookup and authority resolution.
      */
-    private ?Registry $registry = null;
+    private ?Keeper $keeper = null;
 
     /**
      * Token persistence store.
@@ -53,7 +53,7 @@ final class AuthBuilder
     private ?AuthorityStoreInterface $authstore = null;
 
     /**
-     * Authentication policy (expiry + registry validation rules).
+     * Authentication policy (expiry + keeper validation rules).
      */
     private ?Policy $policy = null;
 
@@ -203,54 +203,62 @@ final class AuthBuilder
     }
 
     /**
-     * Create and configure default authentication registry.
+     * Create and configure default authentication keeper.
      *
      * Uses previously configured token and authority stores.
      *
      * @return static
      */
-    public function useRegistry(): static
+    public function useKeeper(): static
     {
-        $this->registry = new Registry(
+        $this->keeper = new Keeper(
             $this->store,
             $this->authstore
         );
+
         return $this;
     }
 
     /**
-     * Use a custom authentication registry.
+     * Use a custom authentication keeper.
      *
-     * @param Registry $registry
+     * @param Keeper $keeper
      * @return static
      */
-    public function withRegistry(Registry $registry): static
+    public function withKeeper(Keeper $keeper): static
     {
-        $this->registry = $registry;
+        $this->keeper = $keeper;
         return $this;
     }
 
     /**
      * Create default authentication policy.
      *
-     * Requires registry to be configured.
+     * Requires keeper to be configured.
      *
      * @return static
      *
-     * @throws InvalidArgumentException If registry is not set.
+     * @throws InvalidArgumentException If keeper is not set.
      */
     public function usePolicy(): static
     {
-        if (!$this->registry) {
-            throw new InvalidArgumentException("Authentication Registry not set");
+        if (!$this->keeper) {
+            throw new InvalidArgumentException("Authentication keeper not set");
         }
 
-        $this->policy = new Policy($this->hasExpiry, $this->registry);
+        $this->policy = new Policy($this->hasExpiry, $this->keeper);
+        return $this;
+    }
+
+
+    public function withPolicy(Policy $policy): static
+    {
+        $this->policy = $policy;
         return $this;
     }
 
     /**
-     * Enable default authorizer.
+     * Enable authorizer.
      *
      * @return static
      */
@@ -260,10 +268,16 @@ final class AuthBuilder
         return $this;
     }
 
+    public function withAuthorizer(Authorizer $authorizer): static
+    {
+        $this->authorizer = $authorizer;
+        return $this;
+    }
+
     /**
      * Build and return configured Auth instance.
      *
-     * Automatically creates registry and policy if not already set.
+     * Automatically creates keeper and policy if not already set.
      *
      * @return Auth
      *
@@ -275,8 +289,8 @@ final class AuthBuilder
             throw new InvalidArgumentException("issuer is not set");
         }
 
-        if (!$this->registry) {
-            $this->useRegistry();
+        if (!$this->keeper) {
+            $this->useKeeper();
         }
 
         if (!$this->policy) {
@@ -285,7 +299,7 @@ final class AuthBuilder
 
         return new Auth(
             $this->issuer,
-            $this->registry,
+            $this->keeper,
             $this->policy,
             $this->authorizer
         );

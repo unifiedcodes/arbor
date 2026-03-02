@@ -4,7 +4,7 @@ namespace Arbor\auth;
 
 
 use Arbor\auth\authentication\TokenIssuerInterface;
-use Arbor\auth\authentication\Registry;
+use Arbor\auth\authentication\Keeper;
 use Arbor\auth\authentication\Token;
 use Arbor\auth\authentication\Policy;
 use Arbor\auth\AuthContext;
@@ -30,16 +30,16 @@ final class Auth
      * Constructor
      *
      * Initializes the Auth instance with required dependencies and optional configurations.
-     * Sets up the registry for token persistence and initializes the auth policy if not provided.
+     * Sets up the Keeper for token persistence and initializes the auth policy if not provided.
      *
      * @param TokenIssuerInterface $issuer The token issuer implementation
-     * @param Registry $registry token registry for persistence
+     * @param Keeper $keeper token persistence
      * @param Policy $policy Optional custom authentication policy
      * @param array $options Configuration options (e.g., 'hasExpiry' for token expiration)
      */
     public function __construct(
         private TokenIssuerInterface $issuer,
-        private Registry $registry,
+        private Keeper $keeper,
         private Policy $policy,
         private ?Authorizer $authorizer = null,
     ) {}
@@ -49,7 +49,7 @@ final class Auth
      * Issues a new authentication token
      *
      * Creates a token with the provided claims and options, then persists it to storage
-     * via the registry if storage is available.
+     * via the Keeper if storage is available.
      *
      * @param array $claims Token claims/payload (default: empty array)
      * @param array $options Token generation options (default: empty array)
@@ -60,8 +60,8 @@ final class Auth
     {
         $token = $this->issuer->issue($claims, $options);
 
-        // optionally ask registry to persist.
-        $this->registry->save($token);
+        // optionally ask Keeper to persist.
+        $this->keeper->save($token);
 
         return $token;
     }
@@ -84,7 +84,7 @@ final class Auth
         $token = $this->issuer->parse($rawToken, $verificationKey);
 
         // get enriched token from persistance.
-        $storedToken = $this->registry->get($token);
+        $storedToken = $this->keeper->get($token);
 
         if ($storedToken) {
             $token = $storedToken;
@@ -94,11 +94,11 @@ final class Auth
         $this->policy->validate($token);
 
         // gathering abilities of user.
-        $abilities = $this->registry->getAbilities($token);
+        $abilities = $this->keeper->getAbilities($token);
 
         $authContext = new AuthContext(
             $token,
-            $this->registry,
+            $this->keeper,
             $abilities
         );
 
@@ -126,7 +126,7 @@ final class Auth
             $token = $token->token();
         }
 
-        $this->registry->revoke($token);
+        $this->keeper->revoke($token);
     }
 
 

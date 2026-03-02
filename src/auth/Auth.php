@@ -33,8 +33,8 @@ final class Auth
      * Sets up the registry for token persistence and initializes the auth policy if not provided.
      *
      * @param TokenIssuerInterface $issuer The token issuer implementation
-     * @param Policy $policy Optional custom authentication policy
      * @param Registry $registry token registry for persistence
+     * @param Policy $policy Optional custom authentication policy
      * @param array $options Configuration options (e.g., 'hasExpiry' for token expiration)
      */
     public function __construct(
@@ -42,7 +42,6 @@ final class Auth
         private Registry $registry,
         private Policy $policy,
         private ?Authorizer $authorizer = null,
-        private array $options = []
     ) {}
 
 

@@ -20,7 +20,7 @@ final class Document
     private array $scripts = [];
     private array $inlineScripts = [];
     private array $links = [];
-    private ?Uri $baseHref = null;
+    private string|Uri|null $baseHref = null;
     private ?string $nonce = null;
 
     private const SCRIPT_PLACEMENTS = ['head', 'body'];

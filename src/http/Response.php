@@ -206,6 +206,66 @@ class Response
         return $new;
     }
 
+
+    public function withCookie(
+        string $name,
+        string $value,
+        array $options = []
+    ): static {
+        $cookie = $this->buildCookieString($name, $value, $options);
+
+        $new = clone $this;
+        $new->headers->add('Set-Cookie', $cookie);
+
+        return $new;
+    }
+
+
+    public function withoutCookie(string $name): static
+    {
+        return $this->withCookie($name, '', [
+            'expires' => time() - 3600,
+            'path' => '/',
+        ]);
+    }
+
+
+    private function buildCookieString(
+        string $name,
+        string $value,
+        array $options
+    ): string {
+        $cookie = urlencode($name) . '=' . urlencode($value);
+
+        if (isset($options['expires'])) {
+            $cookie .= '; Expires=' . gmdate('D, d M Y H:i:s T', $options['expires']);
+        }
+
+        if (isset($options['max_age'])) {
+            $cookie .= '; Max-Age=' . (int)$options['max_age'];
+        }
+
+        $cookie .= '; Path=' . ($options['path'] ?? '/');
+
+        if (!empty($options['domain'])) {
+            $cookie .= '; Domain=' . $options['domain'];
+        }
+
+        if (!empty($options['secure'])) {
+            $cookie .= '; Secure';
+        }
+
+        if (!empty($options['httponly'])) {
+            $cookie .= '; HttpOnly';
+        }
+
+        if (!empty($options['samesite'])) {
+            $cookie .= '; SameSite=' . ucfirst($options['samesite']);
+        }
+
+        return $cookie;
+    }
+
     /**
      * Gets the response reason phrase
      *

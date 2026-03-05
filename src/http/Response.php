@@ -221,12 +221,10 @@ class Response
     }
 
 
-    public function withoutCookie(string $name): static
+    public function withoutCookie(string $name, array $options = []): static
     {
-        return $this->withCookie($name, '', [
-            'expires' => time() - 3600,
-            'path' => '/',
-        ]);
+        $options['expires'] = time() - 3600;
+        return $this->withCookie($name, '', $options);
     }
 
 

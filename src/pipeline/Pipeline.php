@@ -48,9 +48,9 @@ class Pipeline
     /**
      * The method name that each stage should call.
      *
-     * @var string
+     * @var ?string
      */
-    protected string $methodName = 'process';
+    protected ?string $methodName = null;
 
     /**
      * Set the input data to be processed.
@@ -149,9 +149,7 @@ class Pipeline
 
                 $instance = Container::make($stage);
 
-                $methodName = method_exists($instance, '__invoke')
-                    ? '__invoke'
-                    : $this->methodName;
+                $methodName = $this->resolveMethodName($instance, $stage);
 
                 return Container::call([$instance, $methodName], $parameters);
             };
@@ -167,6 +165,28 @@ class Pipeline
         }
 
         throw new InvalidArgumentException('Invalid stage format.');
+    }
+
+
+    protected function resolveMethodName(object $instance, string $class): string
+    {
+        if (method_exists($instance, '__invoke')) {
+            return '__invoke';
+        }
+
+        if ($this->methodName !== null && method_exists($instance, $this->methodName)) {
+            return $this->methodName;
+        }
+
+        if ($this->methodName === null) {
+            throw new InvalidArgumentException(
+                "Class {$class} is not invokable and no method was specified via Pipeline::via()."
+            );
+        }
+
+        throw new InvalidArgumentException(
+            "Method '{$this->methodName}' does not exist on class {$class}."
+        );
     }
 
     /**

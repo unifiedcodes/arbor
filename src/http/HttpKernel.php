@@ -167,7 +167,7 @@ class HttpKernel
         // setting route context to scope
         Scope::set(RouteContext::class, $routeContext);
 
-        return $this->router->dispatch($routeContext);
+        return $this->router->dispatch($routeContext, 'process');
     }
 
 

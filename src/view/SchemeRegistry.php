@@ -162,7 +162,7 @@ final class SchemeRegistry
             $relative .= '.php';
         }
 
-        $file = normalizeFilePath($scheme->root() . $relative);
+        $file = normalizeFilePath(joinPath($scheme->root(), $relative));
 
         if ($this->verifyFiles && !is_file($file)) {
             throw new RuntimeException(

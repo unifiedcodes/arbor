@@ -14,6 +14,8 @@ use Arbor\router\Meta;
  */
 final class RouteContext
 {
+    private $handler;
+
     /**
      * Creates a new RouteContext instance.
      * 
@@ -22,7 +24,7 @@ final class RouteContext
      * @param Node|null $node The matched route node, if any
      * @param Meta|null $meta Route metadata, if any
      * @param array $parameters Extracted route parameters
-     * @param string|array $handler The route handler (controller/callable)
+     * @param callable|string|array $handler The route handler (controller/callable)
      * @param array $middlewares Array of middleware to apply
      */
     public function __construct(
@@ -31,10 +33,12 @@ final class RouteContext
         private ?Node $node,
         private ?Meta $meta,
         private array $parameters,
-        private string|array $handler,
+        callable|string|array $handler,
         private array $middlewares,
         private string $routeName = '',
-    ) {}
+    ) {
+        $this->handler = $handler;
+    }
     
     
     /* -----------------------------------------------------------------
@@ -69,9 +73,9 @@ final class RouteContext
     /**
      * Gets the route handler.
      * 
-     * @return string|array
+     * @return callable|string|array
      */
-    public function handler(): string|array
+    public function handler(): callable|string|array
     {
         return $this->handler;
     }

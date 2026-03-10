@@ -286,16 +286,19 @@ class Router
      * @return Response The response returned by the route.
      * 
      */
-    public function dispatch(RouteContext $routeContext): Response
+    public function dispatch(RouteContext $routeContext, ?string $via = null): Response
     {
-        return $this->pipeline
-            ->through(
-                $routeContext->middlewares()
-            )
-            ->then(
-                $routeContext->handler(),
-                $routeContext->parameters()
-            );
+        $pipeline = $this->pipeline
+            ->through($routeContext->middlewares());
+
+        if ($via !== null) {
+            $pipeline->via($via);
+        }
+
+        return $pipeline->then(
+            $routeContext->handler(),
+            $routeContext->parameters()
+        );
     }
 
     /**

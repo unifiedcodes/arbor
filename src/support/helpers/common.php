@@ -209,16 +209,21 @@ if (!function_exists('config')) {
 if (!function_exists('joinPath')) {
     function joinPath(string ...$segments): string
     {
-        $clean = [];
+        $segments = array_filter($segments, fn($s) => $s !== '' && $s !== null);
+
+        if (!$segments) {
+            return '';
+        }
+
+        $first = array_shift($segments);
+        $first = rtrim($first, "/\\");
+
+        $clean = [$first];
 
         foreach ($segments as $segment) {
-            if ($segment === '' || $segment === null) {
-                continue;
-            }
-
             $clean[] = trim($segment, "/\\");
         }
 
-        return implode('/', $clean);
+        return implode(DIRECTORY_SEPARATOR, $clean);
     }
 }

@@ -35,7 +35,7 @@ final class Scheme
             throw new InvalidArgumentException('Scheme root cannot be empty or "/".');
         }
 
-        $this->root = trim($root, '/');
+        $this->root = normalizeDirPath($root);
     }
 
     /**

@@ -117,7 +117,7 @@ class RequestFactory
      */
     protected static function URIfromGlobals(array $server): Uri
     {
-        $scheme = (!empty($server['HTTPS']) && $server['HTTPS'] !== 'off') ? 'https' : 'http';
+        $scheme = self::isHttps() ? 'https' : 'http';
         $host = $server['HTTP_HOST'] ?? $server['SERVER_NAME'] ?? 'localhost';
 
         $port = $server['SERVER_PORT'] ?? null;
@@ -151,5 +151,19 @@ class RequestFactory
         }
 
         return new Headers($headers);
+    }
+
+
+    private static function isHttps(): bool
+    {
+        if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
+            return true;
+        }
+
+        if (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https') {
+            return true;
+        }
+
+        return false;
     }
 }

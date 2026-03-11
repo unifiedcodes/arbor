@@ -31,8 +31,7 @@ class URLResolver
     {
         $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
         $httpHost   = $_SERVER['HTTP_HOST'] ?? 'localhost';
-        $https      = ($_SERVER['HTTPS'] ?? 'off') === 'on';
-        $protocol   = $https ? 'https' : 'http';
+        $protocol = static::isHttps() ? 'https' : 'http';
 
         // Normalize slashes and remove front controller path
         $basePath = rtrim(str_replace($frontController, '', $scriptName), '/');
@@ -58,7 +57,7 @@ class URLResolver
      */
     public static function getRequestedURI(): string
     {
-        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https" : "http";
+        $scheme = static::isHttps() ? "https" : "http";
 
         $host = $_SERVER['HTTP_HOST']
             ?? $_SERVER['SERVER_NAME']
@@ -67,6 +66,20 @@ class URLResolver
         $uri    = $_SERVER['REQUEST_URI'] ?? '/'; // includes path and query string
 
         return "$scheme://$host$uri";
+    }
+
+
+    private static function isHttps(): bool
+    {
+        if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
+            return true;
+        }
+
+        if (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https') {
+            return true;
+        }
+
+        return false;
     }
 
     /**

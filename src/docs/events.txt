@@ -1,0 +1,50 @@
+Events Module
+
+Philosophy
+
+The Events module is built around a minimal, type-safe event-driven architecture where events represent completed actions and listeners react to them. It emphasizes decoupling between components, strict contracts internally, and flexible usage externally (via closures). The design relies on class-based event identification and supports inheritance-aware dispatching, allowing broader and polymorphic event handling without additional configuration.
+
+File Structure
+
+├───events
+│       ClosureListener.php
+│       Dispatcher.php
+│       EventInterface.php
+│       Events.php
+│       ListenerInterface.php
+│       Registry.php
+
+Features
+
+- Class-based event system (no string identifiers)
+- Listener registration via class or closure
+- Central dispatcher for event execution
+- Registry-based listener storage
+- Inheritance-aware listener resolution (parent classes + interfaces)
+- Automatic closure adaptation to listeners
+- Duplicate listener execution prevention
+- Simple façade (Events) for usage
+
+Interesting / Advanced Parts
+
+- Inheritance-based dispatch (listeners can target parent types or interfaces)
+- Closure-to-listener adaptation using a clean adapter pattern
+- Deduplication using object identity (spl_object_id)
+- Strict separation between storage (Registry) and execution (Dispatcher)
+- Marker interface approach for events (no enforced structure, but strong boundaries)
+
+Strengths
+
+- Clean and minimal architecture with clear responsibilities
+- Strong decoupling between event producers and consumers
+- Flexible usage with both classes and closures
+- Predictable execution flow with no hidden behavior
+- Extensible design due to separation of components
+
+Limitations
+
+- No support for async or queued listeners
+- No listener priority or execution ordering control beyond registration order
+- No propagation control (cannot stop event flow)
+- Listener type safety relies on manual checks (instanceof)
+- Fully synchronous execution model

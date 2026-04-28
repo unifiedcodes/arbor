@@ -1,0 +1,62 @@
+View Module
+
+Philosophy
+
+The View module is designed as a structured, component-driven rendering system where UI is composed through nested components and a document abstraction. It avoids direct template inclusion by introducing a controlled rendering pipeline using stacks and scoped state. The system emphasizes deterministic rendering, strict output buffer control, and separation between content, document metadata, and final HTML generation. It treats rendering as a stateful process rather than a simple file execution.
+
+view
+    │   Component.php
+    │   Document.php
+    │   DocumentNormalizer.php
+    │   Html.php
+    │   HtmlRenderer.php
+    │   Renderer.php
+    │   Scheme.php
+    │   SchemeRegistry.php
+    │   View.php
+    │   ViewStack.php
+    │
+    └───presets
+            ClosurePreset.php
+            CompositePreset.php
+            PresetInterface.php
+
+Features
+
+- Component-based rendering (Component class with slots and push system)
+- Document abstraction (central place for meta, styles, scripts, attributes)
+- URI-based view resolution via SchemeRegistry
+- ViewStack for managing rendering and component context
+- Renderer with strict output buffering and validation
+- DocumentNormalizer for asset resolution and deduplication
+- HtmlRenderer for final HTML generation (doctype, head, body)
+- Preset system for reusable document configuration
+- Slot and push system for content composition
+- Asset resolution via schemes (supports public/private separation)
+
+Interesting / Advanced Parts
+
+- Strict output buffer integrity validation (detects unclosed slots/pushes and buffer leaks)
+- Dual stack system (component stack + rendering stack for precise state tracking)
+- URI scheme abstraction for views and assets (decouples filesystem from usage)
+- Document normalization layer (deduplication + asset resolution before render)
+- Preset system as composable document configuration (including closure-based presets)
+- Slot + push implemented with enforced nesting and validation (safer than Blade-like systems)
+
+Strengths
+
+- Clear separation: Component → Document → Normalization → HTML
+- Strong runtime safety (buffer checks, slot validation, error clarity)
+- Highly composable (components, presets, schemes)
+- Flexible asset handling via scheme system
+- Predictable rendering lifecycle (low hidden behavior)
+- Good debugging support through explicit errors
+
+Limitations
+
+- High complexity for simple use cases
+- Heavy reliance on global-like Scope for state management
+- Performance overhead due to normalization and object layering
+- Learning curve (slots, push, stack lifecycle)
+- Tight coupling between rendering logic and buffering system
+- Not aligned with common PHP templating standards (Blade/Twig familiarity gap)

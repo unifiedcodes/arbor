@@ -1,0 +1,64 @@
+Validation Module
+Philosophy
+
+The Validation module is designed as a DSL-driven validation engine where validation rules are expressed declaratively and interpreted at runtime. It separates concerns into parsing (DSL → AST), evaluation (logic execution), and formatting (error output). The design emphasizes extensibility via a registry-based rule system, composability through AND/OR/NOT logic, and flexibility in defining both simple and batch validations without tightly coupling rule logic to execution flow.
+
+File Structure
+
+├───validation
+│       Definition.php
+│       ErrorsFormatter.php
+│       Evaluator.php
+│       Parser.php
+│       Registry.php
+│       RuleInterface.php
+│       RuleList.php
+│       RuleListInterface.php
+│       ValidationException.php
+│       Validator.php
+│       ValidatorFactory.php
+
+
+Features
+
+- DSL-based validation ("required email || phone")
+- AST parsing (string/array → structured rules)
+- AND / OR / NOT logic support
+- Rule Registry → dynamic rule resolution
+- Rule system → RuleInterface + RuleList
+- Batch validation via Definition
+- Single + multiple rule validation
+- Early break optimization (performance)
+- Error accumulation control
+- Error formatting with AND/OR readability
+- ValidatorFactory for reusable configurations
+- Directory-based rule auto-registration
+
+Interesting / Advanced Parts
+
+- DSL → AST → Evaluator pipeline (mini interpreter design)
+- Native support for OR logic (rare in typical validators)
+- Negation (!rule) support inside DSL
+- Registry-based dynamic rule resolution (decoupled execution)
+- Dual rule system (method-based + object-based rules)
+- Definition system for reusable validation schemas
+- Error formatting that reflects logical structure (AND/OR)
+
+Strengths
+
+- Strong separation: Parser → Evaluator → Registry → Formatter
+- Highly extensible rule system
+- Expressive validation logic (AND/OR/NOT)
+- Flexible API (single, multiple, batch validation)
+- Reusable validator configurations via factory
+- Clean and modular architecture
+
+Limitations
+
+- DSL debugging and validation is limited
+- Parameters are not type-casted (strings only)
+- Error structure is nested and slightly complex
+- No built-in conditional rules (e.g., required_if)
+- No localization or custom message system
+- RuleList mixes rule definition and execution logic
+- Lacks compile-time safety (runtime interpretation only)

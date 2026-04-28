@@ -1,0 +1,78 @@
+Database ORM Module
+
+Philosophy
+
+The database ORM module is designed around clear separation between query construction, SQL compilation, connection management, and model abstraction. It avoids hidden magic by using explicit builders, relationship objects, and controlled hydration. The design favors composability, predictable data flow, and minimal coupling between layers while still enabling expressive model-based interactions. It balances low-level control (query builder + grammar) with high-level convenience (models and relationships).
+
+File Structure
+
+database
+├── connection
+│   ├── Connection.php
+│   ├── ConnectionPool.php
+│
+├── query
+│   └── grammar
+│       ├── Grammar.php
+│       ├── MysqlGrammar.php
+│
+├── orm
+│   ├── BaseModel.php
+│   ├── Model.php
+│   ├── ModelQuery.php
+│   ├── Pivot.php
+│   ├── AttributesTrait.php
+│   └── relations
+│       ├── Relationship.php
+│       ├── HasOne.php
+│       ├── HasMany.php
+│       ├── BelongsTo.php
+│       ├── BelongsToMany.php
+│       ├── MorphOne.php
+│       ├── MorphMany.php
+│       ├── MorphToMany.php
+
+Features
+
+- Query builder to SQL compilation via Grammar abstraction
+- Database connection pooling with retry mechanism
+- Lazy connection creation and lifecycle management
+- Model-based ORM with attribute management and dirty tracking
+- Mass assignment protection via fillable attributes
+- Fluent query interface through ModelQuery
+- Relationship system (HasOne, HasMany, BelongsTo, BelongsToMany)
+- Polymorphic relationships (MorphOne, MorphMany, MorphToMany)
+- Pivot table handling with additional attributes
+- Eager loading to reduce N+1 queries
+- Query fragments and subquery support
+- Parameter binding and placeholder management
+
+Interesting / Advanced Parts
+
+- Grammar-driven SQL compilation (decouples SQL dialect from query logic)
+- Fragment system allowing nested queries and expressions seamlessly
+- Relationship abstraction with resolve, eagerLoad, and match pattern
+- Pivot hydration strategy separating related and pivot data cleanly
+- Polymorphic many-to-many implementation with type discrimination
+- Binding merge system ensuring correct parameter order across nested queries
+- Attribute system with dirty tracking and original state synchronization
+- ConnectionPool retry logic for resilient database connectivity
+
+Strengths
+
+- Strong separation of concerns across layers
+- Advanced relationship system including polymorphic handling
+- Clean and extensible query compilation architecture
+- Flexible ORM with both low-level and high-level access
+- Consistent design patterns across relationships
+- Good balance between explicit control and developer convenience
+
+Limitations
+
+- Static resolver usage in models introduces global state coupling
+- Limited value type handling in query compilation (e.g., strings, complex types)
+- No identity map leading to duplicate model instances
+- Missing transaction management at ORM level
+- No lifecycle hooks or model events
+- Eager loading lacks nested relationship support
+- Query builder reuse and state management are limited

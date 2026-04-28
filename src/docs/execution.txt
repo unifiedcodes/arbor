@@ -1,0 +1,44 @@
+Execution Module
+
+Philosophy
+
+The Execution module formalizes runtime as an explicit, immutable context object instead of relying on implicit globals or environment checks. It unifies different execution environments (HTTP, CLI, Job) under a single abstraction, enabling consistent handling, traceability, and timing. The design emphasizes minimalism, determinism, and observability, treating execution as a structured entity rather than an ambient state.
+
+File Structure
+
+├───execution
+│       ExecutionContext.php
+│       ExecutionType.php
+
+Features
+
+- ExecutionContext → encapsulates runtime metadata (id, type, timing, parent)
+- ExecutionType → enum for HTTP, CLI, JOB classification
+- Unique Execution ID → lightweight random identifier generation
+- Parent-Child Linking → supports nested execution tracking
+- Timing Utilities → start time + duration calculation
+- Execution Classification Helpers → isHttp(), isCli(), isJob()
+- HTTP Awareness → optional baseURI and derived basePath
+
+Interesting / Advanced Parts
+
+- Execution as a first-class concept (explicit runtime modeling)
+- Parent-child execution chaining (foundation for tracing systems)
+- Built-in timing without external profiler
+- Enum-driven execution typing (avoids string-based logic)
+- Lightweight, dependency-free design with immutability
+
+Strengths
+
+- Very clean and minimal abstraction
+- Unified handling of multiple execution environments
+- Strong foundation for observability (IDs, timing, hierarchy)
+- Immutable design ensures predictable behavior
+- Easy to integrate across modules (kernel, jobs, CLI)
+
+Limitations
+
+- No built-in propagation mechanism (needs external scope/container)
+- No extensibility for attaching custom metadata
+- HTTP-specific fields (baseURI/basePath) slightly mix concerns
+- Limited feature surface (acts only as a primitive, not a full system)

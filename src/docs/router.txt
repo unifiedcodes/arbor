@@ -1,0 +1,54 @@
+Router Module
+
+Philosophy
+
+The Router module is designed around a tree-based routing system combined with a context-driven execution model. Instead of treating routes as simple mappings, it represents them as nodes within a structured tree, allowing efficient matching and flexible parameter handling. The module separates route resolution from execution by producing a RouteContext object, which is later processed through a middleware pipeline. It emphasizes composition, explicit data flow, and unified handling of concerns such as grouping, middleware inheritance, attributes, and even error handling through standard routing mechanisms. The design aims to provide a scalable and extensible routing layer that integrates cleanly with the overall request lifecycle.
+
+File Structure
+
+├───router
+│ ErrorRouter.php
+│ Group.php
+│ Meta.php
+│ Node.php
+│ Registry.php
+│ RouteContext.php
+│ RouteMethods.php
+│ Router.php
+│ URLBuilder.php
+
+Features
+
+- Tree-based route storage and matching (segment-wise traversal)
+- Support for dynamic, optional, and greedy route parameters
+- RouteContext abstraction carrying handler, parameters, middleware, and attributes
+- Route grouping with prefix, middleware, and attribute support
+- Middleware stacking with priority-based normalization
+- Named routes with reverse URL generation
+- Unified routing for normal and error paths
+- Integration with pipeline for request execution
+
+Interesting / Advanced Parts
+
+- Tree (node) based routing instead of flat or regex-only matching
+- RouteContext as a single transport object across resolution and execution
+- Middleware normalization allowing priority-based ordering
+- Attribute system enabling arbitrary metadata attachment to routes
+- Error handling implemented as internal routes instead of separate flow
+- Group stacking mechanism enabling contextual inheritance
+
+Strengths
+
+- Clear separation between route resolution and execution
+- Structured and scalable routing model
+- Flexible middleware and attribute composition
+- Consistent context object simplifies downstream processing
+- Extensible design for advanced routing features
+
+Limitations
+
+- No route caching or compilation (runtime traversal only)
+- Group inheritance does not fully merge nested group stacks
+- No built-in route constraints or validation rules
+- Tree structure lacks optimization for very large route sets
+- Limited debugging or route inspection utilities

@@ -1,0 +1,62 @@
+HTTP Module
+
+Philosophy
+
+The HTTP module is designed around explicit control of the request lifecycle using a centralized kernel, a middleware pipeline, and a scoped execution model. Instead of relying on global state or hidden framework magic, it introduces a stack-based context system (Scope class) where each request (including sub-requests) operates in its own isolated frame. The design favors immutability for HTTP messages, composition over inheritance, and separation of concerns across components like routing, middleware, and message handling. it aims to provide a predictable, deterministic execution flow while remaining flexible and extensible for complex application behavior.
+
+File Structure
+
+├───http
+│   │   HttpKernel.php
+│   │   Request.php
+│   │   RequestContext.php
+│   │   RequestFactory.php
+│   │   Response.php
+│   │   ResponseFactory.php
+│   │   ServerRequest.php
+│   │
+│   └───components
+│           Attributes.php
+│           Cookies.php
+│           Headers.php
+│           HeaderTrait.php
+│           UploadedFile.php
+│           Uri.php
+
+
+Features
+
+- HttpKernel → central request handler (entry point)
+- Middleware Pipeline → executes global middleware stack
+- Scoped Context (Scope) → per-request execution frames
+- Immutable Messages → Request, Response, Uri, Headers
+- ServerRequest → adds cookies, query, files, server params
+- Factories → RequestFactory, ResponseFactory
+- HTTP Components → Headers, Cookies, Uri, UploadedFile, Attributes
+- Error Handling → via ExceptionKernel
+- Sub-request Support → with recursion protection
+
+Interesting / Advanced Parts
+
+- Scope-based execution (Stack-based request context instead of globals)
+- Pipeline decoupled from kernel (clean functional flow)
+- RequestContext proxy (dynamic method forwarding + helpers)
+- Output buffering strategy (prevents accidental output leaks)
+- Minimal UploadedFile (no lifecycle side effects)
+
+Strengths
+
+- Clear architecture: Kernel → Scope → Pipeline → Router → Response
+- Strong isolation (safe sub-requests)
+- Clean separation of concerns
+- Extensible middleware system
+- Mostly immutable design
+- Predictable, explicit flow (low magic)
+
+Limitations
+
+- Mixed mutability (Headers, Cookies)
+- Response::send() couples output + object
+- RequestContext slightly overloaded
+- Not Strict PSR interface
+- Scope class adds coupling

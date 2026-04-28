@@ -1,0 +1,50 @@
+Bootstrap Module
+
+Philosophy
+
+The Bootstrap module is designed as a centralized application initializer that enforces a strict and predictable startup lifecycle. It focuses on configuration-driven setup, early error safety, and modular application scoping. Instead of implicit framework behavior, it provides a clear boot pipeline where configuration, environment, container, and providers are initialized in a controlled sequence. It also introduces multi-application support via URI-based configuration scoping, enabling flexible deployment architectures.
+
+File Structure
+
+├───bootstrap
+│       App.php
+│       AppConfigScope.php
+│       Autoloader.php
+│       EarlyExceptionHandler.php
+│       URLResolver.php
+
+
+Features
+
+- App → central bootstrapper and lifecycle manager
+- Configuration Loading → environment-aware via Configurator
+- Service Container Binding → integrates DI container + facades
+- Provider System → registers and boots service providers
+- Root URI Detection → automatic base URL resolution
+- Multi-App Config Scoping → URI-based app selection and config merging
+- Early Exception Handling → converts PHP errors and handles fatal crashes
+- HTTP Entry → handleHTTP() as request lifecycle entry point
+- Scope Binding → initializes execution scope system
+- Optional Autoloader → fallback PSR-4–like loader without Composer
+
+Interesting / Advanced Parts
+
+- Multi-application configuration scoping via AppConfigScope (URI-driven modular apps)
+- Early exception handler before full framework boot (fail-safe initialization)
+- Config-first boot pipeline (system behavior derived entirely from config)
+- Root URI auto-detection using server environment analysis
+- Controlled boot sequence (no implicit or lazy initialization)
+
+Strengths
+
+- Clear and deterministic boot lifecycle
+- Strong separation of responsibilities across bootstrap components
+- Flexible multi-app architecture within a single codebase
+- Early-stage error safety prevents silent failures
+- Good integration between config, container, and providers
+- Minimal magic with explicit execution flow
+
+Limitations
+- App class is relatively large and handles multiple responsibilities
+- URLResolver tightly coupled to $_SERVER, reducing testability
+- Relies on implicit config keys without strong validation safeguards (but this is handled by configurator, which throws if undefined key is encountered)

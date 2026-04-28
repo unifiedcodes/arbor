@@ -1,0 +1,49 @@
+Stream Module
+
+Philosophy of this module
+
+The Stream module abstracts native PHP stream resources into a consistent, capability-aware interface focused on safety and predictability. It avoids direct use of low-level PHP stream functions by enforcing explicit read/write/seek rules, proper lifecycle handling, and clear error states. The design emphasizes practical handling of real-world constraints such as non-seekable streams, while keeping the API minimal and easy to compose.
+
+File Structure
+
+├───stream
+│ Stream.php
+│ StreamFactory.php
+│ StreamInterface.php
+
+Features
+
+- StreamInterface → defines unified contract for stream operations
+- Stream → concrete wrapper around PHP resources
+- Capability detection → readable, writable, seekable flags
+- Safe operations → read, write, eof, tell, rewind
+- Lifecycle management → close(), detach()
+- Position control → fromStart() ensures correct read position
+- getContents() → chunk-based full stream reading
+- StreamFactory → creation utilities (file, string, input, resource, empty)
+- Non-seekable handling → conversion via toRewindable()
+- Exception-driven errors → avoids silent failures
+
+Interesting / Advanced Parts
+
+- fromStart() → enforces correct handling of non-seekable streams (prevents invalid reuse)
+- toRewindable() → converts one-time streams (e.g. php://input) into reusable buffered streams
+- Capability-based validation → operations allowed strictly based on stream mode
+- Defensive state management → assertAttached() prevents invalid usage after close/detach
+- Chunked reading strategy → avoids memory-heavy full reads
+
+Strengths
+
+- Clean abstraction over native PHP streams
+- Handles edge cases like non-seekable streams properly
+- Strong safety via explicit exceptions and state checks
+- Simple and consistent API surface
+- Factory improves usability and reduces boilerplate
+
+Limitations
+
+getContents() always rewinds (may not fit all use cases)
+No support for partial/remaining reads abstraction
+Missing metadata access (size, URI, stats)
+Mutable design (methods modify internal position)
+Limited advanced stream controls (timeouts, async, blocking modes)

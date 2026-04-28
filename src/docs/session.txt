@@ -1,0 +1,46 @@
+Session Module
+
+Philosophy
+
+The Session module follows a secure-by-default approach while staying close to native PHP session handling. It avoids heavy abstraction and instead wraps core session behavior with added security features like CSRF protection and session regeneration. The design emphasizes explicit control (manual start), fail-fast behavior, and practical convenience through integrated utilities like flash messages.
+
+File Structure
+
+├───session
+│ Session.php
+│ SessionInterface.php
+
+Features
+
+- Session lifecycle management (start, destroy, regenerate)
+- Key-value session storage (set, get, has, remove, all, clear)
+- CSRF token generation and verification
+- Flash messaging system (typed, auto-removal support)
+- Automatic session ID regeneration (time-based)
+- Secure cookie configuration (httponly, secure, samesite)
+- Runtime configuration updates
+- Strict usage enforcement (must start before use)
+
+Interesting / Advanced Parts
+
+- Automatic session regeneration based on time interval (security-focused)
+- Built-in CSRF lifecycle (auto-create + regenerate with session)
+- Fail-fast enforcement using ensureStarted() (prevents silent misuse)
+- Security-first defaults (strict mode, cookies-only, secure flags)
+- Flash system integrated directly with session lifecycle
+
+Strengths
+
+- Strong security baseline with minimal effort
+- Simple and predictable API
+- Lightweight abstraction over native PHP sessions
+- Built-in CSRF and flash handling reduces boilerplate
+- Clear lifecycle control with explicit start requirement
+
+Limitations
+
+- Combines multiple responsibilities (session, CSRF, flash)
+- No support for alternative storage drivers (e.g., Redis, DB)
+- Requires manual session start (no lazy initialization)
+- Relies on ini_set, which may be environment-sensitive
+- Tight coupling to native $_SESSION limits extensibility

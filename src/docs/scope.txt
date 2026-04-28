@@ -1,0 +1,52 @@
+Scope module
+
+Philosophy
+
+The Scope module is built around explicit, stack-based context management where execution is organized into nested frames. Each scope owns its data and resources, ensuring isolation and deterministic cleanup. Instead of relying on global state, it enforces structured lifecycles where entering a scope creates a controlled environment and leaving it guarantees disposal of associated resources. The design emphasizes simplicity, predictability, and safe resource handling.
+
+File Structure
+
+├───scope
+│   │   Disposable.php
+│   │   Frame.php
+│   │   Scope.php
+│   │   Stack.php
+│   │   StackInterface.php
+│   │
+│   └───events
+│           DisposeError.php
+
+Features
+
+- Stack-based scope management (LIFO frames)
+- Frame system for isolated key-value storage
+- Explicit scope lifecycle (enter / leave)
+- Disposable resource registration per scope
+- Automatic cleanup on scope exit
+- Parent and root frame access (parent(), main())
+- Safe disposal with exception handling
+- Event dispatching for disposal failures
+
+Interesting / Advanced Parts
+
+- Disposable pattern for deterministic cleanup (RAII-like behavior in PHP)
+- Reverse-order disposal (stack unwinding correctness)
+- Event-driven error handling during cleanup (DisposeError)
+- Strict post-disposal safety (frame becomes unusable)
+- Decoupled stack abstraction via StackInterface
+
+Strengths
+
+- Strong lifecycle guarantees with automatic cleanup
+- Clear separation: Scope (API), Stack (structure), Frame (state)
+- Safe and predictable execution model
+- Extensible via Disposable and events
+- Minimal and focused design without hidden behavior
+
+Limitations
+
+- No hierarchical variable resolution (no parent fallback lookup)
+- Requires manual enter/leave (risk of misuse without helper)
+- Limited to in-memory storage (no persistence or sharing)
+- Slight redundancy in disposal checks inside Frame
+- Scope is isolated utility, requires integration for full power

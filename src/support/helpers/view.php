@@ -158,3 +158,18 @@ if (!function_exists('escapeHtml')) {
         );
     }
 }
+
+
+/**
+ * Retrieve data from the current view scope.
+ *
+ * @param string|null $key The data key (null = full dataset)
+ * @param mixed $default Default value if key does not exist
+ * @return mixed
+ */
+if (!function_exists('data')) {
+    function data(?string $key = null, mixed $default = null): mixed
+    {
+        return View::data($key, $default);
+    }
+}

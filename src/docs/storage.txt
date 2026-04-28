@@ -1,0 +1,58 @@
+Storage Module
+
+Philosophy
+
+The Storage module is designed around a URI-driven abstraction that decouples file operations from their underlying storage backends. It introduces a scheme-based system where each scheme maps to a storage driver, enabling uniform interaction across local and remote storage. The design emphasizes separation of concerns, It favors stream-based operations for scalability, immutability for configuration objects, and consistent cross-store behavior without exposing backend-specific details.
+
+File Structure
+
+├───storage
+│   │   Path.php
+│   │   Registry.php
+│   │   Scheme.php
+│   │   Stats.php
+│   │   Storage.php
+│   │
+│   └───stores
+│           Local.php
+│           StoreInterface.php
+
+Features
+
+- URI-based storage access (scheme://path)
+- Scheme registry for managing multiple storage backends
+- Unified API for read, write, append, delete, copy, move
+- Automatic path resolution using scheme root
+- Public URL generation via scheme configuration
+- Stream-based I/O for efficient file handling
+- Cross-store operations (copy/move between different stores)
+- File metadata abstraction via Stats object
+- Built-in local filesystem driver
+- Temporary file handling (localTemp scheme)
+
+Interesting / Advanced Parts
+
+- URI-first design (treats storage like a virtual filesystem)
+- Cross-store copy/move with automatic stream bridging
+- Strict separation: Storage (logic) vs Store (execution)
+- Stream abstraction instead of raw string/file handling
+- Centralized path normalization with security constraints
+- Scheme-based configuration (root + base URL + visibility)
+- Transparent handling of string vs stream inputs
+
+Strengths
+
+- Clean layered architecture with clear responsibilities
+- Highly extensible (easy to add new storage drivers)
+- Consistent API across all storage backends
+- Efficient for large files due to stream usage
+- Supports multi-storage and cross-storage workflows
+- Good security practices in path handling
+- Immutable configuration objects (Scheme, Stats)
+
+Limitations
+
+- No directory-level operations (create, delete, recursive handling, we expect driver to do that.)
+- No caching layer for metadata or existence checks
+- Store interface is minimal (no batch or advanced operations)
+- No async or queue support for heavy operations

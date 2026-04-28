@@ -1,0 +1,109 @@
+Files Module
+
+Philosophy
+
+The Files module is designed as a policy-driven file processing system built around a structured lifecycle rather than direct file handling. It separates input normalization, validation (proving), transformation, storage, and variant generation into distinct stages coordinated through a pipeline. The design emphasizes immutability, explicit control over file trust boundaries (proved vs unproved state), and extensibility via policies, strategies, filters, and transformers. It aims to provide secure, deterministic, and composable file handling while remaining adaptable to different file types and storage strategies.
+
+File Structure
+
+├───files
+│   │   Files.php
+│   │   Filer.php
+│   │   Hydrator.php
+│   │   Evaluator.php
+│   │   Keeper.php
+│   │   PolicyCatalog.php
+│   │   Variator.php
+│   │
+│   ├───contracts
+│   │       FileEntryInterface.php
+│   │       FileFilterInterface.php
+│   │       FilePolicyInterface.php
+│   │       FileRecordStoreInterface.php
+│   │       FileStrategyInterface.php
+│   │       FileTransformerInterface.php
+│   │       IngressPolicyInterface.php
+│   │       VariantProfileInterface.php
+│   │       VariantsPolicyInterface.php
+│   │
+│   ├───entries
+│   │       HttpEntry.php
+│   │
+│   ├───filetypes
+│   │   └───image
+│   │       │   ImageIngressPolicy.php
+│   │       │   ImageStrategy.php
+│   │       │   ImageVariantsPolicy.php
+│   │       │
+│   │       ├───transformers
+│   │       │       ImageWebp.php
+│   │       │       ResizeImage.php
+│   │       │
+│   │       └───variants
+│   │               Thumbnail.php
+│   │               Webp.php
+│   │
+│   ├───shared/filters
+│   │       AllowedExtensions.php
+│   │       AllowedMimes.php
+│   │       BinaryOnly.php
+│   │       DenyExtensions.php
+│   │       DenyMimes.php
+│   │       FilenameLength.php
+│   │       MaxFileSize.php
+│   │       MinFileSize.php
+│   │       TextOnlyFilter.php
+│   │
+│   ├───state
+│   │       FileContext.php
+│   │       FileRecord.php
+│   │       Payload.php
+│   │       VariantRecord.php
+│   │
+│   └───utilities
+│           BaseFilePolicy.php
+│           BaseIngressPolicy.php
+│           BaseVariantsPolicy.php
+│           NullFileRecordStore.php
+
+Features
+
+- End-to-end file processing pipeline (ingress → validation → transformation → storage)
+- Secure file handling with explicit trust validation (proved vs unproved states)
+- Policy-driven file behavior based on scheme and MIME type
+- Pluggable validation system (filters for size, type, extension, etc.)
+- Pluggable transformation system (resize, format conversion, etc.)
+- First-class support for file variants (thumbnails, alternate formats)
+- Automatic variant generation and management
+- Support for multiple input sources (HTTP uploads, extendable entries)
+- Immutable file state handling for predictable processing
+- Optional file metadata persistence (via pluggable record stores)
+- Storage abstraction integration (scheme-based file storage)
+- Extensible architecture for new file types and processing rules
+
+Interesting / Advanced Parts
+
+- Proved vs Unproved FileContext (explicit trust boundary model)
+- Decode + re-encode image strategy (security hardening against payload injection)
+- Policy-based resolution (scheme + MIME + interface segregation)
+- Dual pipeline system (filters = fail-fast, transformers = reducer)
+- Variant system as first-class concept (not an afterthought)
+- Hydrator lifecycle design (centralized context transitions)
+- Immutable data flow across entire processing chain
+
+Strengths
+
+- Strong security model (especially in image handling)
+- Clean separation of concerns across all stages
+- Highly extensible via policies, strategies, and profiles
+- Consistent and predictable pipeline execution
+- Good use of immutability for reliability
+- Supports complex use cases (variants, transformations, validation chains)
+
+Limitations
+
+- High complexity for simple file handling needs
+- Strict policy resolution (no fallback or wildcard support)
+- Learning curve due to multiple abstractions
+- Tight dependency on Storage facade
+- Overhead may be unnecessary for basic CRUD applications

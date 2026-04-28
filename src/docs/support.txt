@@ -1,0 +1,62 @@
+Support Module
+
+Philosophy
+
+The Support module provides low-level utilities and primitives to improve developer ergonomics, safety, and extensibility without enforcing application structure. It favors flexibility (macros, helpers), explicit loading, and secure handling of paths and URIs, acting as a foundational toolbox rather than a feature layer.
+
+File Structure
+
+├───support
+│ │ Configuration.php
+│ │ Helpers.php
+│ │ Macros.php
+│ │
+│ ├───helpers
+│ │ arrays.php
+│ │ common.php
+│ │ url.php
+│ │ view.php
+│ │
+│ ├───path
+│ │ PathNormalizer.php
+│ │ Uri.php
+│ │
+│ └───stubs
+│ View.php
+
+Features
+
+- Runtime method extension via macros (instance + static)
+- Dot notation access and mutation for arrays/objects
+- Centralized helper loader for global utilities
+- Configuration defaults with override merging
+- View helper shortcuts for rendering and components
+- URL generation helpers (relative, base-aware, route-based)
+- Cryptographic utilities (secure random, token generation)
+- File system utilities (path normalization, directory handling)
+- Safe URI abstraction with scheme + path validation
+- Strict path normalization with security constraints
+
+Interesting / Advanced Parts
+
+- Macro system with closure binding enabling dynamic method injection
+- PathNormalizer enforcing strong security (traversal, null bytes, reserved names)
+- Immutable Uri design with strict RFC-compliant scheme validation
+- Separation of instance vs static macros (avoids common macro conflicts)
+- Helper system kept explicit (manual load instead of auto-magic)
+
+Strengths
+
+- Strong focus on security (path + URI handling)
+- Highly reusable and framework-agnostic utilities
+- Flexible extension mechanism without inheritance
+- Practical helper set covering common real-world needs
+- Clean separation between utilities and core modules
+
+Limitations
+
+- Heavy reliance on global helper functions (reduced testability)
+- Macros can reduce code traceability if overused
+- Configuration system lacks validation/schema enforcement
+- Potential global namespace pollution (helpers)
+- No strict typing/contracts for helper behaviors

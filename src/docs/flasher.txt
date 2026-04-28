@@ -1,0 +1,51 @@
+Flash Module
+Philosophy
+
+The Flash module is designed as a structured, type-driven flash messaging system that separates message storage, lifecycle management, and rendering. Instead of treating flash messages as simple session strings, it models them as typed UI events with metadata, template-driven rendering, and controlled lifecycle across requests. The design emphasizes separation of concerns (Message vs View), configurability (types, templates), and predictable behavior over implicit framework magic.
+
+File Structure
+
+├───flash
+│ Flasher.php
+│ Message.php
+│ View.php
+
+Features
+- Type-based flash messages with CSS class mapping
+- Session-based storage with automatic flash lifecycle
+- Support for additional message data payload
+- Batch message addition (multiple formats)
+- Message persistence control (keep, clear)
+- Template-based HTML rendering system
+- Custom templates per message type
+- Default fallback template support
+- JSON and array serialization
+- Message counting and existence checks
+- Config-driven initial type registration
+- Magic string rendering (__toString)
+
+Interesting / Advanced Parts
+
+- Clear separation: storage (Message) vs rendering (View) vs facade (Flasher)
+- Type system enforcing valid message categories with styling abstraction
+- Template placeholder system supporting dynamic data injection
+- Lifecycle control via keep() by re-flashing messages into session
+- Dual usage support: server-rendered HTML + API (JSON output)
+- Config-based type initialization using attribute injection
+
+Strengths
+
+- Clean and modular architecture with strong separation of concerns
+- Flexible rendering via customizable templates
+- Supports both web UI and API use cases
+- Explicit lifecycle control (predictable behavior)
+- Simple but extensible type system
+- Secure rendering with HTML escaping
+
+Limitations
+
+- Tight coupling to session layer (not easily reusable outside HTTP context)
+- Template system is basic (string replacement, no logic/loops)
+- Silent failure in __toString() can hide rendering issues
+- Strict type validation may reduce flexibility in dynamic scenarios
+- No prioritization or ordering control for messages

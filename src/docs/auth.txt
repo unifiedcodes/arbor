@@ -1,0 +1,78 @@
+Auth Module
+
+Philosophy
+
+The Auth module is built around clear separation of authentication concerns into independent, composable layers. Instead of bundling token generation, storage, validation, and authorization together, it isolates them into issuer, keeper, policy, and authorizer components. It supports both stateless and stateful authentication models while enforcing explicit configuration through a builder. The design favors extensibility, minimal assumptions, and capability-based authorization over role-based abstractions.
+
+File Structure
+
+├───auth
+│   │   Auth.php
+│   │   AuthBuilder.php
+│   │   AuthContext.php
+│   │   Authorizer.php
+│   │   Keys.php
+│   │
+│   ├───authentication
+│   │   │   AuthorityStoreInterface.php
+│   │   │   Keeper.php
+│   │   │   NullAuthStore.php
+│   │   │   NullTokenStore.php
+│   │   │   Policy.php
+│   │   │   Token.php
+│   │   │   TokenIssuerInterface.php
+│   │   │   TokenStoreInterface.php
+│   │   │
+│   │   └───issuers
+│   │           JWTIssuer.php
+│   │           OpaqueIssuer.php
+│   │
+│   └───authorization
+│           Action.php
+│           ActionInterface.php
+│           AuthEnumTrait.php
+│           Registry.php
+│           ResourceInterface.php
+
+Features
+
+- Auth Orchestrator → unified API for issuing, resolving, revoking tokens
+- AuthBuilder → fluent configuration for issuer, store, policy, authorizer
+- Token System → supports JWT (EdDSA) and Opaque tokens
+- Keeper → persistence layer bridging token + storage + abilities
+- Policy → centralized validation (expiry + store validation)
+- AuthContext → immutable authentication state with attributes
+- Authorizer → ability-based authorization system
+- Registry → resource + action → ability mapping
+- Keys → Ed25519 key management with rotation and JWK support
+- Null Stores → fallback implementations for stateless usage
+
+Interesting / Advanced Parts
+
+- Hybrid auth model → seamless support for both stateless (JWT) and stateful (opaque) tokens
+- Ability-based authorization → resource + action abstraction instead of roles
+- Keeper abstraction → decouples token logic from persistence and authority resolution
+- Enum enforcement → strict consistency of action/resource definitions via FQN checks
+- Key rotation system → timestamp-based KID with JWK conversion
+- Builder-driven configuration → enforces valid setup without hidden defaults
+- Scope-based context injection → request-level auth context without globals
+
+Strengths
+
+- Strong separation of concerns across authentication layers
+- Highly extensible (custom issuers, stores, policies)
+- Supports multiple authentication strategies cleanly
+- Clear and predictable token lifecycle
+- Flexible authorization model (not tied to roles)
+- Minimal assumptions about storage or infrastructure
+- Good use of immutability in Token and AuthContext
+
+Limitations
+
+- Scope-based context introduces hidden coupling
+- Authorization API is exception-driven (no boolean alternative)
+- JWT verification requires manual key passing
+- No built-in refresh token or session lifecycle management (but this can be handled by different kind of tokens this module offers, complexity is moved to developer end to favour clear sepration of concerns)
+- Authority model is simple (array-based, no hierarchy or conditions)
+- Security depends heavily on TokenStore implementation quality
+- Some developer ergonomics (DX) could be improved in configuration and usage

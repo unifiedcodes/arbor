@@ -1,0 +1,60 @@
+Exception Module
+
+Philosophy
+
+The Exception module is built around centralized error handling where all failures (exceptions, PHP errors, fatal shutdown errors) are captured, normalized into a structured and immutable context, and then rendered based on execution environment. It emphasizes separation of concerns (normalization, rendering, orchestration), deterministic handling, and safe fallbacks to ensure no error escapes the system while avoiding recursion and uncontrolled output.
+
+File Structure
+
+├───exception
+│   │   ExceptionContext.php
+│   │   ExceptionKernel.php
+│   │   Normalizer.php
+│   │   Renderer.php
+│   │
+│   ├───events
+│   │       ExceptionOccurred.php
+│   │
+│   └───template
+│           exception.css
+│           HTML.php
+
+
+Features
+
+- ExceptionKernel → global handler (exceptions, errors, shutdown)
+- Normalizer → converts Throwable into structured data
+- ExceptionContext → immutable exception data object
+- Renderer → environment-aware response generation
+- Debug Rendering → detailed HTML stack trace page
+- Production Rendering → safe response + optional error routes
+- Error Route Resolution → custom error page handling
+- Recursion Protection → prevents infinite error loops
+- Event Dispatching → ExceptionOccurred for logging/monitoring
+- Request Context Integration → includes HTTP context in errors
+
+Interesting / Advanced Parts
+
+- Full normalization pipeline (exception chains + trace + request context)
+- Immutable ExceptionContext with with() pattern
+- Recursion-safe rendering using request state (isErrorRequest)
+- Unified handling of exceptions, PHP errors, and fatal shutdown errors
+- Event-based observability with safe fallback (error_log)
+- Context-aware rendering (HTTP vs non-HTTP execution)
+
+Strengths
+
+- Clean separation: Kernel → Normalizer → Renderer
+- Handles entire error lifecycle comprehensively
+- Structured error data improves debugging and logging
+- Safe and predictable behavior in production
+- Extensible via events and error routes
+- Minimal reliance on global state (uses scoped context)
+
+Limitations
+
+- Minor bug in HTML template (exceptionTrail variable misuse)
+- Renderer handles multiple responsibilities (could be further split)
+- Tight coupling with facades (Scope, Route, Respond)
+- No built-in logging layer (relies on events)
+- Debug rendering is HTML-only (no JSON/API support)

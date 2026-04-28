@@ -1,0 +1,57 @@
+Container Module
+
+Philosophy
+
+The Container module is designed around a structured and explicit dependency injection system that separates storage, resolution, and lifecycle management into distinct components. It emphasizes controlled auto-resolution via reflection while requiring explicit bindings for abstractions. The design avoids hidden magic by enforcing strict resolution rules, supports lazy loading through deferred providers, and introduces attribute-based injection for primitives. Overall, it aims for predictability, extensibility, and clean architectural boundaries rather than minimalism.
+
+File Structure
+
+├───container
+│       AttributeInterface.php
+│       ContainerInterface.php
+│       Providers.php
+│       Registry.php
+│       Resolver.php
+│       ServiceBond.php
+│       ServiceContainer.php
+│       ServiceProvider.php
+
+
+Features
+
+- Configuration loading (environment-aware)
+- Service container integration (DI + facades)
+- Service provider registration and booting
+- Root URI detection and resolution
+- Multi-application configuration scoping (URI-based)
+- Early exception and error handling
+- HTTP request entry handling
+- Execution scope initialization
+- Optional class autoloading (fallback mechanism)
+
+Interesting / Advanced Parts
+
+- Attribute-driven primitive injection (modern alternative to config injection)
+- Deferred service providers (lazy-loading bindings only when needed)
+- Strict resolver design with circular dependency tracking
+- Static closure enforcement for safer service definitions
+- Unified invocation system (constructor, method, function handled uniformly)
+- Clear separation between registry (data) and resolver (execution)
+
+Strengths
+
+- Clean separation of concerns across components
+- Predictable resolution behavior with minimal hidden magic
+- Strong reflection-based resolver with good error handling
+- Deferred providers improve performance and scalability
+- Flexible binding system (closures, classes, callables)
+- Supports both manual and automatic dependency resolution
+
+Limitations
+
+- No contextual binding (cannot vary implementation per consumer)
+- No scoped lifecycles (only singleton and transient supported)
+- Attribute system lacks container/context awareness
+- Error messages could provide deeper dependency traces
+- Static closure restriction may reduce flexibility in some cases
+- Requires explicit binding for interfaces/abstracts (no fallback strategies)

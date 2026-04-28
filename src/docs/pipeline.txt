@@ -1,0 +1,49 @@
+Pipeline Module
+
+Philosophy
+
+The Pipeline module is designed around a composable data-processing flow using the middleware (chain of responsibility) pattern. Instead of embedding logic in a single execution block, it structures processing into discrete stages that transform or act upon input sequentially. Each stage has full control over whether to continue or terminate the flow, enabling flexible and deterministic execution.
+The design emphasizes functional composition, loose coupling, and dependency injection through a service container, allowing stages to remain independent, reusable, and easily testable.
+
+File Structure
+
+├───pipeline
+│       Pipeline.php
+│       StageInterface.php
+
+
+Features
+
+- Fluent API → send → through → via → then
+- Middleware-style execution → sequential stage processing
+- Multiple stage formats → callable, class, or [class, method]
+- Dependency Injection → via Container::make() and Container::call()
+- Dynamic method resolution → __invoke or custom via via()
+- Lazy pipeline construction → execution built at runtime
+- Custom parameter injection → extendable stage inputs
+- Chain interruption → stages can stop propagation
+
+Interesting / Advanced Parts
+
+- Reverse pipeline construction (wrapping stages from last to first)
+- Stage normalization (unifies callable, class, and array formats)
+- Dynamic method resolution with fallback strategy
+- Container-driven invocation (auto dependency resolution)
+- Closure-based execution chain (functional composition style)
+
+Strengths
+
+- Clean and minimal design
+- Highly flexible stage definition
+- Strong composability (small reusable units)
+- Decoupled from specific domain (usable beyond HTTP)
+- Dependency injection integration
+- Predictable execution flow
+
+Limitations
+
+- StageInterface is not enforced (optional contract)
+- Mixed typing (Response vs mixed) creates ambiguity
+- No built-in error handling mechanism
+- Runtime validation instead of compile-time safety
+- No strict typing for input/output (uses mixed)

@@ -1,0 +1,60 @@
+Facade Module
+
+Philosophy
+
+The Facade module provides a static interface over container-managed services, allowing developers to access application services through simple, expressive static calls while preserving underlying dependency injection. It favors developer ergonomics and readability by abstracting service resolution behind a consistent proxy layer, balancing convenience with structured architecture.
+
+File Structure
+
+facades
+│   Auth.php
+│   Config.php
+│   Container.php
+│   DB.php
+│   Events.php
+│   Facade.php
+│   Files.php
+│   Flash.php
+│   Respond.php
+│   Route.php
+│   Scope.php
+│   Session.php
+│   Storage.php
+│   View.php
+
+Features
+
+- Static proxy interface for services
+- Container-based service resolution
+- Instance caching per facade
+- Dual accessor support (string key or object)
+- Lazy resolution (on first call)
+- Global container binding
+- Method forwarding via __callStatic
+- Manual instance override (for testing/mocking)
+- Instance reset capability
+
+Interesting / Advanced Parts
+
+- Dual accessor design (supports both container keys and direct objects)
+- Static caching mechanism per facade class (lightweight singleton behavior)
+- Late static binding enabling per-facade resolution logic
+- Ability to bypass container completely using object accessor
+- Minimalistic implementation of static proxy pattern without heavy abstraction
+
+Strengths
+
+- Very clean and minimal design
+- Improves developer experience with concise syntax
+- Flexible resolution (container + direct instance)
+- Easy to integrate across modules
+- Low overhead and easy to understand
+- Good support for testing via instance injection
+
+Limitations
+
+- Introduces global/static state (hidden dependencies)
+- Tight coupling to container lifecycle
+- No built-in request-scoped instance handling
+- Debugging can be harder due to indirect resolution
+- Requires proper bootstrap setup (container must be set)

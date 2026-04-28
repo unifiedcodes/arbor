@@ -1,0 +1,60 @@
+Config Module
+
+Philosophy
+
+The Config module is built around a two-phase configuration lifecycle—a mutable build phase followed by a compiled immutable phase. It treats configuration as declarative data with executable expressions, enabling references, transformations, and fallbacks. The design emphasizes deterministic resolution, immutability after compilation, and composability through DSL and expression pipelines.
+
+File Structure
+
+├───config
+│   │   Compiler.php
+│   │   Configurator.php
+│   │   ConfigValue.php
+│   │   Expr.php
+│   │   ExpressionPipeline.php
+│   │   Registry.php
+│   │   ResolverContext.php
+│   │
+│   └───expressions
+│           CallExpression.php
+│           DSLExpression.php
+│           ExpressionInterface.php
+│           TypeCastExpression.php
+
+Features
+
+- Two-phase lifecycle (build → finalize → immutable access)
+- Dot-notation configuration access
+- Environment-based config overriding
+- Recursive deep merge with !replace support
+- DSL-based value interpolation with fallback support
+- Expression system (call, cast, pipeline chaining)
+- Macro system (static + instance + global resolution)
+- Compile-time resolution of all expressions
+- Attribute-based config injection (ConfigValue)
+- Pre-finalization access via touch()
+
+Interesting / Advanced Parts
+
+- Compile-time resolution engine (config becomes precomputed graph)
+- DSL fallback chaining {key1|key2?default} with recursive resolution
+- ExpressionPipeline (stack-based transformation flow)
+- ResolverContext acting as a mini runtime for expressions
+- Multi-source callable resolution (closure → macro → global function)
+- Strict mutation/access guards enforcing lifecycle correctness
+
+Strengths
+
+- Clear separation: load → compile → access
+- Strong immutability guarantees after finalize
+- Highly extensible via macros and expressions
+- Flexible configuration composition (references, pipelines)
+- Environment-aware configuration layering
+- Consistent and deterministic resolution behavior
+
+Limitations
+
+- DSL parsing is simplistic (string-based detection, no strict parser)
+- Global function execution may introduce safety risks
+- Minor code issues (redundant return, unused methods)
+- Expression extensibility is partially hardcoded

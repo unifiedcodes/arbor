@@ -29,7 +29,8 @@ class View
     /** @var array<PresetInterface> Presets pending application to the next document. */
     private array $pendingPresets = [];
 
-
+    /** @var array<mixed> data injected by view components */
+    protected array $dataStack = [];
     /**
      * Constructor for the View class.
      *
@@ -174,6 +175,8 @@ class View
     {
         $stack = Scope::get(ViewStack::class);
 
+        $this->dataStack[] = $data;
+
         $document = new Document($this->getComponent($uri, $data));
 
         // apply all preset stacks.
@@ -185,10 +188,33 @@ class View
         try {
             return $this->renderer->document($stack);
         } finally {
+            array_pop($this->dataStack);
             $stack->reset();
         }
     }
 
+    /**
+     * Retrieve data from the current view scope.
+     *
+     * @param string|null $key The data key to retrieve (null = entire dataset)
+     * @param mixed $default Default value if key does not exist
+     * @return mixed
+     */
+    public function data(?string $key = null, mixed $default = null): mixed
+    {
+        // Get current (top) data scope
+        $current = end($this->dataStack) ?: [];
+
+        if ($current === false) {
+            return $default;
+        }
+
+        if ($key === null) {
+            return $current;
+        }
+
+        return $current[$key] ?? $default;
+    }
 
     /**
      * Gets the currently active document from the stack.

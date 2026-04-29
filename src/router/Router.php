@@ -11,6 +11,8 @@ use Arbor\router\RouteMethods;
 use Arbor\http\Response;
 use Arbor\config\ConfigValue;
 use Arbor\pipeline\Pipeline;
+use Arbor\facades\Scope;
+use Arbor\http\RequestContext;
 use Exception;
 
 /**
@@ -288,7 +290,10 @@ class Router
      */
     public function dispatch(RouteContext $routeContext, ?string $via = null): Response
     {
+        $requestContext = Scope::get(RequestContext::class);
+
         $pipeline = $this->pipeline
+            ->send($requestContext)
             ->through($routeContext->middlewares());
 
         if ($via !== null) {

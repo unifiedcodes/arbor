@@ -141,7 +141,10 @@ class HttpKernel
      */
     protected function executeGlobalMiddlewares(): Response
     {
+        $requestContext = Scope::get(RequestContext::class);
+
         return $this->pipeline
+            ->send($requestContext)
             ->through($this->globalMiddlewareStack)
             ->then(function () {
                 return $this->routerDispatch();

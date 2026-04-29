@@ -152,6 +152,16 @@ class ServerRequest extends Request
         return $new;
     }
 
+    public function getCookie(string $name, mixed $default = null): mixed
+    {
+        return $this->cookies->get($name, $default);
+    }
+
+    public function cookies(): Cookies
+    {
+        return $this->cookies;
+    }
+
     /**
      * Retrieves the query parameters.
      *

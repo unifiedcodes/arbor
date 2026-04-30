@@ -190,7 +190,7 @@ abstract class Model extends BaseModel
             return false;
         }
 
-        $id = $query->create($this->attributes)->getAttribute($primaryKey);
+        $id = $query->insert($this->attributes);
 
         $this->setAttribute($primaryKey, $id);
         $this->exists = true;

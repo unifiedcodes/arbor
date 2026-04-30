@@ -248,6 +248,12 @@ trait AttributesTrait
         return array_diff_assoc($this->attributes, $this->original);
     }
 
+
+    public function isDirtyField(string $key): bool
+    {
+        return array_key_exists($key, $this->getDirty());
+    }
+
     /**
      * Synchronize the original state with current attributes
      * 

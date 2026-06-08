@@ -35,7 +35,7 @@ class DocumentNormalizer
      */
     public function normalize(Document $document): Html
     {
-        return new Html(
+        $html = new Html(
             lang: $document->getLang(),
             charset: $document->getCharset(),
             htmlAttributes: $document->getHtmlAttributes(),
@@ -49,7 +49,10 @@ class DocumentNormalizer
             meta: $this->meta($document),
             baseHref: $this->base($document),
             links: $this->links($document),
+            initScript: $this->initScript($document),
         );
+
+        return $html;
     }
 
     /**
@@ -296,5 +299,26 @@ class DocumentNormalizer
         }
 
         return $this->schemes->resolveAsset($base, $this->defaultAssetScheme);
+    }
+
+    protected function initScript(Document $document): ?array
+    {
+        $initScript = $document->getInitScript();
+
+        // if filename is empty.
+        if (!$initScript) {
+            return null;
+        }
+
+        $file = $this->schemes->resolveAsset(
+            $initScript['uri'],
+            $this->defaultAssetScheme
+        );
+
+        return [
+            'file' => $file,
+            'name' => $initScript['name'],
+            'attributes' => $initScript['attributes']
+        ];
     }
 }

@@ -40,6 +40,7 @@ final class Html
         private array $inlineScripts = [],
         private array $meta = [],
         private ?string $baseHref = null,
+        private ?array $initScript = null,
     ) {}
 
 
@@ -183,5 +184,10 @@ final class Html
     public function baseHref(): ?string
     {
         return $this->baseHref;
+    }
+
+    public function initScript(): ?array
+    {
+        return $this->initScript;
     }
 }

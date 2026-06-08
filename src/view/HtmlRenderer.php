@@ -90,6 +90,7 @@ final class HtmlRenderer
             . "\n"
             . $this->renderScripts('body')
             . $this->renderInlineScripts('body')
+            . $this->renderInitScripts()
             . "</body>\n";
     }
 
@@ -353,6 +354,34 @@ final class HtmlRenderer
                 . $content
                 . "\n</script>\n";
         }
+
+        return $output;
+    }
+
+
+    private function renderInitScripts()
+    {
+        $initScript = $this->html->initScript();
+
+        if (!$initScript) {
+            return;
+        }
+
+        $output = '';
+
+        $attributes = $initScript['attributes'];
+        $attributes['type'] = "module";
+
+        $file = $initScript['file'];
+        $name = $initScript['name'];
+
+        $output .= "<script"
+            . $this->renderAttributes($attributes)
+            . ">\n"
+            . '   import ' . $name . ' from "' . $file . '";'
+            . "\n"
+            . '   var init = new ' . $name . '();'
+            . "\n</script>\n";
 
         return $output;
     }

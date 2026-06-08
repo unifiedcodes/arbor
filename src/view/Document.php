@@ -34,6 +34,7 @@ final class Document
     private array $links = [];
     private string|Uri|null $baseHref = null;
     private ?string $nonce = null;
+    private ?array $initScript = null;
 
     /**
      * Allowed script placements.
@@ -453,5 +454,25 @@ final class Document
         array $attributes = []
     ): static {
         return $this->inlineScript($content, $attributes, 'body');
+    }
+
+    /**
+     * Convenience method for auto initiating an es6 module.
+     */
+    public function initScript(
+        string|Uri $filename,
+        ?string $name = null,
+        ?array $attributes = null
+    ) {
+        $this->initScript = [
+            'uri' => $filename,
+            'name' => $name ?: 'Init',
+            'attributes' => $attributes ?: []
+        ];
+    }
+
+    public function getInitScript(): ?array
+    {
+        return $this->initScript;
     }
 }

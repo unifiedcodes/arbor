@@ -117,6 +117,10 @@ class MorphToMany extends BelongsToMany
 
         $ids = is_array($relatedIds) ? $relatedIds : [$relatedIds];
 
+        if (empty($ids)) {
+            return;
+        }
+
         $rows = [];
         foreach ($ids as $id) {
             $rows[] = array_merge(
@@ -130,7 +134,7 @@ class MorphToMany extends BelongsToMany
         }
 
         $builder = $this->parent::getDatabase()->table($pivotTable);
-        $builder->insertMany($rows);
+        $builder->insertMany($rows)->execute();
     }
 
     /**
@@ -153,6 +157,11 @@ class MorphToMany extends BelongsToMany
 
         if (!is_null($relatedIds)) {
             $ids = is_array($relatedIds) ? $relatedIds : [$relatedIds];
+
+            if (empty($ids)) {
+                return 0;
+            }
+
             $builder->whereIn($this->relatedKey, $ids);
         }
 
@@ -194,6 +203,29 @@ class MorphToMany extends BelongsToMany
         }
     }
 
+
+    public function syncWithoutDetaching($relatedIds, array $extra = []): void
+    {
+        $ids = is_array($relatedIds)
+            ? $relatedIds
+            : [$relatedIds];
+
+        if (empty($ids)) {
+            return;
+        }
+
+        $builder = $this->parent::getDatabase()
+            ->table($this->pivotTable);
+
+        // Only current morph relations
+        $currentIds = $builder
+            ->where($this->pivotConditions())
+            ->pluck($this->relatedKey);
+
+        $toAttach = array_diff($ids, $currentIds);
+
+        $this->attach($toAttach, $extra);
+    }
 
 
     /**

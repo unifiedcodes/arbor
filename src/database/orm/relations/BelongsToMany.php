@@ -280,6 +280,11 @@ class BelongsToMany extends Relationship
         // If IDs specified, also constrain on relatedKey
         if (!is_null($relatedIds)) {
             $ids = is_array($relatedIds) ? $relatedIds : [$relatedIds];
+
+            if (empty($ids)) {
+                return 0;
+            }
+
             $builder->whereIn($relatedKey, $ids);
         }
 
@@ -308,6 +313,10 @@ class BelongsToMany extends Relationship
 
         $ids = is_array($relatedIds) ? $relatedIds : [$relatedIds];
 
+        if (empty($ids)) {
+            return;
+        }
+
         $rows = [];
         foreach ($ids as $id) {
             $rows[] = array_merge(
@@ -322,6 +331,7 @@ class BelongsToMany extends Relationship
         // spawn a new builder for the pivot table
         $builder = $this->parent::getDatabase()->table($pivotTable);
         $builder->insertMany($rows);
+        $builder->execute();
     }
 
 
@@ -363,6 +373,25 @@ class BelongsToMany extends Relationship
         }
     }
 
+
+    public function syncWithoutDetach($relatedIds, array $extra = []): void
+    {
+        $pivotTable = $this->pivotTable;
+        $relatedKey = $this->relatedKey;
+
+        $ids = is_array($relatedIds)
+            ? $relatedIds
+            : [$relatedIds];
+
+        $builder = $this->parent::getDatabase()->table($pivotTable);
+
+        $currentIds = $builder->where($this->pivotConditions())
+            ->pluck($relatedKey);
+
+        $toAttach = array_diff($ids, $currentIds);
+
+        $this->attach($toAttach, $extra);
+    }
 
     /**
      * Eager load the relationship for multiple models

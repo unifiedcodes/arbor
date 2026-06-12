@@ -418,6 +418,14 @@ class QueryBuilder extends Builder
      */
     public function pluck(string $column, ?string $key = null): array
     {
+        if ($this->type !== 'select') {
+            $this->select(
+                $key
+                    ? [$column, $key]
+                    : [$column]
+            );
+        }
+
         $results = $this->execute()->fetchAll(\PDO::FETCH_ASSOC);
 
         $values = [];

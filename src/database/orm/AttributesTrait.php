@@ -66,6 +66,14 @@ trait AttributesTrait
      */
     public function getAttribute(string $key, mixed $default = null): mixed
     {
+        if ($this->hasMutator($key, 'get')) {
+            $method = $this->mutatorMethod($key, 'get');
+
+            return $this->$method(
+                $this->attributes[$key] ?? null
+            );
+        }
+
         return $this->attributes[$key] ?? $default;
     }
 
@@ -78,6 +86,13 @@ trait AttributesTrait
      */
     public function setAttribute(string $key, mixed $value): void
     {
+        if ($this->hasMutator($key, 'set')) {
+            $method = $this->mutatorMethod($key, 'set');
+            $this->$method($value);
+
+            return;
+        }
+
         $this->attributes[$key] = $value;
     }
 
@@ -279,5 +294,18 @@ trait AttributesTrait
     public function toArray(): array
     {
         return $this->attributes;
+    }
+
+
+    // mutators checker
+
+    protected function hasMutator(string $key, string $type): bool
+    {
+        return method_exists($this, $this->mutatorMethod($key, $type));
+    }
+
+    protected function mutatorMethod(string $key, string $type): string
+    {
+        return $type . studlyStr($key) . 'Attribute';
     }
 }

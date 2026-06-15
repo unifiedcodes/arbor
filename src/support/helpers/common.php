@@ -227,3 +227,17 @@ if (!function_exists('joinPath')) {
         return implode(DIRECTORY_SEPARATOR, $clean);
     }
 }
+
+
+if (!function_exists('studlyStr')) {
+    function studlyStr(string $value): string
+    {
+        return str_replace(
+            ' ',
+            '',
+            ucwords(
+                str_replace(['-', '_'], ' ', $value)
+            )
+        );
+    }
+}

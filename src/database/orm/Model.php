@@ -103,7 +103,7 @@ abstract class Model extends BaseModel
     {
         // Direct attribute exists
         if (array_key_exists($key, $this->attributes)) {
-            return $this->attributes[$key];
+            return parent::getAttribute($key, $default);
         }
 
         // if relationship exists.
@@ -154,6 +154,7 @@ abstract class Model extends BaseModel
 
         return in_array($key, $this->fillable, true);
     }
+    
     // -----------------------
     // Save / delete
     // -----------------------

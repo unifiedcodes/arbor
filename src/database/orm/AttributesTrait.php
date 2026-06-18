@@ -90,7 +90,7 @@ trait AttributesTrait
             $method = $this->mutatorMethod($key, 'set');
             $this->$method($value);
 
-            return;
+            $value = $this->$method($value);
         }
 
         $this->attributes[$key] = $value;
@@ -234,7 +234,7 @@ trait AttributesTrait
      */
     public function jsonSerialize(): mixed
     {
-        return $this->attributes;
+        return $this->toArray();
     }
 
     // ------------------------------
@@ -293,9 +293,14 @@ trait AttributesTrait
      */
     public function toArray(): array
     {
-        return $this->attributes;
-    }
+        $data = [];
 
+        foreach ($this->attributes as $key => $value) {
+            $data[$key] = $this->getAttribute($key);
+        }
+
+        return $data;
+    }
 
     // mutators checker
 

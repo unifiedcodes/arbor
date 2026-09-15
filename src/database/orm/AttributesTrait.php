@@ -66,11 +66,14 @@ trait AttributesTrait
      */
     public function getAttribute(string $key, mixed $default = null): mixed
     {
-        if ($this->hasMutator($key, 'get')) {
+        if (
+            array_key_exists($key, $this->attributes) &&
+            $this->hasMutator($key, 'get')
+        ) {
             $method = $this->mutatorMethod($key, 'get');
 
             return $this->$method(
-                $this->attributes[$key] ?? null
+                $this->attributes[$key]
             );
         }
 
@@ -88,8 +91,6 @@ trait AttributesTrait
     {
         if ($this->hasMutator($key, 'set')) {
             $method = $this->mutatorMethod($key, 'set');
-            $this->$method($value);
-
             $value = $this->$method($value);
         }
 

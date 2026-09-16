@@ -4,6 +4,10 @@
   font-family: sans-serif;
 }
 
+#errorpage.light {
+  filter: invert(1);
+}
+
 #errorpage main {
   text-align: center;
 }

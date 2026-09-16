@@ -3,6 +3,7 @@
 namespace Arbor\exception\template;
 
 use Arbor\exception\ExceptionContext;
+use Arbor\facades\Config;
 
 /**
  * HTML exception template renderer
@@ -23,6 +24,10 @@ class HTML
      */
     static public function page(ExceptionContext $exceptionContext)
     {
+        $theme = class_exists(Config::class)
+            ? (Config::get('app.theme', 'default'))
+            : 'default';
+
         $html = '';
 
         $html .= self::requestInfo($exceptionContext->request());
@@ -36,7 +41,7 @@ class HTML
 
         return "
             <!doctype html>
-            <html id='errorpage'>
+            <html id='errorpage' class='{$theme}'>
             <head>
                 <meta charset='utf-8'>
                 <title>Application Error</title>

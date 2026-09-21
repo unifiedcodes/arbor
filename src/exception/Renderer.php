@@ -9,6 +9,7 @@ use Arbor\facades\Route;
 use Arbor\http\RequestContext;
 use Arbor\facades\Scope;
 use RuntimeException;
+use Throwable;
 
 /**
  * Renderer class responsible for rendering exceptions into HTTP responses.
@@ -101,36 +102,39 @@ class Renderer
      * @param RequestContext $requestContext The current HTTP request context
      * @return Response The HTTP response for the exception
      */
-    public function httpRender(ExceptionContext $exceptionContext, RequestContext $requestContext): Response
-    {
-        // 1. Prevent infinite error recursion
+    public function httpRender(
+        ExceptionContext $exceptionContext,
+        RequestContext $requestContext
+    ): Response {
+        // Prevent infinite error recursion
         if ($requestContext->isErrorRequest()) {
             return $this->httpResponse($exceptionContext);
         }
 
-        // 2. Mark current request as handling an error
-        $errorRequest = $requestContext->withError();
-        Scope::set(RequestContext::class, $errorRequest);
+        // Create an error request context
+        $errorRequestContext = $requestContext->withError();
 
-        // 3. Try resolving a dedicated error page
-        $errorRoute = Route::resolveErrorPage(
-            $exceptionContext->code(),
-            $requestContext->getMethod()
-        );
+        try {
+            // Resolve a dedicated error page
+            $errorRoute = Route::resolveErrorPage(
+                $exceptionContext->code(),
+                $requestContext->getMethod()
+            );
 
-        if ($errorRoute !== null) {
-
-            $response = Route::dispatch($errorRoute);
-
-            if (!$response instanceof Response) {
-                throw new RuntimeException('Error route must return Response');
+            // No dedicated error page → default response
+            if ($errorRoute === null) {
+                return $this->httpResponse($exceptionContext);
             }
 
-            return $response;
-        }
+            // Make the error request context available to the route
+            Scope::set(RequestContext::class, $errorRequestContext);
 
-        // 4. Fallback to default error response
-        return $this->httpResponse($exceptionContext);
+            // Dispatch the error route
+            return Route::dispatch($errorRoute);
+        } catch (Throwable $th) {
+            // Error page itself failed → never recurse
+            return $this->httpResponse($exceptionContext);
+        }
     }
 
 

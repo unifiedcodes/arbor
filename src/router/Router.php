@@ -77,11 +77,7 @@ class Router
      */
     public function __construct(
         protected Pipeline $pipeline,
-
         protected URLBuilder $URLBuilder,
-
-        #[ConfigValue('app.uri_prefix')]
-        protected string $urlPrefix,
     ) {
         $this->registry = new Registry();
         $this->group = new Group();
@@ -240,7 +236,7 @@ class Router
 
     public function resolveErrorPage(int $errorCode, string $verb): RouteContext
     {
-        $basePath = $this->urlPrefix . '/__error__/';
+        $basePath = '/__error__/';
 
         $path = $basePath . $errorCode;
 
@@ -385,7 +381,6 @@ class Router
     {
         return $this->registry->getRouteTree();
     }
-
 
     public function getGroupById($id)
     {

@@ -2,9 +2,7 @@
 
 namespace Arbor\bootstrap;
 
-use Exception;
-use Arbor\bootstrap\URLResolver;
-use Arbor\bootstrap\AppConfigScope;
+use Arbor\exception\ExceptionKernel;
 use Arbor\container\ServiceContainer;
 use Arbor\config\Configurator;
 use Arbor\http\HttpKernel;
@@ -15,7 +13,6 @@ use Arbor\facades\Facade;
 use Arbor\http\Request;
 use Arbor\scope\Scope;
 use Arbor\scope\Stack;
-use Arbor\bootstrap\EarlyExceptionHandler;
 use RuntimeException;
 
 /**
@@ -54,19 +51,9 @@ class App
      * debugging behavior, and other environment-specific settings.
      * Defaults to 'production' for security.
      *
-     * @var string|null Current application environment
+     * @var string Current application environment
      */
-    protected ?string $environment = 'production';
-
-    /**
-     * The root URI for the application.
-     *
-     * Base URI path for the application, automatically detected from the request
-     * or manually configured. Used for URL generation and routing.
-     *
-     * @var string Root URI path (e.g., '/myapp' or '')
-     */
-    protected string $rootURI = '';
+    protected string $environment = 'production';
 
     /**
      * The Configurator instance.
@@ -169,7 +156,6 @@ class App
      * 2. Loads helper functions
      * 3. Configures the facade container
      * 4. Loads global configuration
-     * 5. Detects and sets root URI
      * 6. Loads application-specific configuration
      * 7. Registers and boots service providers
      *
@@ -177,7 +163,7 @@ class App
      * handling HTTP requests.
      *
      * @return $this Returns self for method chaining
-     * @throws Exception If configuration directory is not set or other boot failures
+     * @throws RuntimeException If configuration directory is not set or other boot failures
      * 
      * @example
      * ```php
@@ -194,10 +180,8 @@ class App
             return $this;
         }
 
-        $this->booted = true;
-
-        // Emergency error safety
-        $this->bootEarlyExceptionHandler();
+        // error handler
+        $this->bindExceptionHandler();
 
         // Helpers
         Helpers::load();
@@ -207,7 +191,6 @@ class App
 
         // Config
         $this->loadConfig();
-        $this->setRootURI();
         $this->finalizeConfig();
 
         // Scope
@@ -216,9 +199,11 @@ class App
         // Providers
         $this->loadProviders();
 
+        // flag booted.
+        $this->booted = true;
+
         return $this;
     }
-
 
     protected function bindScope(): void
     {
@@ -231,37 +216,15 @@ class App
         );
     }
 
-    /**
-     * Detect and set the root URI for the application.
-     *
-     * Automatically detects the application's root URI if not manually configured.
-     * Uses the URLResolver to analyze the front controller path and determine
-     * the appropriate base URI for the application.
-     *
-     * If 'root.uri' is already set in configuration, this method does nothing,
-     * allowing for manual override of auto-detection.
-     *
-     * @return void
-     * 
-     * @internal This method is called automatically during boot()
-     */
-    protected function setRootURI(): void
+    protected function bindExceptionHandler()
     {
-        if (!empty($this->configurator->touch('root.uri'))) {
-            return;
-        }
-
-        $this->rootURI = URLResolver::detectRootUri($this->configurator->touch('root.front_controller'));
-
-        $this->configurator->set('root.uri', $this->rootURI);
+        $this->container->singleton(
+            ExceptionKernel::class,
+            static function () {
+                return new ExceptionKernel($this->isDebug());
+            }
+        );
     }
-
-
-    protected function bootEarlyExceptionHandler()
-    {
-        (new EarlyExceptionHandler())->bind($this->isDebug());
-    }
-
 
     /**
      * Load the configuration and bind it as a singleton in the container.
@@ -271,7 +234,7 @@ class App
      * as a singleton in the DI container for application-wide access.
      *
      * @return void
-     * @throws Exception If configuration directory is not specified
+     * @throws RuntimeException If configuration directory is not specified
      * 
      * @internal This method is called automatically during boot()
      */
@@ -279,7 +242,7 @@ class App
     {
         // Ensure configuration directory is set.
         if (!isset($this->configDir)) {
-            throw new Exception("Configuration directory not specified.");
+            throw new RuntimeException("Configuration directory not specified.");
         }
 
         // Bind the Config instance as a singleton.
@@ -296,6 +259,7 @@ class App
         // Retrieve and set the Config instance.
         $this->configurator = $this->container->make(Configurator::class);
     }
+
 
     protected function finalizeConfig()
     {
@@ -360,7 +324,9 @@ class App
             throw new RuntimeException('Application must be booted before handling HTTP.');
         }
 
-        $request = RequestFactory::fromGlobals();
+        $request = RequestFactory::fromGlobals(
+            $this->getConfig('app.url_prefix')
+        );
 
         $kernel = $this->container->make(HttpKernel::class);
 

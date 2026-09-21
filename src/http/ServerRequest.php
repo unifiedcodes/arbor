@@ -56,6 +56,8 @@ class ServerRequest extends Request
      */
     protected null|array|object $parsedBody;
 
+    protected string $urlPrefix = '/';
+
     /**
      * ServerRequest constructor.
      *
@@ -87,6 +89,7 @@ class ServerRequest extends Request
         ?StreamInterface $body = null,
         string $method = 'GET',
         string $version = '1.1',
+        string $urlPrefix = '/'
     ) {
         parent::__construct(
             uri: $uri,
@@ -102,6 +105,7 @@ class ServerRequest extends Request
         $this->cookies = $cookies ?? new Cookies();
         $this->queryParams = $queryParams;
         $this->parsedBody = $parsedBody;
+        $this->urlPrefix = $urlPrefix;
 
         // Normalize the uploaded files array to UploadedFile instances
         $this->uploadedFiles = self::normalizeFiles($uploadedFiles);
@@ -288,5 +292,11 @@ class ServerRequest extends Request
         }
 
         return $normalized;
+    }
+
+
+    public function getUriPrefix(): string
+    {
+        return $this->urlPrefix;
     }
 }

@@ -29,7 +29,7 @@ class RequestFactory
      * 
      * @return ServerRequest The server request object
      */
-    public static function fromGlobals(): ServerRequest
+    public static function fromGlobals(string $urlPrefix): ServerRequest
     {
         return new ServerRequest(
             // base request.
@@ -45,7 +45,8 @@ class RequestFactory
             cookies: new Cookies($_COOKIE),
             queryParams: $_GET,
             parsedBody: $_POST,
-            uploadedFiles: $_FILES
+            uploadedFiles: $_FILES,
+            urlPrefix: self::normalizeURLPrefix($urlPrefix)
         );
     }
 
@@ -165,5 +166,17 @@ class RequestFactory
         }
 
         return false;
+    }
+
+
+    private static function normalizeURLPrefix(string $prefix): string
+    {
+        $prefix = trim($prefix);
+
+        if ($prefix === '' || $prefix === '/') {
+            return '';
+        }
+
+        return '/' . trim($prefix, '/');
     }
 }

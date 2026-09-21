@@ -33,7 +33,6 @@ final class ExecutionContext
      */
     public function __construct(
         ExecutionType $type,
-        ?string $baseURI = null,
         ?string $parentId = null,
         ?string $id = null,
         ?float $startedAt = null
@@ -42,10 +41,6 @@ final class ExecutionContext
         $this->parentId = $parentId;
         $this->id        = $id ?? self::generateId();
         $this->startedAt = $startedAt ?? microtime(true);
-        $this->baseURI  = $baseURI;
-        $this->basePath = $baseURI
-            ? (parse_url($baseURI, PHP_URL_PATH) ?: '')
-            : null;
     }
 
     /* ---------- identity ---------- */
@@ -148,25 +143,5 @@ final class ExecutionContext
     {
         // lightweight, no external deps
         return bin2hex(random_bytes(8));
-    }
-
-
-    /* ---------- HTTP environment ---------- */
-
-    /**
-     * Returns the base URI for this execution, if any.
-     * Only applicable to HTTP executions.
-     */
-    public function baseURI(): ?string
-    {
-        return $this->baseURI;
-    }
-
-    /**
-     * Returns the base path derived from base URI, if any.
-     */
-    public function basePath(): ?string
-    {
-        return $this->basePath;
     }
 }

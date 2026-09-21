@@ -39,7 +39,7 @@ final class RequestContext
     public static function from(Request $request): self
     {
         return new self(
-            request: $request,
+            request: $request
         );
     }
 
@@ -197,21 +197,24 @@ final class RequestContext
      * 
      * @return string The relative path with leading slash
      */
-    public function getRelativePath(string $basePath): string
+    public function getRequestPath(): string
     {
-        $requestedPath = $this->request->getUri()->getPath();
-        $basePath = rtrim($basePath, '/');
+        $requestPath = $this->request->getUri()->getPath() ?? "/";
+        $uriPrefix = $this->getUriPrefix();
 
-        // Normalize slashes
-        $requestedPath = '/' . ltrim($requestedPath, '/');
-
-        // Ensure basePath is prefix of requestedPath
-        if ($basePath && str_starts_with($requestedPath, $basePath . '/')) {
-            $relative = substr($requestedPath, strlen($basePath));
-            return '/' . ltrim($relative, '/'); // always return path with leading slash
+        if ($uriPrefix === '') {
+            return $requestPath;
         }
 
-        return $requestedPath; // fallback to full path if no match
+        if ($requestPath === $uriPrefix) {
+            return '/';
+        }
+
+        if (str_starts_with($requestPath, $uriPrefix . '/')) {
+            return substr($requestPath, strlen($uriPrefix));
+        }
+
+        return $requestPath;
     }
 
     /**

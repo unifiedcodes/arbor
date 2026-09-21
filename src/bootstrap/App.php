@@ -80,16 +80,6 @@ class App
 
 
     /**
-     * Application-specific configuration files array.
-     *
-     * Maps application names to their specific configuration file paths.
-     * Allows for modular configuration management across different app components.
-     *
-     * @var array<string, string> Array mapping app names to config file paths
-     */
-    protected array $appConfigFiles = [];
-
-    /**
      * Dependency injection container instance.
      *
      * Manages service registration, resolution, and lifecycle. Handles both
@@ -172,29 +162,6 @@ class App
     }
 
     /**
-     * Register application-specific configuration file.
-     *
-     * Associates an application name with a specific configuration file path.
-     * This allows for modular configuration where different parts of the application
-     * can have their own configuration files.
-     *
-     * @param string $appName Name/identifier for the application module
-     * @param string $config_file Path to the configuration file for this app module
-     * @return $this Returns self for method chaining
-     * 
-     * @example
-     * ```php
-     * $app->useAppConfig('api', '/path/to/api-config.php')
-     *     ->useAppConfig('admin', '/path/to/admin-config.php');
-     * ```
-     */
-    public function useAppConfig(string $appName, string $config_file): self
-    {
-        $this->appConfigFiles[$appName] = $config_file;
-        return $this;
-    }
-
-    /**
      * Boot the application by loading configuration and providers.
      *
      * Performs the complete application bootstrapping process:
@@ -241,7 +208,6 @@ class App
         // Config
         $this->loadConfig();
         $this->setRootURI();
-        $this->scopeConfig();
         $this->finalizeConfig();
 
         // Scope
@@ -331,36 +297,6 @@ class App
         $this->configurator = $this->container->make(Configurator::class);
     }
 
-    /**
-     * Load application-scoped configuration.
-     *
-     * Handles loading and scoping of application-specific configuration files.
-     * Creates an AppConfigScope instance to manage modular configuration
-     * and applies configuration based on the detected application key.
-     *
-     * This allows different applications or modules to have their own
-     * configuration while sharing the same framework instance.
-     *
-     * @return void
-     * 
-     * @internal This method is called automatically during boot()
-     */
-    protected function scopeConfig(): void
-    {
-        $configScope = $this->container->make(AppConfigScope::class, [
-            'rootDir' => $this->configurator->touch('root.dir'),
-            'rootUri' => $this->rootURI,
-            'env' => $this->environment
-        ]);
-
-        $configScope->appConfigByFiles($this->appConfigFiles);
-
-        $configScope->scope(URLResolver::getAppKey(
-            $this->rootURI
-        ));
-    }
-
-
     protected function finalizeConfig()
     {
         // set debug status
@@ -409,14 +345,13 @@ class App
      * 3. Default value (false)
      *
      * @return bool True if debug mode is enabled, false otherwise
-     * 
-     * ```
+     *
+     *
      */
     protected function isDebug(): bool
     {
         return $this->environment === 'development';
     }
-
 
 
     public function handleHTTP(): Response

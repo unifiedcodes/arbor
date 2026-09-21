@@ -81,43 +81,4 @@ class URLResolver
 
         return false;
     }
-
-    /**
-     * Extracts the application key (first path segment) from the requested URI
-     * 
-     * Given a root URI, this method determines the first path segment after
-     * the root, which typically represents the application or module identifier.
-     * Uses manual string scanning for optimal performance.
-     * 
-     * Examples:
-     * - Root: 'https://example.com/', Request: 'https://example.com/admin/users' → 'admin'
-     * - Root: 'https://example.com/app/', Request: 'https://example.com/app/api/v1' → 'api'
-     * 
-     * @param string $rootUri The root URI of the application
-     * @return string The first path segment after root, or empty string if none found
-     */
-    public static function getAppKey(string $rootUri): string
-    {
-        $requestUri = static::getRequestedURI();
-        $relativePath = '';
-
-        if ($rootUri && str_starts_with($requestUri, $rootUri)) {
-            $relative = substr($requestUri, strlen($rootUri));
-            $relativePath = '/' . ltrim($relative, '/');
-        }
-
-        // Manually scan characters to find first segment
-        // trade off to save performance cost of more readable ways.
-        $length = strlen($relativePath);
-        $start = 0;
-
-        while ($start < $length && $relativePath[$start] === '/') {
-            $start++;
-        }
-
-        if ($start === $length) return '';
-
-        $end = strpos($relativePath, '/', $start);
-        return $end === false ? substr($relativePath, $start) : substr($relativePath, $start, $end - $start);
-    }
 }

@@ -176,11 +176,7 @@ class ExceptionKernel
      */
     public function handle(Throwable $error): Response
     {
-        try {
-            $requestContext = Scope::get(RequestContext::class);
-        } catch (Throwable $e) {
-            $requestContext = null;
-        }
+        $requestContext = Scope::get(RequestContext::class);
 
         $exceptionContext = $this->normalizer->normalize($error, $requestContext);
 

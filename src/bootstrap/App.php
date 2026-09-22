@@ -47,4 +47,10 @@ class App
         $this->container->registerProviders(Config::touch($key));
         $this->container->bootProviders();
     }
+
+
+    public function get(string $fqn): mixed
+    {
+        return $this->container->get($fqn);
+    }
 }

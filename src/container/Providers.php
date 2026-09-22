@@ -2,83 +2,79 @@
 
 namespace Arbor\container;
 
-use Exception;
-use Arbor\container\ServiceProvider;
+use InvalidArgumentException;
 
-/**
- * Class Providers
- *
- * Manages the registration and booting of service providers,
- * including support for deferred providers.
- *
- * @package Arbor\container
- */
 class Providers
 {
     /**
-     * Array of registered (immediate) service providers.
+     * Registered providers indexed by their FQN.
      *
-     * @var ServiceProvider[]
+     * @var array<string, ServiceProvider>
      */
     protected array $providers = [];
 
     /**
-     * Mapping of deferred service keys to their corresponding provider.
+     * Deferred providers indexed by the services they provide.
      *
      * @var array<string, ServiceProvider>
      */
     protected array $deferred = [];
 
     /**
-     * Providers constructor.
+     * Providers that have already been booted.
      *
-     * @param ServiceContainer $container The container instance.
+     * @var array<string, true>
      */
+    protected array $booted = [];
+
     public function __construct(
         protected Registry $registry,
         protected Resolver $resolver
     ) {}
 
-    /**
-     * Register a single provider.
-     *
-     * Providers can be registered either as an instance or a class name.
-     * If the provider is deferred, its services will be loaded only when needed.
-     *
-     * @param ServiceProvider|string $provider The provider instance or class name.
-     *
-     * @throws Exception if the resolved provider does not extend ServiceProvider.
-     *
-     * @return void
-     */
     public function registerProvider(ServiceProvider|string $provider): void
     {
-        // Resolve provider instance if a class name is given.
-        if (is_string($provider)) {
-            $providerInstance = $this->resolver->get($provider);
-            if (!$providerInstance instanceof ServiceProvider) {
-                throw new \InvalidArgumentException("Provider class {$provider} must extend ServiceProvider");
-            }
-        } else {
-            $providerInstance = $provider;
+        $provider = $this->resolveProvider($provider);
+
+        $fqn = get_class($provider);
+
+        // Provider has already been registered.
+        if (isset($this->providers[$fqn])) {
+            return;
         }
 
-        // Always register aliases from the provider.
-        $this->registerAliases($providerInstance);
+        // Register aliases once.
+        $this->registerAliases($provider);
 
-        // If provider is deferred, store its provided service keys.
-        if ($providerInstance->isDeferred()) {
-            foreach ($providerInstance->provides() as $serviceKey) {
-                $this->deferred[$serviceKey] = $providerInstance;
-            }
-        } else {
-            // Register and boot immediately.
-            $providerInstance->register();
-            $this->providers[] = $providerInstance;
+        if ($provider->isDeferred()) {
+            $this->registerDeferred($provider);
+
+            return;
         }
+
+        // Register provider exactly once.
+        $provider->register();
+
+        $this->providers[$fqn] = $provider;
     }
 
+    protected function resolveProvider(
+        ServiceProvider|string $provider
+    ): ServiceProvider {
+        if ($provider instanceof ServiceProvider) {
+            return $provider;
+        }
 
+        $providerInstance = $this->resolver->get($provider);
+
+        if (!$providerInstance instanceof ServiceProvider) {
+            throw new InvalidArgumentException(
+                "Provider class {$provider} must extend ServiceProvider"
+            );
+        }
+
+        return $providerInstance;
+    }
 
     protected function registerAliases(ServiceProvider $provider): void
     {
@@ -87,13 +83,13 @@ class Providers
         }
     }
 
-    /**
-     * Register multiple providers.
-     *
-     * @param array $providers Array of provider instances or class names.
-     *
-     * @return void
-     */
+    protected function registerDeferred(ServiceProvider $provider): void
+    {
+        foreach ($provider->provides() as $serviceKey) {
+            $this->deferred[$serviceKey] = $provider;
+        }
+    }
+
     public function registerProviders(array $providers): void
     {
         foreach ($providers as $provider) {
@@ -101,43 +97,47 @@ class Providers
         }
     }
 
-    /**
-     * Boot all registered (immediate) providers.
-     *
-     * This method should be called after all providers are registered.
-     *
-     * @return void
-     */
     public function bootProviders(): void
     {
-        foreach ($this->providers as $provider) {
-            $provider->boot();
+        foreach ($this->providers as $fqn => $provider) {
+            $this->bootProvider($fqn, $provider);
         }
     }
 
-    /**
-     * Load a deferred provider if the service key is deferred.
-     *
-     * This method checks if the requested service is provided by a deferred provider.
-     * If found, it registers and boots the provider immediately.
-     *
-     * @param string $serviceKey The service key being resolved.
-     *
-     * @return void
-     * 
-     */
+    protected function bootProvider(
+        string $fqn,
+        ServiceProvider $provider
+    ): void {
+        if (isset($this->booted[$fqn])) {
+            return;
+        }
+
+        $provider->boot();
+
+        $this->booted[$fqn] = true;
+    }
+
     public function loadDeferred(string $serviceKey): void
     {
-        if (isset($this->deferred[$serviceKey])) {
-            $provider = $this->deferred[$serviceKey];
-            $provider->register();
-            $provider->boot();
-            $this->providers[] = $provider;
-
-            // Remove all provided keys from the deferred mapping.
-            foreach ($provider->provides() as $providedKey) {
-                unset($this->deferred[$providedKey]);
-            }
+        if (!isset($this->deferred[$serviceKey])) {
+            return;
         }
+
+        $provider = $this->deferred[$serviceKey];
+        $fqn = get_class($provider);
+
+        // Remove all deferred entries belonging to this provider.
+        foreach ($provider->provides() as $providedKey) {
+            unset($this->deferred[$providedKey]);
+        }
+
+        // It may have already been registered through another path.
+        if (!isset($this->providers[$fqn])) {
+            $provider->register();
+            $this->providers[$fqn] = $provider;
+        }
+
+        // Deferred providers are booted when first loaded.
+        $this->bootProvider($fqn, $provider);
     }
 }

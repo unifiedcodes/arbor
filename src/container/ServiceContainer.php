@@ -185,6 +185,11 @@ class ServiceContainer implements ContainerInterface
         $this->providers->registerProviders($providers);
     }
 
+    public function registerProvider(ServiceProvider|string $provider)
+    {
+        $this->providers->registerProvider($provider);
+    }
+
     /**
      * Boot all registered service providers.
      *

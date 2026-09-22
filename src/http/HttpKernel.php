@@ -2,19 +2,12 @@
 
 namespace Arbor\http;
 
-use Arbor\router\Router;
-use Arbor\config\ConfigValue;
+use Arbor\facades\Route;
 use Arbor\pipeline\Pipeline;
 use Arbor\pipeline\StageInterface;
 use Arbor\http\Response;
 use Arbor\http\Request;
 use Arbor\http\RequestContext;
-use Arbor\exception\ExceptionKernel;
-use Arbor\facades\Scope;
-use Arbor\execution\ExecutionContext;
-use Arbor\execution\ExecutionType;
-use Arbor\router\RouteContext;
-use Throwable;
 use Exception;
 
 /**
@@ -23,14 +16,10 @@ use Exception;
  */
 class HttpKernel
 {
-    protected array $globalMiddlewareStack = [];
+    protected array $middlewares = [];
 
     public function __construct(
         protected Pipeline $pipeline,
-        protected Router $router,
-
-        #[ConfigValue('root.is_debug')]
-        protected ?bool $isDebug = false,
     ) {}
 
 
@@ -48,7 +37,7 @@ class HttpKernel
      */
     public function addMiddleware(StageInterface|string $middleware): void
     {
-        $this->globalMiddlewareStack[] = $middleware;
+        $this->middlewares[] = $middleware;
     }
 
     /**
@@ -58,155 +47,27 @@ class HttpKernel
      * @param Request $request The incoming request
      * @param bool $isSubRequest True if this is an internal sub-request
      * @return Response The processed response
+     * 
      */
-    public function handle(Request $request, bool $isSubRequest = false): Response
+    public function handle(RequestContext $requestContext): Response
     {
-        $initialOBLevel = ob_get_level();
-
-        // Enter execution scope (new frame)
-        Scope::enter();
-
-        try {
-            // Attach execution context
-            Scope::set(
-                ExecutionContext::class,
-
-                new ExecutionContext(
-                    ExecutionType::HTTP
-                )
-            );
-
-
-            // Attach request context
-            $requestContext = RequestContext::from($request);
-            Scope::set(RequestContext::class, $requestContext);
-
-
-            // Prevent infinite recursion of requests.
-            $this->isAlreadyDispatched($request);
-
-
-            // Start output buffering in non-debug environments
-            if (!$this->isDebug) {
-                ob_start();
-            }
-
-            if ($isSubRequest) {
-                // Dispatch through router directly
-                $response = $this->routerDispatch();
-            } else {
-                // Apply global middleware for main request only and dispatch.
-                $response = $this->executeGlobalMiddlewares();
-            }
-
-            // Clean up output buffers
-            if (!$this->isDebug) {
-                $this->cleanOutputBuffer($initialOBLevel);
-            }
-
-            return $response;
-        }
-        // handling errors
-        catch (Throwable $error) {
-
-            if (!$this->isDebug) {
-                $this->cleanOutputBuffer($initialOBLevel);
-            }
-
-            return (new ExceptionKernel($this->isDebug))->handle($error);
-        }
-        // Always leave scope ()
-        finally {
-            Scope::leave();
-        }
-    }
-
-
-    protected function cleanOutputBuffer($oblevel)
-    {
-        while (ob_get_level() > $oblevel) {
-            ob_end_clean();
-        }
-    }
-
-    /**
-     * Execute the global middleware pipeline on the request context.
-     *
-     * @param RequestContext $requestContext
-     * @return Response
-     */
-    protected function executeGlobalMiddlewares(): Response
-    {
-        $requestContext = Scope::get(RequestContext::class);
-
+        // Apply global middleware for main request only and dispatch.
         return $this->pipeline
             ->send($requestContext)
-            ->through($this->globalMiddlewareStack)
-            ->then(function () {
-                return $this->routerDispatch();
+            ->through($this->middlewares)
+            ->then(function () use ($requestContext) {
+                return $this->routeDispatch($requestContext);
             });
     }
 
-    /**
-     * Dispatch the request context via the router.
-     *
-     * @return Response The controller return value (to be normalized to Response)
-     */
-    protected function routerDispatch(): Response
+    public function routeDispatch(RequestContext $requestContext): Response
     {
-        $requestContext = Scope::get(RequestContext::class);
-
-        // Extract path and verb from the request.
-        // Asking Router for RouteContext.
-        $routeContext = $this->router->resolve(
+        // get routecontext from router.
+        $routeContext = Route::resolve(
             $requestContext->getRequestPath(),
             $requestContext->getMethod()
         );
 
-        // setting Route Context to scope
-        Scope::set(RouteContext::class, $routeContext);
-
-        return $this->router->dispatch($routeContext);
-    }
-
-
-    private function isAlreadyDispatched(Request $request): void
-    {
-        $signature = $this->normalizedRequestString($request);
-        $depth = Scope::depth();
-
-        // Walk all existing frames (excluding the current one)
-        for ($i = 0; $i < $depth - 1; $i++) {
-            $frame = Scope::getFrame($i);
-
-            if (!$frame || !$frame->has(RequestContext::class)) {
-                continue;
-            }
-
-            $existingRequest =
-                $frame->get(RequestContext::class)->getRequest();
-
-            if ($this->normalizedRequestString($existingRequest) === $signature) {
-                throw new Exception(
-                    'Infinite sub-request detected for route: ' . $request->getUri()
-                );
-            }
-        }
-    }
-
-
-    private function normalizedRequestString(Request $request): string
-    {
-        // Full URI including query string
-        $uri = (string) $request->getUri();
-
-        // Normalize trailing slash
-        $uri = rtrim($uri, '/');
-        $uri = $uri === '' ? '/' : $uri;
-
-        // Normalize method
-        $method = strtoupper($request->getMethod());
-
-        return $method . ' ' . $uri;
+        return Route::dispatch($routeContext);
     }
 }

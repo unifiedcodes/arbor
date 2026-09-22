@@ -105,7 +105,6 @@ class ServerRequest extends Request
         $this->cookies = $cookies ?? new Cookies();
         $this->queryParams = $queryParams;
         $this->parsedBody = $parsedBody;
-        $this->urlPrefix = $urlPrefix;
 
         // Normalize the uploaded files array to UploadedFile instances
         $this->uploadedFiles = self::normalizeFiles($uploadedFiles);
@@ -292,11 +291,5 @@ class ServerRequest extends Request
         }
 
         return $normalized;
-    }
-
-
-    public function getUriPrefix(): string
-    {
-        return $this->urlPrefix;
     }
 }

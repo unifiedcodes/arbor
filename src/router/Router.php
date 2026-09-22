@@ -286,15 +286,14 @@ class Router
      */
     public function dispatch(RouteContext $routeContext, ?string $via = null): Response
     {
+        // set routecontext into scope.
+        Scope::set(RouteContext::class, $routeContext);
+
         $requestContext = Scope::get(RequestContext::class);
 
         $pipeline = $this->pipeline
             ->send($requestContext)
             ->through($routeContext->middlewares());
-
-        if ($via !== null) {
-            $pipeline->via($via);
-        }
 
         return $pipeline->then(
             $routeContext->handler(),

@@ -28,6 +28,7 @@ final class RequestContext
         protected readonly Request|ServerRequest $request,
         protected readonly mixed $route = null,
         protected readonly bool $isErrorRequest = false,
+        protected readonly string $uriPrefix = "/",
     ) {}
 
     /**
@@ -36,10 +37,11 @@ final class RequestContext
      * @param Request $request The HTTP request to wrap
      * @return self A new RequestContext instance
      */
-    public static function from(Request $request): self
+    public static function from(Request $request, string $uriPrefix = "/"): self
     {
         return new self(
-            request: $request
+            request: $request,
+            uriPrefix: self::normalizeURLPrefix($uriPrefix)
         );
     }
 
@@ -235,5 +237,21 @@ final class RequestContext
     public function isErrorRequest(): bool
     {
         return $this->isErrorRequest;
+    }
+
+    public function getUriPrefix(): string
+    {
+        return $this->uriPrefix;
+    }
+
+    private static function normalizeURLPrefix(string $prefix): string
+    {
+        $prefix = trim($prefix);
+
+        if ($prefix === '' || $prefix === '/') {
+            return '';
+        }
+
+        return '/' . trim($prefix, '/');
     }
 }

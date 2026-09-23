@@ -23,31 +23,15 @@ class App
         Facade::setContainer($this->container);
     }
 
-    public function boot(ServiceProvider|string $configProvider): self
+    public function load(ServiceProvider|string|array $providers): self
     {
-        if ($this->booted) {
-            return $this;
-        }
+        $providers = is_array($providers) ? $providers : [$providers];
 
-        // load configurator
-        $this->container->registerProvider($configProvider);
+        $this->container->registerProviders($providers);
         $this->container->bootProviders();
 
-        // load providers
-        $this->loadProviders('systemProviders');
-        $this->loadProviders('moduleProviders');
-
-        // mark booted and return self
-        $this->booted = true;
         return $this;
     }
-
-    protected function loadProviders(string $key = ""): void
-    {
-        $this->container->registerProviders(Config::touch($key));
-        $this->container->bootProviders();
-    }
-
 
     public function get(string $fqn): mixed
     {

@@ -14,7 +14,7 @@ use Arbor\config\ConfigValue;
 final class URLBuilder
 {
     public function __construct(
-        #[ConfigValue('app.url_prefix')]
+        #[ConfigValue('root.url_prefix')]
         protected string $baseURI
     ) {}
 

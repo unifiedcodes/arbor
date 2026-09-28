@@ -67,8 +67,7 @@ class ExecutionKernel
 
         // handle.
         $handle = static function () use ($request) {
-
-            $requestContext = RequestContext::from($request, Config::get('app.url_prefix'));
+            $requestContext = RequestContext::from($request, Config::get('root.url_prefix'));
 
             Scope::set(
                 RequestContext::class,

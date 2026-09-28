@@ -51,8 +51,6 @@ class View
             $this->schemes,
             $defaultAssetsScheme
         );
-
-        Scope::set(ViewStack::class, new ViewStack());
     }
 
 
@@ -173,7 +171,7 @@ class View
      */
     public function render(string|Uri $uri, array $data = []): string
     {
-        $stack = Scope::get(ViewStack::class);
+        $stack = $this->stack();
 
         $this->dataStack[] = $data;
 
@@ -191,6 +189,19 @@ class View
             array_pop($this->dataStack);
             $stack->reset();
         }
+    }
+
+
+    protected function stack(): ViewStack
+    {
+        $stack = Scope::get(ViewStack::class);
+
+        if (!$stack) {
+            $stack = new ViewStack();
+            Scope::set(ViewStack::class, $stack);
+        }
+
+        return $stack;
     }
 
     /**
@@ -224,7 +235,7 @@ class View
      */
     public function document(): Document
     {
-        $stack = Scope::get(ViewStack::class);
+        $stack = $this->stack();
 
         if (!$stack->hasDocument()) {
             throw new RuntimeException('no document set');
@@ -243,7 +254,7 @@ class View
      */
     public function component(string|Uri $uri, array $data = []): string
     {
-        $stack = Scope::get(ViewStack::class);
+        $stack = $this->stack();
 
         $component = $this->getComponent($uri, $data);
 
@@ -268,7 +279,7 @@ class View
      */
     public function startComponent(string|Uri $uri, array $data = []): void
     {
-        $stack = Scope::get(ViewStack::class);
+        $stack = $this->stack();
 
         $component = $this->getComponent($uri, $data);
 
@@ -283,7 +294,7 @@ class View
      */
     public function endComponent(): void
     {
-        $stack = Scope::get(ViewStack::class);
+        $stack = $this->stack();
 
         $component = $stack->popComponent();
 
@@ -303,7 +314,7 @@ class View
      */
     public function startSlot(string $name): void
     {
-        $stack = Scope::get(ViewStack::class);
+        $stack = $this->stack();
 
         $component = $stack->currentComponent();
 
@@ -322,7 +333,7 @@ class View
      */
     public function endSlot(): void
     {
-        $stack = Scope::get(ViewStack::class);
+        $stack = $this->stack();
 
         $component = $stack->currentComponent();
 
@@ -342,7 +353,7 @@ class View
      */
     public function slot(?string $name = null): string
     {
-        $stack = Scope::get(ViewStack::class);
+        $stack = $this->stack();
 
         $component = $stack->currentRendering();
 
@@ -362,7 +373,7 @@ class View
      */
     public function hasSlot(string $name): bool
     {
-        $stack = Scope::get(ViewStack::class);
+        $stack = $this->stack();
 
         $component = $stack->currentRendering();
 
@@ -397,7 +408,7 @@ class View
      */
     public function startPush(string $name): void
     {
-        $stack = Scope::get(ViewStack::class);
+        $stack = $this->stack();
         $component = $stack->currentComponent();
 
         if (!$component) {
@@ -415,7 +426,7 @@ class View
      */
     public function endPush(): void
     {
-        $stack = Scope::get(ViewStack::class);
+        $stack = $this->stack();
         $component = $stack->currentComponent();
 
         if (!$component) {

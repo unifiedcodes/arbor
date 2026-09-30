@@ -1,12 +1,12 @@
 <?php
 
-namespace Arbor\session;
+namespace Arbor\events;
 
 use Arbor\facade\Facade;
-use Arbor\session\SessionManager;
+use Arbor\events\Events;
 
 
-class Session extends Facade
+class Event extends Facade
 {
     /**
      * Get the service accessor string used to resolve the instance from the container.
@@ -15,6 +15,6 @@ class Session extends Facade
      */
     protected static function getAccessor(): string
     {
-        return SessionManager::class;
+        return Events::class;
     }
 }

@@ -3,7 +3,7 @@
 namespace Arbor\exception\template;
 
 use Arbor\exception\ExceptionContext;
-use Arbor\facades\Config;
+use Arbor\config\Config;
 
 /**
  * HTML exception template renderer

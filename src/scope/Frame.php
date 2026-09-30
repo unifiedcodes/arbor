@@ -3,7 +3,7 @@
 namespace Arbor\scope;
 
 use Arbor\scope\events\DisposeError;
-use Arbor\facades\Events;
+use Arbor\events\Events;
 use Throwable;
 use RuntimeException;
 

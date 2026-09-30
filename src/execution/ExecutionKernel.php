@@ -3,9 +3,9 @@
 namespace Arbor\execution;
 
 use Arbor\execution\ExecutionType;
-use Arbor\facades\Config;
-use Arbor\facades\Container;
-use Arbor\facades\Scope;
+use Arbor\config\Config;
+use Arbor\container\Container;
+use Arbor\scope\Scope;
 use Arbor\http\RequestFactory;
 use Arbor\http\RequestContext;
 use Arbor\http\HttpKernel;

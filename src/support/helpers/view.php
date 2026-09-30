@@ -1,6 +1,6 @@
 <?php
 
-use Arbor\facades\View;
+use Arbor\view\View;
 use Arbor\view\Document;
 
 /**

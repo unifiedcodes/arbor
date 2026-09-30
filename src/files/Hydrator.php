@@ -7,7 +7,7 @@ use Arbor\files\state\Payload;
 use Arbor\stream\StreamInterface;
 use Arbor\storage\Stats;
 use Arbor\stream\StreamFactory;
-use Arbor\facades\Storage;
+use Arbor\storage\Storage;
 
 use RuntimeException;
 

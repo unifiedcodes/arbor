@@ -6,7 +6,7 @@ namespace Arbor\config;
 use Attribute;
 use Arbor\container\AttributeInterface;
 use Arbor\config\Configurator;
-use Arbor\facades\Config;
+use Arbor\config\Config;
 use Exception;
 
 /**

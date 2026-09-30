@@ -5,4 +5,4 @@
  * Not meant for runtime usage.
  */
 
-class View extends \Arbor\facades\View {}
+class View extends \Arbor\view\View {}

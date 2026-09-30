@@ -4,7 +4,7 @@ namespace Arbor\pipeline;
 
 
 use InvalidArgumentException;
-use Arbor\facades\Container;
+use Arbor\container\Container;
 
 /**
  * Class Pipeline

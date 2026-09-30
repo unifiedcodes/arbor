@@ -2,7 +2,7 @@
 
 namespace Arbor\http;
 
-use Arbor\facades\Route;
+use Arbor\router\Route;
 use Arbor\pipeline\Pipeline;
 use Arbor\pipeline\StageInterface;
 use Arbor\http\Response;

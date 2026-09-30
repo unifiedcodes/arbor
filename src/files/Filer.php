@@ -9,7 +9,7 @@ use Arbor\files\state\FileContext;
 use Arbor\files\PolicyCatalog;
 use Arbor\files\state\FileRecord;
 use Arbor\files\Evaluator;
-use Arbor\facades\Storage;
+use Arbor\storage\Storage;
 use Arbor\support\path\Uri;
 use RuntimeException;
 

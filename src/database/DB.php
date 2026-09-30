@@ -1,9 +1,10 @@
 <?php
 
-namespace Arbor\facades;
+namespace Arbor\database;
 
-use Arbor\facades\Facade;
+use Arbor\facade\Facade;
 use Arbor\database\Database;
+use Arbor\database\DatabaseResolver;
 use Exception;
 
 /**
@@ -32,9 +33,9 @@ class DB extends Facade
      *
      * @return string The service accessor string for the DatabaseResolver
      */
-    protected static function getAccessor(): string|object
+    protected static function getAccessor(): string
     {
-        return 'Arbor\\database\\DatabaseResolver';
+        return DatabaseResolver::class;
     }
 
     /**

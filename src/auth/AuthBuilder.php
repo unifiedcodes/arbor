@@ -283,7 +283,7 @@ final class AuthBuilder
      *
      * @throws InvalidArgumentException If issuer is not configured.
      */
-    public function build()
+    public function build(): Authenticator
     {
         if (!$this->issuer) {
             throw new InvalidArgumentException("issuer is not set");
@@ -297,7 +297,7 @@ final class AuthBuilder
             $this->usePolicy();
         }
 
-        return new Auth(
+        return new Authenticator(
             $this->issuer,
             $this->keeper,
             $this->policy,

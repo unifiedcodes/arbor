@@ -1,9 +1,9 @@
 <?php
 
-namespace Arbor\facades;
+namespace Arbor\router;
 
-use Arbor\facades\Facade;
-
+use Arbor\facade\Facade;
+use Arbor\router\Router;
 
 class Route extends Facade
 {
@@ -12,8 +12,8 @@ class Route extends Facade
      *
      * @return string
      */
-    protected static function getAccessor(): string|object
+    protected static function getAccessor(): string
     {
-        return 'Arbor\\router\\Router';
+        return Router::class;
     }
 }

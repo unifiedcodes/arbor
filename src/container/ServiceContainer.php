@@ -11,7 +11,7 @@ use Arbor\container\Providers;
 /**
  * Class Container
  *
- * Acts as a facade for the dependency injection system,
+ * Acts as a orchestrator for the dependency injection system,
  * providing a seamless interface for binding, resolving,
  * aliasing, and calling services.
  *

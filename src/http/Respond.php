@@ -1,9 +1,9 @@
 <?php
 
-namespace Arbor\facades;
+namespace Arbor\http;
 
-use Arbor\facades\Facade;
-
+use Arbor\facade\Facade;
+use Arbor\http\ResponseFactory;
 
 class Respond extends Facade
 {
@@ -12,8 +12,8 @@ class Respond extends Facade
      *
      * @return string
      */
-    protected static function getAccessor(): string|object
+    protected static function getAccessor(): string
     {
-        return 'Arbor\\http\\ResponseFactory';
+        return ResponseFactory::class;
     }
 }

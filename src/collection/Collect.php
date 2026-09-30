@@ -1,12 +1,11 @@
 <?php
 
-namespace Arbor\session;
+namespace Arbor\collection;
 
 use Arbor\facade\Facade;
-use Arbor\session\SessionManager;
+use Arbor\collection\Collector;
 
-
-class Session extends Facade
+class Collect extends Facade
 {
     /**
      * Get the service accessor string used to resolve the instance from the container.
@@ -15,6 +14,6 @@ class Session extends Facade
      */
     protected static function getAccessor(): string
     {
-        return SessionManager::class;
+        return Collector::class;
     }
 }

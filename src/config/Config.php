@@ -1,8 +1,9 @@
 <?php
 
-namespace Arbor\facades;
+namespace Arbor\config;
 
-use Arbor\facades\Facade;
+use Arbor\facade\Facade;
+use Arbor\config\Configurator;
 
 
 class Config extends Facade
@@ -12,8 +13,8 @@ class Config extends Facade
      *
      * @return string
      */
-    protected static function getAccessor(): string|object
+    protected static function getAccessor(): string
     {
-        return 'Arbor\\config\\Configurator';
+        return Configurator::class;
     }
 }

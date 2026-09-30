@@ -2,7 +2,7 @@
 
 namespace Arbor\router;
 
-use Arbor\facades\Route;
+use Arbor\router\Route;
 
 /**
  * ErrorRouter

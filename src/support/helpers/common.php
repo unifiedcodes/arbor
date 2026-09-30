@@ -10,7 +10,7 @@
  * All functions are conditionally defined to prevent redefinition errors.
  */
 
-use Arbor\facades\Config;
+use Arbor\facade\Config;
 
 /**
  * Generate a cryptographically secure random integer within a specified range.

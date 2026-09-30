@@ -3,7 +3,7 @@
 namespace Arbor\collection;
 
 
-class Collection
+class Collector
 {
     protected array $items = [];
 

@@ -1,9 +1,9 @@
 <?php
 
-namespace Arbor\facades;
+namespace Arbor\flash;
 
-use Arbor\facades\Facade;
-
+use Arbor\facade\Facade;
+use Arbor\flash\Flasher;
 
 class Flash extends Facade
 {
@@ -12,8 +12,8 @@ class Flash extends Facade
      *
      * @return string
      */
-    protected static function getAccessor(): string|object
+    protected static function getAccessor(): string
     {
-        return 'Arbor\\flash\\Flasher';
+        return Flasher::class;
     }
 }

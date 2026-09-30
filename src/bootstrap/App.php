@@ -5,8 +5,8 @@ namespace Arbor\bootstrap;
 use Arbor\config\Configurator;
 use Arbor\container\ServiceContainer;
 use Arbor\container\ServiceProvider;
-use Arbor\facades\Facade;
-use Arbor\facades\Config;
+use Arbor\facade\Facade;
+use Arbor\config\Config;
 use Arbor\support\Helpers;
 
 class App

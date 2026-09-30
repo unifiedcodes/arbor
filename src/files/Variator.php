@@ -8,7 +8,7 @@ use Arbor\files\contracts\VariantProfileInterface;
 use Arbor\files\Hydrator;
 use Arbor\files\Evaluator;
 use Arbor\files\PolicyCatalog;
-use Arbor\facades\Storage;
+use Arbor\storage\Storage;
 use Arbor\files\state\FileContext;
 use Arbor\files\state\VariantRecord;
 use RuntimeException;

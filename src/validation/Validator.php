@@ -13,9 +13,9 @@ use Arbor\validation\RuleInterface;
 use Arbor\validation\RuleListInterface;
 
 /**
- * Validator Facade
+ * Validator Orchestrator
  * 
- * Main validation class that acts as a facade to orchestrate validation operations.
+ * Main validation class that acts as a orchestrator to orchestrate validation operations.
  * Provides a unified interface for validating single rules, multiple rules, and batch operations.
  * 
  * WIP: This class is 99% complete.
@@ -79,7 +79,7 @@ class Validator
     /**
      * Constructor - Initialize validator with required dependencies
      * 
-     * Facade class to delegate and orchestrate validation operations across
+     * Class to delegate and orchestrate validation operations across
      * different components (registry, parser, evaluator, definition).
      * 
      * @param Registry $registry Rule registry for managing validation rules.

@@ -1,7 +1,7 @@
 <?php
 
-use Arbor\facades\Config;
-use Arbor\facades\Route;
+use Arbor\config\Config;
+use Arbor\router\Route;
 
 /**
  * URL Helper Functions for Arbor Framework

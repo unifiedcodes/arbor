@@ -9,7 +9,7 @@ use Arbor\events\Dispatcher;
 use Closure;
 
 /**
- * High-level façade for interacting with the Arbor event system.
+ * High-level orchestrator for interacting with the Arbor event system.
  *
  * Provides a simplified API for:
  * - Registering event listeners

@@ -3,16 +3,16 @@
 namespace Arbor\exception;
 
 
+use Throwable;
+use ErrorException;
 use Arbor\config\ConfigValue;
 use Arbor\http\Response;
 use Arbor\exception\Renderer;
 use Arbor\exception\Normalizer;
 use Arbor\http\RequestContext;
-use Arbor\facades\Scope;
-use Throwable;
-use ErrorException;
+use Arbor\scope\Scope;
 use Arbor\exception\events\ExceptionOccurred;
-use Arbor\facades\Events;
+use Arbor\events\Events;
 
 /**
  * ExceptionKernel

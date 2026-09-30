@@ -10,7 +10,7 @@ use Arbor\flash\View;
  * Flasher - Flash Message Management System
  * 
  * The Flasher class provides a comprehensive interface for managing flash messages
- * in web applications. It acts as a facade that combines message storage/retrieval
+ * in web applications. It acts as a orchestrator that combines message storage/retrieval
  * functionality with view rendering capabilities, allowing developers to easily
  * display temporary messages to users across HTTP requests.
  * 

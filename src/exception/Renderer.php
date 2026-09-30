@@ -4,10 +4,10 @@ namespace Arbor\exception;
 
 use Arbor\exception\template\HTML;
 use Arbor\http\Response;
-use Arbor\facades\Respond;
-use Arbor\facades\Route;
+use Arbor\http\Respond;
+use Arbor\router\Route;
 use Arbor\http\RequestContext;
-use Arbor\facades\Scope;
+use Arbor\scope\Scope;
 use RuntimeException;
 use Throwable;
 

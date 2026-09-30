@@ -11,12 +11,12 @@ use Arbor\router\RouteMethods;
 use Arbor\http\Response;
 use Arbor\config\ConfigValue;
 use Arbor\pipeline\Pipeline;
-use Arbor\facades\Scope;
+use Arbor\facade\Scope;
 use Arbor\http\RequestContext;
 use Exception;
 
 /**
- * Class Router (Router Facade)
+ * Class Router (Router Orchestrator)
  *
  * Manages route registration, grouping, resolution, and dispatching.
  * This class handles grouping of routes, adding individual routes,

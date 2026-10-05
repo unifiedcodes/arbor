@@ -6,8 +6,11 @@ class Collector
 {
     protected $collections = [];
 
-    public function define(string $key, string $type, bool $isMultiple = false)
-    {
+    public function define(
+        string $key,
+        string $type,
+        bool $isMultiple = false
+    ): static {
         if ($this->has($key)) {
             throw new LogicException(
                 "Collection with key [{$key}] is already defined."
@@ -19,6 +22,8 @@ class Collector
             type: $type,
             isMultiple: $isMultiple
         );
+
+        return $this;
     }
 
     public function __call(string $method, array $arguments): mixed
@@ -65,22 +70,21 @@ class Collector
     public function get(string $key): mixed
     {
         $this->ensureKey($key);
-        $this->collections[$key]->get($key);
-
-        return $this;
+        return $this->collections[$key]->get();
     }
 
     public function clear(?string $key = null): bool
     {
-        $this->ensureKey($key);
-
         if ($key === null) {
-            $this->collections = [];
+            foreach ($this->collections as $collection) {
+                $collection->clear();
+            }
 
             return true;
         }
 
-        unset($this->collections[$key]);
+        $this->ensureKey($key);
+        $this->collections[$key]->clear();
 
         return true;
     }

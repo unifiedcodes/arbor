@@ -89,4 +89,10 @@ class Collection
     {
         return count($this->values);
     }
+
+    public function clear(): static
+    {
+        $this->values = [];
+        return $this;
+    }
 }

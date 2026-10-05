@@ -37,4 +37,9 @@ class App
     {
         return $this->container->get($fqn);
     }
+
+    public function container()
+    {
+        return $this->container;
+    }
 }

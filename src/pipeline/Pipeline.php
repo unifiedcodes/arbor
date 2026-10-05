@@ -170,22 +170,23 @@ class Pipeline
 
     protected function resolveMethodName(object $instance, string $class): string
     {
+        if ($this->methodName !== null) {
+
+            if (!method_exists($instance, $this->methodName)) {
+                throw new InvalidArgumentException(
+                    "Method '{$this->methodName}' does not exist on class {$class}."
+                );
+            }
+
+            return $this->methodName;
+        }
+
         if (method_exists($instance, '__invoke')) {
             return '__invoke';
         }
 
-        if ($this->methodName !== null && method_exists($instance, $this->methodName)) {
-            return $this->methodName;
-        }
-
-        if ($this->methodName === null) {
-            throw new InvalidArgumentException(
-                "Class {$class} is not invokable and no method was specified via Pipeline::via()."
-            );
-        }
-
         throw new InvalidArgumentException(
-            "Method '{$this->methodName}' does not exist on class {$class}."
+            "Class {$class} is not invokable and no method was specified via Pipeline::via()."
         );
     }
 

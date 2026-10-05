@@ -8,7 +8,7 @@ use Arbor\pipeline\StageInterface;
 use Arbor\http\Response;
 use Arbor\http\Request;
 use Arbor\http\RequestContext;
-use Exception;
+use UnexpectedValueException;
 
 /**
  * The central HTTP kernel responsible for handling HTTP and sub-requests,
@@ -52,15 +52,28 @@ class HttpKernel
     public function handle(RequestContext $requestContext): Response
     {
         // Apply global middleware for main request only and dispatch.
-        return $this->pipeline
+        $pipeline = $this->pipeline
             ->send($requestContext)
-            ->through($this->middlewares)
-            ->then(function () use ($requestContext) {
-                return $this->routeDispatch($requestContext);
-            });
+            ->through($this->middlewares);
+
+        $response = $pipeline->then(
+            fn() => $this->routeDispatch($requestContext)
+        );
+
+        if (!$response instanceof Response) {
+            throw new UnexpectedValueException(
+                sprintf(
+                    'HTTP request handling expected an instance of "%s", but received "%s".',
+                    Response::class,
+                    get_debug_type($response)
+                )
+            );
+        }
+
+        return $response;
     }
 
-    public function routeDispatch(RequestContext $requestContext): Response
+    public function routeDispatch(RequestContext $requestContext): mixed
     {
         // get routecontext from router.
         $routeContext = Route::resolve(

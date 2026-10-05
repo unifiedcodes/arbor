@@ -11,7 +11,7 @@ use Arbor\router\RouteMethods;
 use Arbor\http\Response;
 use Arbor\config\ConfigValue;
 use Arbor\pipeline\Pipeline;
-use Arbor\facade\Scope;
+use Arbor\scope\Scope;
 use Arbor\http\RequestContext;
 use Exception;
 
@@ -281,10 +281,10 @@ class Router
      *
      * @param RouteContext           $route           The resolved route context.
      *
-     * @return Response The response returned by the route.
+     * @return mixed The response returned by the route.
      * 
      */
-    public function dispatch(RouteContext $routeContext, ?string $via = null): Response
+    public function dispatch(RouteContext $routeContext, ?string $via = null): mixed
     {
         // set routecontext into scope.
         Scope::set(RouteContext::class, $routeContext);
@@ -293,7 +293,9 @@ class Router
 
         $pipeline = $this->pipeline
             ->send($requestContext)
-            ->through($routeContext->middlewares());
+            ->through(
+                $routeContext->middlewares()
+            );
 
         return $pipeline->then(
             $routeContext->handler(),

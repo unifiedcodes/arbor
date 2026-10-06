@@ -7,8 +7,8 @@ use Exception;
 use Arbor\validation\Parser;
 use Arbor\validation\Registry;
 use Arbor\validation\Evaluator;
-use Arbor\validation\ErrorsFormatter;
 use Arbor\validation\RuleInterface;
+use Arbor\validation\ErrorsFormatter;
 use Arbor\validation\RuleListInterface;
 
 /**
@@ -42,6 +42,8 @@ class Validator
      */
     protected Evaluator $evaluator;
 
+    protected ErrorsFormatter $errorsFormatter;
+
 
     /**
      * Array storing validation errors
@@ -65,6 +67,7 @@ class Validator
         $this->parser = new Parser();
 
         $this->evaluator = new Evaluator($this->registry);
+        $this->errorsFormatter = new ErrorsFormatter();
     }
 
     /**
@@ -75,12 +78,20 @@ class Validator
      * @param string|null $name Optional name for error tracking
      * @return bool True if all validations pass, false otherwise
      */
-    public function check(mixed $input, string|array $dsl): array
+    public function check(mixed $input, string|array $dsl, ?string $fieldName = null): ValidationResult
     {
         // Parse DSL into abstract syntax tree
         $ast = $this->parser->parse($dsl);
+
         // Evaluate the parsed rules against input
-        return $this->evaluator->evaluate($input, $ast);
+        $result = $this->evaluator->evaluate($input, $ast);
+
+        // construct ValidationResult.
+        return new ValidationResult(
+            isValid: $result['isValid'],
+            errors: $result['errors'],
+            fieldName: $fieldName
+        );
     }
 
     /**
@@ -93,10 +104,16 @@ class Validator
      * @param array $definition Validation definition structure
      * @return bool True if all batch validations pass, false otherwise
      */
-    public function checkDefinition(array $inputs, array $definition)
+    public function checkDefinition(array $inputs, array $definition): ValidationResult
     {
         $definitionAst = $this->parser->parseDefinition($definition);
-        return $this->evaluator->evaluateDefinition($inputs, $definitionAst);
+        $result = $this->evaluator->evaluateDefinition($inputs, $definitionAst);
+
+        return new ValidationResult(
+            isValid: $result['isValid'],
+            errors: $result['errors'],
+            isBatch: true
+        );
     }
 
 

@@ -23,12 +23,12 @@ class ErrorsFormatter
      * @param array $errors Multi-dimensional array of errors keyed by field name
      * @return array Formatted errors with field names as keys and formatted messages as values
      */
-    public function format(array $errors): array
+    public function formatBatch(array $errors): array
     {
         $formattedErrors = [];
 
-        foreach ($errors as $field => $bucket) {
-            $formattedErrors[$field] = $this->formatBucket($field, $bucket);
+        foreach ($errors as $fieldName => $bucket) {
+            $formattedErrors[$fieldName] = $this->format($bucket, $fieldName);
         }
 
         $formatted = array_filter($formattedErrors, fn($msg) => $msg !== '');
@@ -44,11 +44,11 @@ class ErrorsFormatter
      * a formatted message using AND/OR logic. Groups within an array are joined with
      * 'and', while separate groups are joined with 'Or'.
      * 
-     * @param string $field The name of the field being validated
      * @param array $bucket Array of error message groups for this field
+     * @param string $fieldName The name of the field being validated
      * @return string Formatted error message in the format "'fieldname' message1 and message2 Or message3"
      */
-    protected function formatBucket(string $field, array $bucket): string
+    public function format(array $bucket, ?string $fieldName = null): string
     {
         $bucket = $this->removeDuplicates($bucket);
 
@@ -68,7 +68,15 @@ class ErrorsFormatter
             }
         }
 
-        return !empty($messages) ? "'$field' " . implode(' Or ', $messages) : '';
+        if (empty($messages)) {
+            return '';
+        }
+
+        if ($fieldName !== null) {
+            $fieldName = "'$fieldName' ";
+        }
+
+        return $fieldName . implode(' Or ', $messages);
     }
 
 

@@ -20,12 +20,12 @@ use InvalidArgumentException;
  * The resulting AST structure is:
  * [
  *     [  // OR group 1
- *         ['rule' => 'required', 'negate' => false, 'params' => []],
- *         ['rule' => 'email', 'negate' => false, 'params' => []]
+ *         ['rule' => 'required', 'params' => []],
+ *         ['rule' => 'email', 'params' => []]
  *     ],
  *     [  // OR group 2  
- *         ['rule' => 'phone', 'negate' => false, 'params' => []],
- *         ['rule' => 'empty', 'negate' => true, 'params' => []]
+ *         ['rule' => 'phone', 'params' => []],
+ *         ['rule' => 'empty', 'params' => []]
  *     ]
  * ]
  * 
@@ -77,8 +77,8 @@ class Parser
      * [
      *     'email' => [
      *         [
-     *             ['rule' => 'required', 'negate' => false, 'params' => []],
-     *             ['rule' => 'email', 'negate' => false, 'params' => []]
+     *             ['rule' => 'required', 'params' => []],
+     *             ['rule' => 'email', 'params' => []]
      *         ]
      *     ],
      *     'age' => [...],
@@ -161,7 +161,6 @@ class Parser
      * - "required" -> rule with no parameters
      * - "min:5" -> rule with single parameter
      * - "between:1,10" -> rule with multiple parameters
-     * - "!empty" -> negated rule
      * 
      * @param string $rule The individual rule string to parse
      * @return array Parsed rule node structure
@@ -198,21 +197,13 @@ class Parser
      * 
      * @param string $rule The rule name (potentially with '!' prefix for negation)
      * @param array $params Optional array of rule parameters
-     * @return array Standardized rule node with 'rule', 'negate', and 'params' keys
+     * @return array Standardized rule node with 'rule' and 'params' keys
      */
     protected function makeNode(string $rule, array $params = []): array
     {
-        // Check for negation prefix
-        $negate = false;
-        if (str_starts_with($rule, '!')) {
-            $negate = true;
-            $rule = substr($rule, 1); // Remove the '!' prefix
-        }
-
         // Return standardized node structure
         return [
             'rule' => $rule,      // The rule name without negation prefix
-            'negate' => $negate,  // Boolean flag indicating if rule should be negated
             'params' => $params,  // Array of parameters for this rule
         ];
     }

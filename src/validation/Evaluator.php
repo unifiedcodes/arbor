@@ -19,34 +19,15 @@ use Arbor\validation\ValidationException;
  */
 class Evaluator
 {
-    /** @var Registry Registry instance containing validation rule definitions */
-    protected Registry $registry;
-
-
-    /** @var bool Flag to enable early return optimization when first valid group is found */
-    protected bool $earlyBreak = true;
-
     /**
      * Constructor initializes the evaluator with a validation registry.
      * 
      * @param Registry $registry The registry containing validation rule definitions
      */
-    public function __construct(Registry $registry)
-    {
+    public function __construct(
+        protected Registry $registry,
+    ) {
         $this->registry = $registry;
-    }
-
-    /**
-     * Configure early return behavior for performance optimization.
-     * 
-     * When enabled, evaluation stops as soon as the first valid AND group is found,
-     * potentially improving performance for complex validation trees.
-     * 
-     * @param bool $is True to enable early return, false to evaluate all groups
-     */
-    public function setEarlyBreak(bool $is): void
-    {
-        $this->earlyBreak = $is;
     }
 
     /**
@@ -76,14 +57,17 @@ class Evaluator
             if (!$validated) {
                 $errors[] = "Rule '{$rule}' failed.";
             }
-        } catch (ValidationException | Throwable $e) {
+        } catch (ValidationException $e) {
             $errors[] = $e->getMessage();
         }
 
-        return [
-            'validated' => $validated,
-            'errors'    => $errors
-        ];
+        $result = ['isValid' => $validated];
+
+        if ($this->hasErrors($errors)) {
+            $result['errors'] = $errors;
+        }
+
+        return $result;
     }
 
     /**
@@ -110,28 +94,44 @@ class Evaluator
 
             if ($groupPassed) {
                 $passed = true;
-
-                if ($this->earlyBreak) {
-                    // Early termination: stop processing once we find a passing group
-                    break;
-                }
+                break;
             }
 
             // Collect errors from this group for comprehensive reporting
-            $errors[] = $groupErrors;
+            if ($this->hasErrors($groupErrors)) {
+                $errors[] = $groupErrors;
+            }
         }
 
-        return [
-            'validated' => $passed,
-            'errors' => $errors
-        ];
+        $result = ['isValid' => $passed];
+
+        if ($this->hasErrors($errors)) {
+            $result['errors'] = $errors;
+        }
+
+        return $result;
+    }
+
+
+    protected function hasErrors(array $errors): bool
+    {
+        foreach ($errors as $error) {
+            if (is_array($error)) {
+                if ($this->hasErrors($error)) {
+                    return true;
+                }
+            } elseif (!empty($error)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
      * Evaluate a single AND group of validation rules.
      * 
      * All rules within an AND group must pass for the group to be considered valid.
-     * Processing stops early if earlyBreak is enabled and a rule fails.
      * 
      * @param mixed $input The data to validate
      * @param array $andGroup Array of rule nodes, each containing rule definition
@@ -163,11 +163,6 @@ class Evaluator
                 // Handle validation exceptions with custom error messages
                 $allPassed = false;
                 $errors[] = $e->getMessage();
-
-                if ($this->earlyBreak) {
-                    // Early termination: return immediately on first failure
-                    return [false, $errors];
-                }
             }
         }
 
@@ -205,5 +200,34 @@ class Evaluator
         }
 
         return $result;
+    }
+
+    public function evaluateDefinition(array $inputs, array $definition)
+    {
+        $allValidated = true;
+        $errors = [];
+
+        foreach ($definition as $field => $ast) {
+            $value = $inputs[$field] ?? null;
+
+            if (!is_array($ast)) {
+                throw new InvalidArgumentException(
+                    "Validation definition for '{$field}' must be an AST array."
+                );
+            }
+
+            $result = $this->evaluate($value, $ast);
+
+            if (!$result['isValid']) {
+                $allValidated = false;
+
+                $errors[$field] = $result['errors'];
+            }
+        }
+
+        return [
+            'isValid' => $allValidated,
+            'errors'    => $errors
+        ];
     }
 }

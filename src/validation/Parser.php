@@ -2,6 +2,8 @@
 
 namespace Arbor\validation;
 
+use InvalidArgumentException;
+
 /**
  * DSL Parser for Validation Rules
  * 
@@ -39,7 +41,7 @@ class Parser
      * 
      * @param string|array $input The validation rules to parse
      * @return array The parsed AST structure
-     * @throws \InvalidArgumentException When input is neither string nor array
+     * @throws InvalidArgumentException When input is neither string nor array
      */
     public function parse(string|array $dsl): array
     {
@@ -54,7 +56,7 @@ class Parser
             return $this->parseArr($dsl);
         }
 
-        throw new \InvalidArgumentException('DSL input must be a string or array.');
+        throw new InvalidArgumentException('DSL input must be a string or array.');
     }
 
     /**

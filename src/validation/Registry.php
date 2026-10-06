@@ -198,11 +198,16 @@ class Registry
     public function resolve(string $ruleName): callable|array
     {
         // Check if the rule exists
-        if (!isset($this->rules[$ruleName])) {
+        if (!$this->has($ruleName)) {
             throw new InvalidArgumentException("No rule registered with name: '{$ruleName}'.");
         }
 
         // Return the callable array [object, method]
         return $this->rules[$ruleName];
+    }
+
+    public function has(string $ruleName): bool
+    {
+        return isset($this->rules[$ruleName]);
     }
 }

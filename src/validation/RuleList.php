@@ -162,7 +162,7 @@ class RuleList implements RuleListInterface
     public function minLength($input, int $min = 1): bool
     {
         if (!is_string($input)) {
-            throw new ValidationException('must be a string');
+            throw new ValidationException("must be a string of at least {$min} characters");
         }
 
         if (mb_strlen($input) < $min) {
@@ -183,7 +183,7 @@ class RuleList implements RuleListInterface
     public function maxLength($input, int $max): bool
     {
         if (!is_string($input)) {
-            throw new ValidationException('must be a string');
+            throw new ValidationException("must be a string of {$max} characters");
         }
 
         if (mb_strlen($input) > $max) {
@@ -204,7 +204,7 @@ class RuleList implements RuleListInterface
     public function length($input, int $length): bool
     {
         if (!is_string($input)) {
-            throw new ValidationException('must be a string');
+            throw new ValidationException("must be a string exactly {$length} characters long ");
         }
 
         if (mb_strlen($input) !== $length) {
@@ -286,7 +286,7 @@ class RuleList implements RuleListInterface
     public function phone($input): bool
     {
         if (!is_string($input)) {
-            throw new ValidationException('must be a string');
+            throw new ValidationException('must be a valid phone number');
         }
 
         // Remove common phone number separators
@@ -311,7 +311,7 @@ class RuleList implements RuleListInterface
     public function date($input, string $format = 'Y-m-d'): bool
     {
         if (!is_string($input)) {
-            throw new ValidationException('must be a string');
+            throw new ValidationException("must be a string of a valid Date in format {$format}");
         }
 
         $date = \DateTime::createFromFormat($format, $input);
@@ -376,7 +376,7 @@ class RuleList implements RuleListInterface
     public function uuid($input): bool
     {
         if (!is_string($input)) {
-            throw new ValidationException('must be a string');
+            throw new ValidationException('must be a string in a valid UUID format');
         }
 
         $pattern = '/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i';
@@ -397,7 +397,7 @@ class RuleList implements RuleListInterface
     public function alphanumeric($input): bool
     {
         if (!is_string($input)) {
-            throw new ValidationException('must be a string');
+            throw new ValidationException('must be a string of alpha-numeric charachters only');
         }
 
         if (preg_match('/^[a-zA-Z0-9]+$/', $input) !== 1) {
@@ -417,7 +417,7 @@ class RuleList implements RuleListInterface
     public function alpha($input): bool
     {
         if (!is_string($input)) {
-            throw new ValidationException('must be a string');
+            throw new ValidationException('must be a string of alphabet charachters only');
         }
 
         if (preg_match('/^[a-zA-Z]+$/', $input) !== 1) {
@@ -453,7 +453,7 @@ class RuleList implements RuleListInterface
     public function digits($input): bool
     {
         if (!is_string($input)) {
-            throw new ValidationException('must be a string');
+            throw new ValidationException('must be a string of only digits');
         }
 
         if (preg_match('/^\d+$/', $input) !== 1) {
@@ -539,7 +539,7 @@ class RuleList implements RuleListInterface
     public function slug($input): bool
     {
         if (!is_string($input)) {
-            throw new ValidationException('must be a string');
+            throw new ValidationException('must be a string of valid slug');
         }
 
         if (preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)*$/', $input) !== 1) {
@@ -560,7 +560,7 @@ class RuleList implements RuleListInterface
     public function password($input): bool
     {
         if (!is_string($input)) {
-            throw new ValidationException('must be a string');
+            throw new ValidationException('must be a string of valid password format');
         }
 
         if (preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/', $input) !== 1) {

@@ -7,7 +7,6 @@ use Exception;
 use Arbor\validation\Parser;
 use Arbor\validation\Registry;
 use Arbor\validation\Evaluator;
-use Arbor\validation\Definition;
 use Arbor\validation\ErrorsFormatter;
 use Arbor\validation\RuleInterface;
 use Arbor\validation\RuleListInterface;
@@ -17,9 +16,6 @@ use Arbor\validation\RuleListInterface;
  * 
  * Main validation class that acts as a orchestrator to orchestrate validation operations.
  * Provides a unified interface for validating single rules, multiple rules, and batch operations.
- * 
- * WIP: This class is 99% complete.
- * Pending:
  * 
  * @package Arbor\validation
  */
@@ -46,26 +42,6 @@ class Validator
      */
     protected Evaluator $evaluator;
 
-    /**
-     * Definition instance for handling batch validation definitions
-     * 
-     * @var Definition|null
-     */
-    protected ?Definition $definition = null;
-
-    /**
-     * ErrorsFormatter instance for handling formatting of error messages
-     * 
-     * @var ErrorsFormatter
-     */
-    protected ErrorsFormatter $errorsFormatter;
-
-    /**
-     * Flag to determine if errors should be accumulated across validations
-     * 
-     * @var bool
-     */
-    protected bool $keepErrors = true;
 
     /**
      * Array storing validation errors
@@ -74,72 +50,21 @@ class Validator
      */
     protected array $errors = [];
 
-    protected bool $definitionEarlyBreak = true;
-
     /**
      * Constructor - Initialize validator with required dependencies
      * 
      * Class to delegate and orchestrate validation operations across
      * different components (registry, parser, evaluator, definition).
      * 
-     * @param Registry $registry Rule registry for managing validation rules.
-     * @param Parser $parser DSL and definition parser.
-     * @param Evaluator $evaluator Validation logic evaluator.
-     * @param ErrorsFormatter $errorsFormatter for formatting errors in readable format.
+     * @param bool $earlyBreak early break for evaluator.
      * 
      */
-    public function __construct(
-        Registry $registry,
-        Parser $parser,
-        Evaluator $evaluator,
-        ErrorsFormatter $errorsFormatter
-    ) {
-        $this->registry = $registry;
-        $this->parser = $parser;
-        $this->evaluator = $evaluator;
-        $this->errorsFormatter = $errorsFormatter;
-    }
-
-    /**
-     * Configure error accumulation behavior
-     * 
-     * When set to false, errors array will be cleared before each validation.
-     * When set to true (default), errors will accumulate across validations.
-     * 
-     * @param bool $is Whether to keep errors across validations
-     * @return void
-     */
-    public function keepErrors(bool $is): void
+    public function __construct()
     {
-        $this->keepErrors = $is;
-    }
+        $this->registry = new Registry();
+        $this->parser = new Parser();
 
-    /**
-     * Validate a single value against a single rule
-     * 
-     * @param mixed $value The value to validate
-     * @param string $rule The validation rule to apply
-     * @param string|null $name Optional name for error tracking (if provided, errors are keyed by name)
-     * @return bool True if validation passes, false otherwise
-     */
-    public function validateRule(mixed $value, string $rule, ?string $name = null): bool
-    {
-        // Clear errors if not keeping them across validations
-        if (!$this->keepErrors) {
-            $this->errors = [];
-        }
-
-        // Evaluate the single rule against the value
-        $result = $this->evaluator->evaluateSingle($value, $rule);
-
-        // Store errors with appropriate key structure
-        if ($name) {
-            $this->errors[$name] = $result['errors'];
-        } else {
-            $this->errors[] = $result['errors'];
-        }
-
-        return $result['validated'];
+        $this->evaluator = new Evaluator($this->registry);
     }
 
     /**
@@ -150,34 +75,12 @@ class Validator
      * @param string|null $name Optional name for error tracking
      * @return bool True if all validations pass, false otherwise
      */
-    public function validateRules(mixed $input, string|array $dsl, ?string $name = null): bool
+    public function check(mixed $input, string|array $dsl): array
     {
-        // Clear errors if not keeping them across validations
-        if (!$this->keepErrors) {
-            $this->errors = [];
-        }
-
         // Parse DSL into abstract syntax tree
         $ast = $this->parser->parse($dsl);
-
         // Evaluate the parsed rules against input
-        $result = $this->evaluator->evaluate($input, $ast);
-
-        // Store errors with appropriate key structure
-        if ($name) {
-            $this->errors[$name] = $result['errors'];
-        } else {
-            $this->errors[] = $result['errors'];
-        }
-
-        return $result['validated'];
-    }
-
-
-    protected function buildDefinition(): void
-    {
-        $this->definition = new Definition($this->evaluator);
-        $this->definition->setEarlyBreak($this->definitionEarlyBreak);
+        return $this->evaluator->evaluate($input, $ast);
     }
 
     /**
@@ -190,79 +93,12 @@ class Validator
      * @param array $definition Validation definition structure
      * @return bool True if all batch validations pass, false otherwise
      */
-    public function validateBatch(array $inputs, array $definition): bool
+    public function checkDefinition(array $inputs, array $definition)
     {
-        if ($this->definition === null) {
-            $this->buildDefinition();
-        }
-
-        // Clear errors for batch operation
-        $this->errors = [];
-
-        // Parse the validation definition into a usable format
-        $parsedDefinition = $this->parser->parseDefinition($definition);
-
-        // Set the parsed definition in the definition handler
-        $this->definition->define($parsedDefinition);
-
-        // Execute batch validation
-        $result = $this->definition->validate($inputs);
-
-        // Store batch validation errors
-        $this->errors = $result['errors'];
-
-        return $result['validated'];
+        $definitionAst = $this->parser->parseDefinition($definition);
+        return $this->evaluator->evaluateDefinition($inputs, $definitionAst);
     }
 
-    /**
-     * Define validation rules for later use
-     * 
-     * Allows pre-defining validation schemas that can be reused
-     * without having to parse them repeatedly.
-     * 
-     * @param array $definition The validation definition to parse and store
-     * @return void
-     */
-    public function define(array $definition)
-    {
-        if ($this->definition === null) {
-            $this->buildDefinition();
-        }
-
-
-        $parsedDefinition = $this->parser->parseDefinition($definition);
-        $this->definition->define($parsedDefinition);
-    }
-
-
-    public function validateDefinition(array $inputs): bool
-    {
-        if ($this->definition === null || !$this->definition->hasDefinition()) {
-            throw new Exception("Definition is not set, need to call define() before calling validateDefinition()");
-        }
-
-        $this->errors = [];
-
-        $result = $this->definition->validate($inputs);
-
-        $this->errors = $result['errors'];
-
-        return $result['validated'];
-    }
-
-    /**
-     * Parse validation rules DSL into abstract syntax tree
-     * 
-     * Utility method to parse rules without executing validation.
-     * Useful for debugging or pre-processing validation rules.
-     * 
-     * @param mixed $dsl The DSL to parse (string or array format)
-     * @return array Parsed abstract syntax tree representation
-     */
-    public function parseRules($dsl): array
-    {
-        return $this->parser->parse($dsl);
-    }
 
     /**
      * Register validation rules from a class instance
@@ -273,7 +109,7 @@ class Validator
      * @param RuleInterface|RuleListInterface $class Rule class instance to register
      * @return void
      */
-    public function addRulesFromClass(RuleInterface|RuleListInterface $class)
+    public function addRule(RuleInterface|RuleListInterface $class)
     {
         $this->registry->register($class);
     }
@@ -288,43 +124,8 @@ class Validator
      * @param string $namespace Namespace prefix for the discovered classes
      * @return void
      */
-    public function addRulesFromDir(string $dir, string $namespace): void
+    public function addRulesDir(string $dir, string $namespace): void
     {
         $this->registry->registerFromDir($dir, $namespace);
-    }
-
-    /**
-     * Get all accumulated validation errors
-     * 
-     * Returns the raw errors array containing all validation failures
-     * from the current or accumulated validation operations.
-     * 
-     * @return array Array of validation errors
-     */
-    public function getErrors(): array
-    {
-        return $this->errors;
-    }
-
-    /**
-     * Get human-readable validation errors
-     * 
-     * @return array Formatted error messages
-     */
-    public function getFormattedErrors(): array
-    {
-        return $this->errorsFormatter->format($this->errors);
-    }
-
-
-    public function earlyEvaluate($is): void
-    {
-        $this->evaluator->setEarlyBreak($is);
-    }
-
-
-    public function definitionEarlyBreak($is)
-    {
-        $this->definitionEarlyBreak = $is;
     }
 }

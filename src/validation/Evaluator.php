@@ -49,7 +49,6 @@ class Evaluator
 
             if (!$result['isValid']) {
                 $allValidated = false;
-
                 $errors[$field] = $result['errors'];
             }
         }
@@ -91,10 +90,17 @@ class Evaluator
             $errors[] = $groupErrors;
         }
 
-        return [
+        $result = [
             'isValid' => $passed,
-            'errors' => $errors
         ];
+
+        if ($passed) {
+            $result['errors'] = [];
+        } else {
+            $result['errors'] = $errors;
+        }
+
+        return $result;
     }
 
 

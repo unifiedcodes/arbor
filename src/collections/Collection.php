@@ -52,31 +52,16 @@ class Collection
             return;
         }
 
-        // Class / interface
-        if (class_exists($this->type) || interface_exists($this->type)) {
-            if (!$value instanceof $this->type) {
-                throw new InvalidArgumentException(
-                    sprintf(
-                        '%s collection expects instance of [%s], [%s] given.',
-                        $this->key,
-                        $this->type,
-                        get_debug_type($value)
-                    )
-                );
-            }
-
-            return;
-        }
-
-        $validation = Validate::check($value, $this->type, $this->key);
+        $validation = Validate::check($value, $this->type);
 
         if (!$validation->isValid()) {
             throw new InvalidArgumentException(
                 sprintf(
-                    '%s collection expects instance of [%s], [%s] given.',
+                    '%s collection expects instance of [%s], [%s] given. Validation error: %s',
                     $this->key,
                     $this->type,
-                    get_debug_type($value)
+                    get_debug_type($value),
+                    $validation->errors()
                 )
             );
         }

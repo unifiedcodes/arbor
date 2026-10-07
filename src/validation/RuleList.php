@@ -12,7 +12,6 @@ use Arbor\validation\ValidationException;
  */
 class RuleList implements RuleListInterface
 {
-
     public function provides(): array
     {
         return [
@@ -46,7 +45,11 @@ class RuleList implements RuleListInterface
             'array',
             'file',
             'slug',
-            'password'
+            'password',
+            'callable',
+            'fqn',
+            'instanceOf',
+            'isA'
         ];
     }
 
@@ -565,6 +568,73 @@ class RuleList implements RuleListInterface
 
         if (preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/', $input) !== 1) {
             throw new ValidationException('must be at least 8 characters long and contain at least one lowercase letter, one uppercase letter, one digit, and one special character');
+        }
+
+        return true;
+    }
+
+    public function callable($input): bool
+    {
+        if (!is_callable($input)) {
+            throw new ValidationException('must be a callable');
+        }
+
+        return true;
+    }
+
+    public function fqn($input): bool
+    {
+        if (!is_string($input)) {
+            throw new ValidationException('must be a valid fully qualified class name');
+        }
+
+        if (preg_match('/^(?:\\\\?[A-Za-z_][A-Za-z0-9_]*)(?:\\\\[A-Za-z_][A-Za-z0-9_]*)*$/', $input) !== 1) {
+            throw new ValidationException('must be a valid fully qualified class name');
+        }
+
+        if (!class_exists($input)) {
+            throw new ValidationException("class {$input} does not exist");
+        }
+
+        return true;
+    }
+
+    public function instanceOf($input, string $type): bool
+    {
+        if (!class_exists($type) && !interface_exists($type)) {
+            throw new ValidationException(
+                "class or interface {$type} does not exist"
+            );
+        }
+
+        if (!$input instanceof $type) {
+            throw new ValidationException(
+                "must be an instance of {$type}"
+            );
+        }
+
+        return true;
+    }
+
+
+    public function isA($input, string $type): bool
+    {
+        if (!is_string($input) || !class_exists($input)) {
+            throw new ValidationException(
+                'must be a valid class name'
+            );
+        }
+
+        if (!class_exists($type) && !interface_exists($type)) {
+            throw new ValidationException(
+                "class or interface {$type} does not exist"
+            );
+        }
+
+        if (!is_a($input, $type, true)) {
+            throw new ValidationException(
+                "class {$input} must extend or implement {$type}"
+            );
         }
 
         return true;

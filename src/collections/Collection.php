@@ -2,9 +2,9 @@
 
 namespace Arbor\collections;
 
-use BadMethodCallException;
 use LogicException;
 use InvalidArgumentException;
+use Arbor\validation\Validate;
 
 
 class Collection
@@ -36,7 +36,7 @@ class Collection
     {
         if (!$this->isMultiple && count($this->values) >= 1) {
             throw new LogicException(
-                'Single Mode Collection already contains an instance.'
+                'Single Mode Collection already contains an instance or value for this key'
             );
         }
 
@@ -52,15 +52,14 @@ class Collection
             return;
         }
 
-        $type = $this->type;
-
         // Class / interface
-        if (class_exists($type) || interface_exists($type)) {
-            if (!$value instanceof $type) {
+        if (class_exists($this->type) || interface_exists($this->type)) {
+            if (!$value instanceof $this->type) {
                 throw new InvalidArgumentException(
                     sprintf(
-                        'Collection expects instance of [%s], [%s] given.',
-                        $type,
+                        '%s collection expects instance of [%s], [%s] given.',
+                        $this->key,
+                        $this->type,
                         get_debug_type($value)
                     )
                 );
@@ -69,7 +68,18 @@ class Collection
             return;
         }
 
-        // Delegate built-in validation to Arbor validation module.
+        $validation = Validate::check($value, $this->type, $this->key);
+
+        if (!$validation->isValid()) {
+            throw new InvalidArgumentException(
+                sprintf(
+                    '%s collection expects instance of [%s], [%s] given.',
+                    $this->key,
+                    $this->type,
+                    get_debug_type($value)
+                )
+            );
+        }
     }
 
     public function get(): mixed

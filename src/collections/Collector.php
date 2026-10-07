@@ -2,6 +2,8 @@
 
 namespace Arbor\collections;
 
+use InvalidArgumentException;
+
 class Collector
 {
     protected $collections = [];

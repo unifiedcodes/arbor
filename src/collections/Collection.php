@@ -67,16 +67,8 @@ class Collection
         }
     }
 
-    public function get(): mixed
+    public function get(): array
     {
-        if (empty($this->values)) {
-            return null;
-        }
-
-        if (!$this->isMultiple) {
-            return $this->values[0];
-        }
-
         return $this->values;
     }
 

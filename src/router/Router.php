@@ -47,12 +47,13 @@ class Router
 
 
     /**
-     * URLBuilder instance.
+     * Error router instance.
      *
      * @var ErrorRouter
      */
     protected ErrorRouter $errorRouter;
 
+    protected URLBuilder $URLBuilder;
 
     /**
      * Pending group options to be applied for route grouping.
@@ -77,11 +78,14 @@ class Router
      */
     public function __construct(
         protected Pipeline $pipeline,
-        protected URLBuilder $URLBuilder,
+
+        #[ConfigValue('root.url_prefix')]
+        protected string $baseURI
     ) {
         $this->registry = new Registry();
         $this->group = new Group();
         $this->errorRouter = new ErrorRouter();
+        $this->URLBuilder = new URLBuilder($this->baseURI);
     }
 
     /**

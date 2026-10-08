@@ -200,6 +200,11 @@ class ServiceContainer implements ContainerInterface
         $this->providers->bootProviders();
     }
 
+    public function finalizeProviders(): void
+    {
+        $this->providers->finalizeProviders();
+    }
+
     /**
      * Retrieve the underlying Registry instance.
      *

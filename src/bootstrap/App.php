@@ -11,7 +11,6 @@ use Arbor\support\Helpers;
 
 class App
 {
-    protected $booted = false;
     protected ServiceContainer $container;
 
     public function __construct()
@@ -23,12 +22,26 @@ class App
         Facade::setContainer($this->container);
     }
 
-    public function load(ServiceProvider|string|array $providers): self
+    public function eagerLoad(ServiceProvider|string|array $providers): self
+    {
+        $this->providers($providers);
+        $this->boot();
+
+        return $this;
+    }
+
+    public function providers(ServiceProvider|string|array $providers): self
     {
         $providers = is_array($providers) ? $providers : [$providers];
-
         $this->container->registerProviders($providers);
+
+        return $this;
+    }
+
+    public function boot(): self
+    {
         $this->container->bootProviders();
+        $this->container->finalizeProviders();
 
         return $this;
     }

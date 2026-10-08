@@ -27,6 +27,8 @@ class Providers
      */
     protected array $booted = [];
 
+    protected array $finalized = [];
+
     public function __construct(
         protected Registry $registry,
         protected Resolver $resolver
@@ -139,5 +141,26 @@ class Providers
 
         // Deferred providers are booted when first loaded.
         $this->bootProvider($fqn, $provider);
+    }
+
+
+    public function finalizeProviders(): void
+    {
+        foreach ($this->providers as $fqn => $provider) {
+            $this->finalizeProvider($fqn, $provider);
+        }
+    }
+
+    protected function finalizeProvider(
+        string $fqn,
+        ServiceProvider $provider
+    ): void {
+        if (isset($this->finalized[$fqn])) {
+            return;
+        }
+
+        $provider->finalize();
+
+        $this->finalized[$fqn] = true;
     }
 }

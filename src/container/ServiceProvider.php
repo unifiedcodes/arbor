@@ -68,10 +68,13 @@ abstract class ServiceProvider
         return $this->deferred;
     }
 
-
-
     public function aliases(): array
     {
         return [];
+    }
+
+    public function finalize()
+    {
+        // optional finalization logic.
     }
 }

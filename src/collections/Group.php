@@ -4,7 +4,7 @@ namespace Arbor\collections;
 
 use InvalidArgumentException;
 
-final class GroupEntry implements EntryInterface
+final class Group implements EntryInterface
 {
     protected array $values = [];
 

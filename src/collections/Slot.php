@@ -7,7 +7,7 @@ use InvalidArgumentException;
 use Arbor\validation\Validate;
 
 
-final class CollectionEntry implements EntryInterface
+final class Slot implements EntryInterface
 {
     protected array $values = [];
 

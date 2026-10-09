@@ -6,13 +6,13 @@ use LogicException;
 
 class Collector
 {
-    protected Collections $collections;
-    protected Groups $groups;
+    protected Collectible $slots;
+    protected Collectible $groups;
 
     public function __construct()
     {
-        $this->collections = new Collections();
-        $this->groups = new Groups();
+        $this->slots = new Collectible('Slots', Slot::class);
+        $this->groups = new Collectible('Group', Group::class);
     }
 
     public function slot(
@@ -20,25 +20,30 @@ class Collector
         string $type,
         bool $isMultiple = true
     ): self {
-        $this->collections->define($key, $type, $isMultiple);
-        return $this;
-    }
-
-    public function group(string $key): self
-    {
-        $this->groups->define($key);
+        $this->slots->define($key, $type, $isMultiple);
         return $this;
     }
 
     public function add(string $key, mixed $value): self
     {
-        $this->collections->add($key, $value);
+        $this->slots->add($key, $value);
         return $this;
     }
 
-    public function bind(string $groupName, ...$collections): self
+    public function group(string $key, ?array $values = null): self
     {
-        $this->groups->add($groupName, ...$collections);
+        $this->groups->define($key);
+
+        if (!empty($values)) {
+            $this->bind($key, ...$values);
+        }
+
+        return $this;
+    }
+
+    public function bind(string $groupName, ...$slots): self
+    {
+        $this->groups->add($groupName, ...$slots);
         return $this;
     }
 
@@ -76,8 +81,8 @@ class Collector
             return;
         }
 
-        if ($this->collections->has($key)) {
-            foreach ($this->collections->touch($key) as $value) {
+        if ($this->slots->has($key)) {
+            foreach ($this->slots->touch($key) as $value) {
                 $result[] = $value;
             }
         }
@@ -85,7 +90,7 @@ class Collector
 
     public function finalize(): void
     {
-        $this->collections->finalize();
+        $this->slots->finalize();
         $this->groups->finalize();
     }
 }

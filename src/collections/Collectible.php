@@ -5,7 +5,7 @@ namespace Arbor\collections;
 use LogicException;
 use InvalidArgumentException;
 
-abstract class Collectible
+class Collectible
 {
     /** @var array<string, EntryInterface> */
     protected array $entries = [];
@@ -13,10 +13,21 @@ abstract class Collectible
     /** @var array<string, list<Contribution>> */
     protected array $contributions = [];
 
-    abstract protected function type(): string;
 
-    /** @return class-string<EntryInterface> */
-    abstract protected function dto(): string;
+    public function __construct(
+        protected string $type,
+        protected string $dto
+    ) {}
+
+    public function type()
+    {
+        return $this->type;
+    }
+
+    public function dto()
+    {
+        return $this->dto;
+    }
 
     public function define(string $key, mixed ...$arguments): static
     {
@@ -130,8 +141,7 @@ abstract class Collectible
     public function get(string $key): array
     {
         $this->ensureKey($key);
-
-        return $this->entries[$key]->get();
+        return $this->touch($key);
     }
 
     public function touch(string $key): array

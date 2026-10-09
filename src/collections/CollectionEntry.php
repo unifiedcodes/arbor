@@ -7,14 +7,14 @@ use InvalidArgumentException;
 use Arbor\validation\Validate;
 
 
-class Collection
+final class CollectionEntry implements EntryInterface
 {
     protected array $values = [];
 
     public function __construct(
         protected string $key,
         protected ?string $type = null,
-        protected bool $isMultiple = false
+        protected bool $isMultiple = true
     ) {}
 
     public function key(): string

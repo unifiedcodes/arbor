@@ -15,6 +15,7 @@ class RuleList implements RuleListInterface
     public function provides(): array
     {
         return [
+            'string',
             'int' => 'integer',
             'alnum' => 'alphanumeric',
             'al' => 'alpha',
@@ -51,6 +52,22 @@ class RuleList implements RuleListInterface
             'instanceOf',
             'isA'
         ];
+    }
+
+    /**
+     * Validate string
+     *
+     * @param mixed $input
+     * @return bool
+     * @throws ValidationException
+     */
+    public function string($input): bool
+    {
+        if (!is_string($input)) {
+            throw new ValidationException('must be a string');
+        }
+
+        return true;
     }
 
     /**

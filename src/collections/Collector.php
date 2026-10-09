@@ -3,190 +3,89 @@
 namespace Arbor\collections;
 
 use LogicException;
-use InvalidArgumentException;
 
 class Collector
 {
-    protected $collections = [];
-    protected $groups = [];
+    protected Collections $collections;
+    protected Groups $groups;
 
-    public function __call(string $method, array $arguments): mixed
+    public function __construct()
     {
-        if ($this->hasGroup($method)) {
-            return $this->handleGroupCall($method, $arguments);
-        }
-
-        if ($this->has($method)) {
-            return $this->handleCollectionCall($method, $arguments);
-        }
-
-        throw new InvalidArgumentException(
-            "Collection or group with key [{$method}] is not defined."
-        );
+        $this->collections = new Collections();
+        $this->groups = new Groups();
     }
 
-    protected function handleGroupCall(
-        string $method,
-        array $arguments
-    ): mixed {
-        if (count($arguments) === 0) {
-            return $this->getGroup($method);
-        }
-
-        return $this->pushToGroup($method, ...$arguments);
-    }
-
-    protected function handleCollectionCall(
-        string $method,
-        array $arguments
-    ): mixed {
-        if (count($arguments) === 0) {
-            return $this->get($method);
-        }
-
-        return $this->push($method, $arguments[0]);
-    }
-
-    public function define(
+    public function slot(
         string $key,
         string $type,
-        bool $isMultiple = false
-    ): static {
-        if ($this->hasSome($key)) {
-            throw new LogicException(
-                "Collection or group with name [{$key}] is already defined."
-            );
-        }
-
-        $this->collections[$key] = new Collection(
-            key: $key,
-            type: $type,
-            isMultiple: $isMultiple
-        );
-
+        bool $isMultiple = true
+    ): self {
+        $this->collections->define($key, $type, $isMultiple);
         return $this;
     }
 
-    public function group(string $groupName, ...$collections)
+    public function group(string $key): self
     {
-        if ($this->hasSome($groupName)) {
-            throw new LogicException(
-                "Collection or group with name [{$groupName}] is already defined."
-            );
-        }
-
-        $this->groups[$groupName] = [];
-
-        $this->pushToGroup($groupName, ...$collections);
-
+        $this->groups->define($key);
         return $this;
     }
 
-    public function has(string $key): bool
+    public function add(string $key, mixed $value): self
     {
-        return isset($this->collections[$key]);
-    }
-
-    public function hasGroup(string $groupName): bool
-    {
-        return isset($this->groups[$groupName]);
-    }
-
-    public function hasSome(string $key): bool
-    {
-        return $this->has($key) || $this->hasGroup($key);
-    }
-
-    protected function ensureKey(string $key): void
-    {
-        if (!$this->has($key)) {
-            throw new InvalidArgumentException(
-                "Collection with key [{$key}] is not defined."
-            );
-        }
-    }
-
-    public function push(string $key, mixed $value): static
-    {
-        $this->ensureKey($key);
-        $this->collections[$key]->push($value);
-
+        $this->collections->add($key, $value);
         return $this;
     }
 
-    public function pushToGroup(string $groupName, ...$collections): static
+    public function bind(string $groupName, ...$collections): self
     {
-        if (!$this->hasGroup($groupName)) {
-            throw new InvalidArgumentException(
-                "Group with name [{$groupName}] is not defined."
-            );
-        }
-
-        foreach ($collections as $collection) {
-            $this->ensureKey($collection);
-            $this->groups[$groupName][] = $collection;
-        }
-
+        $this->groups->add($groupName, ...$collections);
         return $this;
     }
 
-    public function get(string $key): array
-    {
-        $this->ensureKey($key);
-        return $this->collections[$key]->get();
-    }
-
-    public function getCollection(string $key): Collection
-    {
-        $this->ensureKey($key);
-        return $this->collections[$key];
-    }
-
-    public function keysInGroup(string $groupName): array
-    {
-        if (!$this->hasGroup($groupName)) {
-            throw new InvalidArgumentException(
-                "Group with name: [{$groupName}] is not defined."
-            );
-        }
-
-        return $this->groups[$groupName];
-    }
-
-    public function getGroup(string $groupName)
-    {
-        return $this->concat(...$this->keysInGroup($groupName));
-    }
-
-    public function concat(string ...$keys): array
+    public function get(string ...$keys): array
     {
         $result = [];
 
         foreach ($keys as $key) {
-            $this->ensureKey($key);
-
-            $result = array_merge_recursive(
-                $result,
-                $this->get($key)
-            );
+            $this->resolve($key, $result, []);
         }
 
         return $result;
     }
 
-    public function clear(?string $key = null): bool
-    {
-        if ($key === null) {
-            foreach ($this->collections as $collection) {
-                $collection->clear();
+    private function resolve(
+        string $key,
+        array &$result,
+        array $path
+    ): void {
+        if ($this->groups->has($key)) {
+            if (isset($path[$key])) {
+                $cycle = implode(' -> ', [...array_keys($path), $key]);
+
+                throw new LogicException(
+                    "Circular group reference detected: [{$cycle}]."
+                );
             }
 
-            return true;
+            $path[$key] = true;
+
+            foreach ($this->groups->touch($key) as $collectionKey) {
+                $this->resolve($collectionKey, $result, $path);
+            }
+
+            return;
         }
 
-        $this->ensureKey($key);
-        $this->collections[$key]->clear();
+        if ($this->collections->has($key)) {
+            foreach ($this->collections->touch($key) as $value) {
+                $result[] = $value;
+            }
+        }
+    }
 
-        return true;
+    public function finalize(): void
+    {
+        $this->collections->finalize();
+        $this->groups->finalize();
     }
 }

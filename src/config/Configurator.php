@@ -44,16 +44,13 @@ class Configurator
      * @param string $path The path to the configuration directory
      * @param string|null $environment Optional environment name for loading environment-specific overrides
      */
-    public function __construct(string $path = 'configs', ?string $environment = null)
+    public function __construct(string $path = 'configs')
     {
         $this->registry = new Registry();
         $this->compiler = new Compiler($this->registry);
 
         // Load base configuration
-        $this->registry->loadConfig($path);
-
-        // Load environment-specific configuration overrides if provided
-        $this->registry->mergeEnvironment($path, $environment);
+        $this->registry->loadDir($path);
     }
 
     /**
@@ -139,7 +136,7 @@ class Configurator
 
         $this->registry->replace(
             $this->compiler->compile(
-                $this->registry->getRaw()
+                $this->registry->all()
             )
         );
 

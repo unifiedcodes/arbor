@@ -34,9 +34,9 @@ final class Compiler
             registry: $this->registry,
         );
 
-        $ctx->setResolver(fn(mixed $v): mixed => $this->compileInternal($v, $ctx));
+        $ctx->setResolver(fn(mixed $v): mixed => $this->evaluate($v, $ctx));
 
-        return $this->compileInternal($data, $ctx);
+        return $this->evaluate($data, $ctx);
     }
 
     /**
@@ -50,7 +50,7 @@ final class Compiler
      * @param ResolverContext $ctx The resolver context containing registry and resolver function
      * @return mixed The compiled value with expressions resolved
      */
-    private function compileInternal(mixed $value, ResolverContext $ctx): mixed
+    private function evaluate(mixed $value, ResolverContext $ctx): mixed
     {
         if (is_string($value) && $this->containsDsl($value)) {
             $value = new DSLExpression($value);
@@ -62,7 +62,7 @@ final class Compiler
 
         if (is_array($value)) {
             foreach ($value as $k => $v) {
-                $value[$k] = $this->compileInternal($v, $ctx);
+                $value[$k] = $this->evaluate($v, $ctx);
             }
         }
 

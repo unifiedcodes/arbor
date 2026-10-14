@@ -4,7 +4,11 @@ namespace Arbor\config;
 
 use Arbor\support\Macros;
 use Exception;
-use stdClass;
+use FilesystemIterator;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
+use RuntimeException;
+use SplFileInfo;
 
 /**
  * Registry class for managing application configuration.
@@ -25,103 +29,116 @@ class Registry
      */
     protected array $config = [];
 
-    /**
-     * Load configuration files from a directory.
-     *
-     * Reads all PHP files from the specified directory and stores their returned
-     * arrays in the config registry. Files should return associative arrays.
-     *
-     * @param string $configPath The path to the configuration directory
-     * @param bool $merge Whether to merge with existing configuration (default: false)
-     * @return void
-     * @throws Exception If the directory doesn't exist or if a config file doesn't return an array
-     */
-    public function loadConfig(string $configPath, bool $merge = false): void
+
+    public function loadDir(string $dir): static
     {
-        $configPath = rtrim($configPath, '/') . '/';
+        $this->config = $this->loadDirItems($dir);
 
-        if (!is_dir($configPath)) {
-            throw new Exception("Config directory not found: $configPath");
-        }
+        return $this;
+    }
 
-        foreach (glob($configPath . '*.php') as $file) {
-            $key = basename($file, '.php');
-            try {
-                $data = require $file;
-            } catch (Exception $e) {
-                throw new Exception("Error loading config file '$file': " . $e->getMessage());
-            }
+    public function mergeDir(string $dir): static
+    {
+        $items = $this->loadDirItems($dir);
 
-            if (!is_array($data)) {
-                throw new Exception("Config file '$file' must return an array.");
-            }
+        $this->config = array_replace_recursive(
+            $this->config,
+            $items
+        );
 
-            if ($merge && isset($this->config[$key])) {
-                // Merge environment config over base config for the same key
-                $this->config[$key] = $this->arrayMergeRecursiveDistinct($this->config[$key], $data);
-            } else {
-                $this->config[$key] = $data;
-            }
-        }
+        return $this;
     }
 
     /**
-     * Recursively merge two arrays with distinct handling for different array types.
-     *
-     * Supports a special '!replace' flag to completely replace the base array.
-     * List arrays are merged using array_merge, while associative arrays are
-     * merged recursively with override values taking precedence.
-     *
-     * @param array<mixed> $base The base array
-     * @param array<mixed> $override The array to merge over the base
-     * @return array<mixed> The merged array
+     * Load PHP configuration files from a directory.
      */
-    protected function arrayMergeRecursiveDistinct(array $base, array $override): array
+    protected function loadDirItems(string $dir): array
     {
-        // Replace entire base array with override
-        if (isset($override['!replace']) && $override['!replace'] === true) {
-            unset($override['!replace']);
-            return $override;
+        $directory = rtrim($dir, DIRECTORY_SEPARATOR);
+
+        if (!is_dir($directory)) {
+            throw new RuntimeException(
+                "Configuration directory does not exist: {$directory}"
+            );
         }
 
-        // If both are list arrays, merge as lists
-        if (array_is_list($base) && array_is_list($override)) {
-            return array_merge($base, $override);
-        }
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator(
+                $directory,
+                FilesystemIterator::SKIP_DOTS
+            )
+        );
 
-        foreach ($override as $key => $value) {
-            if (array_key_exists($key, $base)) {
-                if (is_array($base[$key]) && is_array($value)) {
-                    $base[$key] = $this->arrayMergeRecursiveDistinct($base[$key], $value);
-                } else {
-                    $base[$key] = $value;
-                }
-            } else {
-                $base[$key] = $value;
+        $items = [];
+
+        /** @var SplFileInfo $file */
+        foreach ($iterator as $file) {
+            if (!$file->isFile() || $file->getExtension() !== 'php') {
+                continue;
             }
+
+            $relativePath = substr(
+                $file->getPathname(),
+                strlen($directory) + 1
+            );
+
+            $segments = explode(
+                DIRECTORY_SEPARATOR,
+                $relativePath
+            );
+
+            $last = count($segments) - 1;
+
+            $segments[$last] = pathinfo(
+                $segments[$last],
+                PATHINFO_FILENAME
+            );
+
+            $value = require $file->getPathname();
+
+            if (!is_array($value)) {
+                throw new RuntimeException(
+                    "Configuration file must return an array: "
+                        . $file->getPathname()
+                );
+            }
+
+            $this->setNestedValue($items, $segments, $value);
         }
 
-        return $base;
+        return $items;
     }
 
     /**
-     * Merge environment-specific configuration files.
-     *
-     * Loads configuration files from an environment subdirectory and merges them
-     * with the existing configuration.
-     *
-     * @param string $path The base configuration path
-     * @param string|null $environment The environment name (subdirectory)
-     * @return void
+     * Set a value using an array of path segments.
      */
-    public function mergeEnvironment(string $path, ?string $environment): void
-    {
-        if ($environment !== null) {
-            $envPath = rtrim($path, '/\\') . DIRECTORY_SEPARATOR . $environment;
-            if (is_dir($envPath)) {
-                $this->loadConfig($envPath, true);
-            }
+    protected function setNestedValue(
+        array &$items,
+        array $segments,
+        mixed $value
+    ): void {
+        $key = array_shift($segments);
+
+        if ($key === null) {
+            return;
         }
+
+        if ($segments === []) {
+            $items[$key] = $value;
+            return;
+        }
+
+        if (!isset($items[$key])) {
+            $items[$key] = [];
+        }
+
+        if (!is_array($items[$key])) {
+            throw new RuntimeException(
+                "Configuration path conflict at: {$key}"
+            );
+        }
+
+        $this->setNestedValue($items[$key], $segments, $value);
     }
 
     /**
@@ -155,7 +172,7 @@ class Registry
     {
         $hasDefault = func_num_args() === 2;
 
-        $sentinel = new stdClass();
+        $sentinel = '%sentinel%';
 
         $value = value_at($this->config, $key, $sentinel);
 
@@ -165,8 +182,6 @@ class Registry
             }
             throw new Exception("Config key '{$key}' not found.");
         }
-
-        return $value;
 
         return $value;
     }
@@ -181,19 +196,6 @@ class Registry
      * @return array<string, mixed> A copy of all configuration data
      */
     public function all(): array
-    {
-        return $this->config;
-    }
-
-    /**
-     * Get a reference to the raw configuration array.
-     *
-     * WARNING: Returns the actual internal configuration array,
-     * allowing direct modifications. Use with caution.
-     *
-     * @return array<string, mixed> The raw configuration array
-     */
-    public function getRaw(): array
     {
         return $this->config;
     }

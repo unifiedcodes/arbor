@@ -158,6 +158,6 @@ final class AuthContext
      */
     public function hasAbility(string $id): bool
     {
-        return in_array($id, $this->abilities);
+        return in_array($id, $this->abilities, true);
     }
 }

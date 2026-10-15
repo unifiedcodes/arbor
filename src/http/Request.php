@@ -319,4 +319,43 @@ class Request
         $new->attributes = $this->attributes->without($name);
         return $new;
     }
+
+    /**
+     * Retrieves the request URI scheme.
+     *
+     * Uses the URI scheme when available, otherwise falls back
+     * to server parameters to determine HTTP or HTTPS.
+     */
+    public function getScheme(): string
+    {
+        $scheme = strtolower($this->uri->getScheme());
+
+        if ($scheme !== '') {
+            return $scheme;
+        }
+
+        $https = $this->serverParams['HTTPS'] ?? null;
+
+        if (
+            $https !== null
+            && $https !== ''
+            && strtolower((string) $https) !== 'off'
+            && (string) $https !== '0'
+        ) {
+            return 'https';
+        }
+
+        // Support common reverse-proxy headers only when your proxy is trusted.
+        $forwardedProto = $this->headers->get('X-Forwarded-Proto');
+
+        if (is_string($forwardedProto) && $forwardedProto !== '') {
+            $proxyScheme = strtolower(trim(explode(',', $forwardedProto)[0]));
+
+            if (in_array($proxyScheme, ['http', 'https'], true)) {
+                return $proxyScheme;
+            }
+        }
+
+        return 'http';
+    }
 }

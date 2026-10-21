@@ -4,6 +4,8 @@ namespace Arbor\view;
 
 use Arbor\support\path\Uri;
 use RuntimeException;
+use LogicException;
+use InvalidArgumentException;
 
 /**
  * Represents an HTML document definition.
@@ -474,5 +476,49 @@ final class Document
     public function getInitScript(): ?array
     {
         return $this->initScript;
+    }
+
+    private array $importMap = [];
+
+    /**
+     * Add module import-map entries.
+     *
+     * Multiple calls merge their entries into a single import map.
+     *
+     * @throws LogicException If a specifier is registered with conflicting URLs.
+     */
+    public function importMap(array $imports): static
+    {
+        foreach ($imports as $specifier => $url) {
+            if (!is_string($specifier) || !is_string($url)) {
+                throw new InvalidArgumentException(
+                    'Import-map specifiers and URLs must be strings.'
+                );
+            }
+
+            if (
+                isset($this->importMap[$specifier]) &&
+                $this->importMap[$specifier] !== $url
+            ) {
+                throw new LogicException(
+                    sprintf(
+                        'Conflicting import-map entry for "%s".',
+                        $specifier
+                    )
+                );
+            }
+
+            $this->importMap[$specifier] = $url;
+        }
+
+        return $this;
+    }
+
+    /**
+     * Get module import-map entries.
+     */
+    public function getImportMap(): array
+    {
+        return $this->importMap;
     }
 }

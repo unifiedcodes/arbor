@@ -68,6 +68,7 @@ final class HtmlRenderer
             . $this->links()
             . $this->styles()
             . $this->inlineStyles()
+            . $this->importMap()
             . $this->renderScripts('head')
             . $this->renderInlineScripts('head')
             . "</head>\n";
@@ -384,5 +385,35 @@ final class HtmlRenderer
             . "\n</script>\n";
 
         return $output;
+    }
+
+    private function importMap(): string
+    {
+        $imports = $this->html->importMap();
+
+        if ($imports === []) {
+            return '';
+        }
+
+        $content = json_encode(
+            ['imports' => $imports],
+            JSON_HEX_TAG
+                | JSON_HEX_AMP
+                | JSON_HEX_APOS
+                | JSON_HEX_QUOT
+                | JSON_THROW_ON_ERROR
+        );
+
+        $attributes = ['type' => 'importmap'];
+
+        if ($this->html->nonce() !== null) {
+            $attributes['nonce'] = $this->html->nonce();
+        }
+
+        return '<script'
+            . $this->renderAttributes($attributes)
+            . ">\n"
+            . $content
+            . "\n</script>\n";
     }
 }

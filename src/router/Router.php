@@ -79,13 +79,13 @@ class Router
     public function __construct(
         protected Pipeline $pipeline,
 
-        #[ConfigValue('root.url_prefix')]
-        protected string $baseURI
+        #[ConfigValue('root.url')]
+        string $baseURI
     ) {
         $this->registry = new Registry();
         $this->group = new Group();
         $this->errorRouter = new ErrorRouter();
-        $this->URLBuilder = new URLBuilder($this->baseURI);
+        $this->URLBuilder = new URLBuilder($baseURI);
     }
 
     /**

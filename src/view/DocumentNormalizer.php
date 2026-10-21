@@ -50,6 +50,7 @@ class DocumentNormalizer
             baseHref: $this->base($document),
             links: $this->links($document),
             initScript: $this->initScript($document),
+            importMap: $document->getImportMap(),
         );
 
         return $html;

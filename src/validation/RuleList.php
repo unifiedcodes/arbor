@@ -50,7 +50,8 @@ class RuleList implements RuleListInterface
             'callable',
             'fqn',
             'instanceOf',
-            'isA'
+            'isA',
+            'associativeArray'
         ];
     }
 
@@ -652,6 +653,27 @@ class RuleList implements RuleListInterface
             throw new ValidationException(
                 "class {$input} must extend or implement {$type}"
             );
+        }
+
+        return true;
+    }
+
+
+    /**
+     * Validate associative array
+     *
+     * @param mixed $input
+     * @return bool
+     * @throws ValidationException
+     */
+    public function associativeArray($input): bool
+    {
+        if (!is_array($input)) {
+            throw new ValidationException('must be an array');
+        }
+
+        if (array_is_list($input)) {
+            throw new ValidationException('must be an associative array');
         }
 
         return true;

@@ -41,6 +41,7 @@ final class Html
         private array $meta = [],
         private ?string $baseHref = null,
         private ?array $initScript = null,
+        private array $importMap = [],
     ) {}
 
 
@@ -189,5 +190,10 @@ final class Html
     public function initScript(): ?array
     {
         return $this->initScript;
+    }
+
+    public function importMap(): array
+    {
+        return $this->importMap;
     }
 }

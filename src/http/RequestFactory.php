@@ -2,6 +2,9 @@
 
 namespace Arbor\http;
 
+use InvalidArgumentException;
+use JsonException;
+
 use Arbor\http\ServerRequest;
 use Arbor\http\components\Uri;
 use Arbor\http\components\Headers;
@@ -31,22 +34,92 @@ class RequestFactory
      */
     public static function fromGlobals(): ServerRequest
     {
-        return new ServerRequest(
-            // base request.
-            method: $_SERVER['REQUEST_METHOD'] ?? 'GET',
-            uri: self::URIfromGlobals($_SERVER),
-            headers: self::HeadersFromGlobals($_SERVER),
-            body: StreamFactory::fromPhpInput(),
-            attributes: new Attributes(),
-            version: self::protocolVersion($_SERVER),
+        $server = $_SERVER;
 
-            // server specific data.
-            serverParams: $_SERVER,
+        $headers = self::HeadersFromGlobals($server);
+        $body = StreamFactory::fromPhpInput();
+
+        $parsedBody = self::parseBody($headers, $body);
+
+        return new ServerRequest(
+            method: $server['REQUEST_METHOD'] ?? 'GET',
+            uri: self::URIfromGlobals($server),
+            headers: $headers,
+            body: $body,
+            attributes: new Attributes(),
+            version: self::protocolVersion($server),
+
+            serverParams: $server,
             cookies: new Cookies($_COOKIE),
             queryParams: $_GET,
-            parsedBody: $_POST,
+            parsedBody: $parsedBody ?? [],
             uploadedFiles: $_FILES,
         );
+    }
+
+    private static function parseBody(
+        Headers $headers,
+        ?StreamInterface $body
+    ): array|object|null {
+
+        $contentType = strtolower(
+            trim($headers->getFirst('Content-Type'))
+        );
+
+        // JSON request body
+        if (
+            $contentType !== ''
+            && preg_match(
+                '/^application\/json(?:\s*;|$)/i',
+                $contentType
+            )
+        ) {
+            $rawBody = $body?->getContents() ?? '';
+
+            if (trim($rawBody) === '') {
+                return [];
+            }
+
+            try {
+                $parsed = json_decode(
+                    $rawBody,
+                    true,
+                    512,
+                    JSON_THROW_ON_ERROR
+                );
+            } catch (JsonException $e) {
+                throw new InvalidArgumentException(
+                    'Invalid JSON request body: ' . $e->getMessage(),
+                    0,
+                    $e
+                );
+            }
+
+            if (!is_array($parsed)) {
+                throw new InvalidArgumentException(
+                    'JSON request body must be an object or array.'
+                );
+            }
+
+            return $parsed;
+        }
+
+        // PHP parses these form formats into $_POST.
+        if (
+            str_starts_with(
+                $contentType,
+                'application/x-www-form-urlencoded'
+            )
+            || str_starts_with(
+                $contentType,
+                'multipart/form-data'
+            )
+        ) {
+            return $_POST;
+        }
+
+        // No supported request body format.
+        return null;
     }
 
     /**

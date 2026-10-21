@@ -65,3 +65,11 @@ if (!function_exists('value_set_at')) {
         $current = $value;
     }
 }
+
+
+if (!function_exists('is_associative')) {
+    function is_associative(array $arr): bool
+    {
+        return !array_is_list($arr);
+    }
+}

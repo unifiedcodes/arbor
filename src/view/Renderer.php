@@ -137,30 +137,17 @@ final class Renderer
 
 
     /**
-     * Evaluates a view file with provided data as local variables.
-     * Uses output buffering to capture rendered output.
+     * Evaluates a view file with provided data.
      *
-     * @param string $file The path to the view file to evaluate.
-     * @param array $data Associative array of variables to make available in the view.
-     * @return string The captured output from the view file.
-     * @throws RuntimeException If a data key is not a valid PHP variable name.
+     * @param string $file
+     * @param array $data
+     * @return string
      */
     private function evaluate(string $file, array $data): string
     {
         ob_start();
 
         (function () use ($file, $data) {
-            foreach ($data as $key => $value) {
-
-                if (!is_string($key) || !preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $key)) {
-                    throw new RuntimeException(
-                        "Invalid variable name '{$key}' passed to view."
-                    );
-                }
-
-                ${$key} = $value;
-            }
-
             include $file;
         })();
 

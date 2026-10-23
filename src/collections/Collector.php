@@ -24,9 +24,12 @@ class Collector
         return $this;
     }
 
-    public function add(string $key, mixed $value): self
+    public function add(string $key, mixed ...$value): self
     {
-        $this->slots->add($key, $value);
+        foreach ($value as $value) {
+            $this->slots->add($key, $value);
+        }
+
         return $this;
     }
 

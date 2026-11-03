@@ -40,7 +40,7 @@ final class Html
         private array $inlineScripts = [],
         private array $meta = [],
         private ?string $baseHref = null,
-        private ?array $initScript = null,
+        private array $initScripts = [],
         private array $importMap = [],
     ) {}
 
@@ -187,9 +187,9 @@ final class Html
         return $this->baseHref;
     }
 
-    public function initScript(): ?array
+    public function initScripts(): array
     {
-        return $this->initScript;
+        return $this->initScripts;
     }
 
     public function importMap(): array

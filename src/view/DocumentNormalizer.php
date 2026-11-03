@@ -49,7 +49,7 @@ class DocumentNormalizer
             meta: $this->meta($document),
             baseHref: $this->base($document),
             links: $this->links($document),
-            initScript: $this->initScript($document),
+            initScripts: $this->initScripts($document),
             importMap: $document->getImportMap(),
         );
 
@@ -302,24 +302,29 @@ class DocumentNormalizer
         return $this->schemes->resolveAsset($base, $this->defaultAssetScheme);
     }
 
-    protected function initScript(Document $document): ?array
+    /**
+     * Normalize and resolve initialization scripts.
+     *
+     * @param Document $document
+     * @return array
+     */
+    protected function initScripts(Document $document): array
     {
-        $initScript = $document->getInitScript();
+        $normalized = [];
 
-        // if filename is empty.
-        if (!$initScript) {
-            return null;
+        foreach ($document->getInitScripts() as $initScript) {
+
+            $normalized[] = [
+                'file' => $this->schemes->resolveAsset(
+                    $initScript['uri'],
+                    $this->defaultAssetScheme
+                ),
+                'name' => $initScript['name'],
+                'dependencies' => $initScript['dependencies'],
+                'attributes' => $initScript['attributes']
+            ];
         }
 
-        $file = $this->schemes->resolveAsset(
-            $initScript['uri'],
-            $this->defaultAssetScheme
-        );
-
-        return [
-            'file' => $file,
-            'name' => $initScript['name'],
-            'attributes' => $initScript['attributes']
-        ];
+        return $normalized;
     }
 }

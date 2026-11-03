@@ -360,31 +360,204 @@ final class HtmlRenderer
     }
 
 
-    private function renderInitScripts()
+    /**
+     * Render all initialization modules in a single module script.
+     *
+     * @return string
+     */
+    private function renderInitScripts(): string
     {
-        $initScript = $this->html->initScript();
+        $initScripts = $this->html->initScripts();
 
-        if (!$initScript) {
-            return;
+        if ($initScripts === []) {
+            return '';
         }
 
-        $output = '';
+        $imports = [];
+        $scripts = [];
+        $usedNames = [];
 
-        $attributes = $initScript['attributes'];
-        $attributes['type'] = "module";
+        /*
+     * First pass:
+     * Parse names, validate identifiers and generate imports.
+     */
+        foreach ($initScripts as $index => $initScript) {
 
-        $file = $initScript['file'];
-        $name = $initScript['name'];
+            $parts = preg_split(
+                '/\s+as\s+/',
+                trim($initScript['name']),
+                2
+            );
 
-        $output .= "<script"
+            $className = trim($parts[0]);
+
+            $variableName = isset($parts[1]) && trim($parts[1]) !== ''
+                ? trim($parts[1])
+                : strtolower($className);
+
+            $this->assertJsIdentifier($className);
+            $this->assertJsIdentifier($variableName);
+
+            /*
+         * Class names and variable names share the same
+         * JavaScript module scope.
+         */
+            foreach ([$className, $variableName] as $identifier) {
+
+                if (isset($usedNames[$identifier])) {
+                    throw new \RuntimeException(
+                        "Conflicting initialization identifier '{$identifier}'."
+                    );
+                }
+
+                $usedNames[$identifier] = true;
+            }
+
+            $dependencies = $initScript['dependencies'] ?? [];
+
+            if (!is_array($dependencies)) {
+                throw new \RuntimeException(
+                    "Dependencies for '{$variableName}' must be an array."
+                );
+            }
+
+            foreach ($dependencies as $dependency) {
+
+                if (!is_string($dependency)) {
+                    throw new \RuntimeException(
+                        "Dependencies for '{$variableName}' must be strings."
+                    );
+                }
+
+                $this->assertJsIdentifier($dependency);
+            }
+
+            $file = json_encode(
+                $initScript['file'],
+                JSON_HEX_TAG
+                    | JSON_HEX_AMP
+                    | JSON_HEX_APOS
+                    | JSON_HEX_QUOT
+                    | JSON_THROW_ON_ERROR
+            );
+
+            $imports[] = "import {$className} from {$file};";
+
+            $scripts[$variableName] = [
+                'class' => $className,
+                'dependencies' => array_values(array_unique($dependencies))
+            ];
+        }
+
+        /*
+     * Second pass:
+     * Resolve initialization order.
+     */
+        $ordered = [];
+        $resolving = [];
+        $resolved = [];
+
+        $resolve = function (string $variableName) use (
+            &$resolve,
+            &$ordered,
+            &$resolving,
+            &$resolved,
+            $scripts
+        ): void {
+
+            if (isset($resolved[$variableName])) {
+                return;
+            }
+
+            if (isset($resolving[$variableName])) {
+                throw new \RuntimeException(
+                    "Circular initialization dependency involving '{$variableName}'."
+                );
+            }
+
+            if (!isset($scripts[$variableName])) {
+                throw new \RuntimeException(
+                    "Unknown initialization dependency '{$variableName}'."
+                );
+            }
+
+            $resolving[$variableName] = true;
+
+            foreach ($scripts[$variableName]['dependencies'] as $dependency) {
+                $resolve($dependency);
+            }
+
+            unset($resolving[$variableName]);
+
+            $resolved[$variableName] = true;
+
+            $ordered[] = $variableName;
+        };
+
+        foreach (array_keys($scripts) as $variableName) {
+            $resolve($variableName);
+        }
+
+        /*
+     * Third pass:
+     * Generate constructor calls.
+     */
+        $initializations = [];
+
+        foreach ($ordered as $variableName) {
+
+            $script = $scripts[$variableName];
+
+            $arguments = [];
+
+            foreach ($script['dependencies'] as $dependency) {
+                $arguments[] = "{$dependency}: {$dependency}";
+            }
+
+            $constructorArguments = $arguments
+                ? "{" . implode(', ', $arguments) . "}"
+                : '';
+
+            $initializations[] = "var {$variableName} = new {$script['class']}({$constructorArguments});";
+        }
+
+        /*
+     * Render the module script.
+     */
+        $attributes = [
+            'type' => 'module'
+        ];
+
+        if ($this->html->nonce() !== null) {
+            $attributes['nonce'] = $this->html->nonce();
+        }
+
+        $output = "<script"
             . $this->renderAttributes($attributes)
-            . ">\n"
-            . '   import ' . $name . ' from "' . $file . '";'
-            . "\n"
-            . '   var init = new ' . $name . '();'
-            . "\n</script>\n";
+            . ">\n";
+
+        $output .= implode("\n", $imports) . "\n\n";
+
+        $output .= implode("\n", $initializations) . "\n";
+
+        $output .= "</script>\n";
 
         return $output;
+    }
+
+    /**
+     * Validate a JavaScript identifier.
+     *
+     * @param string $identifier
+     * @return void
+     */
+    private function assertJsIdentifier(string $identifier): void
+    {
+        if (!preg_match('/^[a-zA-Z_$][a-zA-Z0-9_$]*$/D', $identifier)) {
+            throw new \RuntimeException(
+                "Invalid JavaScript identifier '{$identifier}'."
+            );
+        }
     }
 
     private function importMap(): string

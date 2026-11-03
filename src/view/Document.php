@@ -36,7 +36,7 @@ final class Document
     private array $links = [];
     private string|Uri|null $baseHref = null;
     private ?string $nonce = null;
-    private ?array $initScript = null;
+    private array $initScripts = [];
 
     /**
      * Allowed script placements.
@@ -459,23 +459,37 @@ final class Document
     }
 
     /**
-     * Convenience method for auto initiating an es6 module.
+     * Register an ES module for automatic initialization.
+     *
+     * @param string|Uri $filename Module filename.
+     * @param string|null $name Class name and optional variable alias.
+     * @param array|null $dependencies Variable names required by the constructor.
+     * @param array|null $attributes Script attributes.
+     * @return static
      */
     public function initScript(
         string|Uri $filename,
         ?string $name = null,
+        ?array $dependencies = null,
         ?array $attributes = null
-    ) {
-        $this->initScript = [
+    ): static {
+
+        $this->initScripts[] = [
             'uri' => $filename,
             'name' => $name ?: 'Init',
-            'attributes' => $attributes ?: []
+            'dependencies' => $dependencies ?? [],
+            'attributes' => $attributes ?? []
         ];
+
+        return $this;
     }
 
-    public function getInitScript(): ?array
+    /**
+     * Get registered initialization scripts.
+     */
+    public function getInitScripts(): array
     {
-        return $this->initScript;
+        return $this->initScripts;
     }
 
     private array $importMap = [];

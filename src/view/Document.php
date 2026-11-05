@@ -115,11 +115,16 @@ final class Document
      * @param string|Uri $href
      * @param array $attributes
      */
-    public function style(string|Uri $href, array $attributes = []): static
-    {
+    public function style(
+        string|Uri $href,
+        array $attributes = [],
+        int $priority = 0
+    ): static {
+
         $this->styles[] = [
             'href' => $href,
             'attributes' => $attributes,
+            'priority' => $priority,
         ];
 
         return $this;
@@ -145,13 +150,15 @@ final class Document
     public function script(
         string|Uri $src,
         array $attributes = [],
-        string $placement = 'body'
+        string $placement = 'body',
+        int $priority = 0
     ): static {
         $this->assertScriptPlacement($placement);
 
         $this->scripts[$placement][] = [
             'src' => $src,
             'attributes' => $attributes,
+            'priority' => $priority,
         ];
 
         return $this;
@@ -329,11 +336,15 @@ final class Document
     /**
      * Add inline style block.
      */
-    public function inlineStyle(string $content, array $attributes = []): static
-    {
+    public function inlineStyle(
+        string $content,
+        array $attributes = [],
+        int $priority = 0
+    ): static {
         $this->inlineStyles[] = [
             'content' => $content,
             'attributes' => $attributes,
+            'priority' => $priority,
         ];
 
         return $this;
@@ -355,7 +366,8 @@ final class Document
     public function inlineScript(
         string $content,
         array $attributes = [],
-        string $placement = 'body'
+        string $placement = 'body',
+        int $priority = 0
     ): static {
 
         $this->assertScriptPlacement($placement);
@@ -363,6 +375,7 @@ final class Document
         $this->inlineScripts[$placement][] = [
             'content' => $content,
             'attributes' => $attributes,
+            'priority' => $priority,
         ];
 
         return $this;

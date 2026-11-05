@@ -5,6 +5,7 @@ namespace Arbor\view;
 use Arbor\view\SchemeRegistry;
 use Arbor\view\Html;
 use RuntimeException;
+use Arbor\support\Sorter;
 
 /**
  * Responsible for converting a Document instance
@@ -59,10 +60,10 @@ class DocumentNormalizer
     /**
      * Push a value into a bucket only if it has not already been added.
      *
-     * @param array  $bucket Destination array.
-     * @param array  $seen   Identity lookup map.
+     * @param array $bucket Destination array.
+     * @param array $seen Identity lookup map.
      * @param string $identity Unique identity string.
-     * @param mixed  $value Value to push.
+     * @param mixed $value Value to push.
      * @return void
      */
     private function pushUnique(array &$bucket, array &$seen, string $identity, mixed $value): void
@@ -123,7 +124,9 @@ class DocumentNormalizer
      */
     protected function styles(Document $document): array
     {
-        return $this->resolveLinks($document->getStyles());
+        return Sorter::sort(
+            $this->resolveLinks($document->getStyles())
+        );
     }
 
     /**
@@ -154,6 +157,7 @@ class DocumentNormalizer
 
             $content = $style['content'] ?? '';
             $attributes = $style['attributes'] ?? [];
+            $priority = $style['priority'] ?? 0;
 
             if (!is_string($content)) {
                 throw new RuntimeException('Inline style content must be string.');
@@ -168,11 +172,12 @@ class DocumentNormalizer
                 value: [
                     'content' => $content,
                     'attributes' => $attributes,
+                    'priority' => $priority,
                 ]
             );
         }
 
-        return $normalized;
+        return Sorter::sort($normalized);
     }
 
     /**
@@ -192,6 +197,7 @@ class DocumentNormalizer
 
                 $uri = $script['src'] ?? null;
                 $attributes = $script['attributes'] ?? [];
+                $priority = $script['priority'] ?? 0;
 
                 $identity = $placement . '-' . $uri . '-' . serialize($attributes);
 
@@ -204,9 +210,14 @@ class DocumentNormalizer
                     value: [
                         'src' => $src,
                         'attributes' => $attributes,
+                        'priority' => $priority,
                     ]
                 );
             }
+
+            $normalized[$placement] = Sorter::sort(
+                $normalized[$placement]
+            );
         }
 
         return $normalized;
@@ -231,6 +242,7 @@ class DocumentNormalizer
 
                 $content = $script['content'] ?? '';
                 $attributes = $script['attributes'] ?? [];
+                $priority = $script['priority'] ?? 0;
 
                 if (!is_string($content)) {
                     throw new RuntimeException('Inline script content must be string.');
@@ -245,9 +257,14 @@ class DocumentNormalizer
                     value: [
                         'content' => $content,
                         'attributes' => $attributes,
+                        'priority' => $priority,
                     ]
                 );
             }
+
+            $normalized[$placement] = Sorter::sort(
+                $normalized[$placement]
+            );
         }
 
         return $normalized;

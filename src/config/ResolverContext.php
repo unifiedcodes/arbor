@@ -1,6 +1,6 @@
 <?php
 
-namespace Arbor\Config;
+namespace Arbor\config;
 
 use Arbor\Config\Registry;
 use Closure;

@@ -1,6 +1,6 @@
 <?php
 
-namespace Arbor\shared\filters;
+namespace Arbor\files\shared\filters;
 
 use Arbor\files\contracts\FileFilterInterface;
 use Arbor\files\state\FileContext;
@@ -11,7 +11,7 @@ use LogicException;
  *
  * @package Arbor\shared\filters
  */
-final class TextOnlyFilter implements FileFilterInterface
+final class TextOnly implements FileFilterInterface
 {
     /**
      * Validates that the file in the given context is a text file.

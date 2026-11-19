@@ -1,6 +1,6 @@
 <?php
 
-namespace Arbor\shared\filters;
+namespace Arbor\files\shared\filters;
 
 use Arbor\files\contracts\FileFilterInterface;
 use Arbor\files\state\FileContext;

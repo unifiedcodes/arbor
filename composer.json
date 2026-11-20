@@ -1,6 +1,6 @@
 {
   "name": "unifiedcodes/arbor",
-  "description": "A modular PHP micro-framework for fast, modern application development.",
+  "description": "A modular PHP framework",
   "type": "library",
   "license": "Apache-2.0",
   "keywords": [

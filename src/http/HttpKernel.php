@@ -4,7 +4,6 @@ namespace Arbor\http;
 
 use Arbor\router\Route;
 use Arbor\pipeline\Pipeline;
-use Arbor\pipeline\StageInterface;
 use Arbor\http\Response;
 use Arbor\http\Request;
 use Arbor\http\RequestContext;
@@ -33,9 +32,9 @@ class HttpKernel
     /**
      * Add a global middleware to be executed for every request.
      *
-     * @param StageInterface $middleware
+     * @param string $middleware
      */
-    public function addMiddleware(StageInterface|string $middleware): void
+    public function addMiddleware(string $middleware): void
     {
         $this->middlewares[] = $middleware;
     }
@@ -44,8 +43,7 @@ class HttpKernel
      * Handles an incoming request, manages its context and routing, and returns a response.
      * Also applies global middlewares to non-subrequests and catches errors to ensure a valid response.
      *
-     * @param Request $request The incoming request
-     * @param bool $isSubRequest True if this is an internal sub-request
+     * @param RequestContext $requestContext The incoming request context
      * @return Response The processed response
      * 
      */

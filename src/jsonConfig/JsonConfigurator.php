@@ -12,70 +12,42 @@ class JsonConfigurator
 {
     public array $configs = [];
 
-    private array $environments = [];
-
-    private string $currentEnv;
-
     public function __construct(
-        string $path = 'configs',
-        ?array $environments = [],
-        ?string $varName = 'APP_ENV',
-        bool $shouldMerge = true
+        private string $path = 'configs',
+        private bool $shouldMerge = true,
+        private ?string $suffix = null,
     ) {
-        $this->currentEnv = getenv($varName) ?: 'production';
-
-        // Default environment aliases
-        $defaultEnvironments = [
-            'dev'  => 'development',
-            'prod' => 'production'
-        ];
-
-        // Merge additional environments provided by client
-        $this->environments = array_replace(
-            $defaultEnvironments,
-            $environments ?? []
-        );
-
-        $this->populateEnvironments();
-        $this->load($path, $shouldMerge);
+        $this->load();
     }
 
-    private function load(string $path, bool $shouldMerge)
+    private function load()
     {
         // Scan and load environment configurations
-        $files = $this->scanDirectory($path);
+        $files = $this->scanDirectory($this->path);
+
+        if (empty($files)) {
+            $suffix = $this->suffix !== null
+                ? " matching suffix '{$this->suffix}'"
+                : '';
+
+            throw new RuntimeException(
+                "No JSON configuration files found in '{$this->path}'{$suffix}."
+            );
+        }
 
         sort($files, SORT_STRING);
 
         foreach ($files as $file) {
-            $this->loadFile($file, $shouldMerge);
+            $this->loadFile($file);
         }
     }
 
-    private function populateEnvironments(): void
-    {
-        $environments = [];
-
-        foreach ($this->environments as $short => $long) {
-            $environments[$short] = $short;
-            $environments[$long] = $short;
-        }
-
-        $this->environments = $environments;
-    }
-
-    private function getAliases(string $environment): array
-    {
-        $env = $this->environments[$environment] ?? $environment;
-
-        return array_keys($this->environments, $env, true);
-    }
 
     private function scanDirectory(string $path): array
     {
         if (!is_dir($path)) {
             throw new RuntimeException(
-                "Environment config directory not found: {$path}"
+                "Configuration directory not found: {$path}"
             );
         }
 
@@ -88,8 +60,6 @@ class JsonConfigurator
             )
         );
 
-        $aliases = $this->getAliases($this->currentEnv);
-
         foreach ($iterator as $file) {
             if (!$file->isFile()) {
                 continue;
@@ -97,38 +67,45 @@ class JsonConfigurator
 
             $filename = $file->getFilename();
 
-            foreach ($aliases as $alias) {
-                if (str_ends_with($filename, ".{$alias}.json")) {
-                    $files[] = $file->getPathname();
-                    break;
-                }
+            // Only consider JSON files.
+            if (!str_ends_with($filename, '.json')) {
+                continue;
             }
+
+            // Filter by suffix when one is provided.
+            if (
+                $this->suffix !== null &&
+                !str_ends_with($filename, ".{$this->suffix}.json")
+            ) {
+                continue;
+            }
+
+            $files[] = $file->getPathname();
         }
 
         return $files;
     }
 
-    private function loadFile(string $file, bool $shouldMerge = true): void
+    private function loadFile(string $file): void
     {
-        $filename = basename($file);
-
-        $aliases = $this->getAliases($this->currentEnv);
-
-        $suffix = '/\.(' . implode(
-            '|',
-            array_map(
-                fn($alias) => preg_quote($alias, '/'),
-                $aliases
-            )
-        ) . ')\.json$/';
-
-        $name = preg_replace($suffix, '', $filename);
-
         $content = file_get_contents($file);
 
         if ($content === false) {
             throw new RuntimeException(
                 "Unable to read configuration file: {$file}"
+            );
+        }
+
+        $filename = basename($file);
+
+        // Remove .json and the optional suffix.
+        $name = substr($filename, 0, -5);
+
+        if ($this->suffix !== null) {
+            $name = substr(
+                $name,
+                0,
+                - (strlen($this->suffix) + 1)
             );
         }
 
@@ -146,7 +123,7 @@ class JsonConfigurator
                 );
             }
 
-            if ($shouldMerge) {
+            if ($this->shouldMerge) {
                 $this->configs = array_replace_recursive(
                     $this->configs,
                     $config
@@ -180,15 +157,5 @@ class JsonConfigurator
         }
 
         return $value;
-    }
-
-    public function getEnvironment(): string
-    {
-        return $this->currentEnv;
-    }
-
-    public function getEnvironmentAliases(): array
-    {
-        return $this->getAliases($this->currentEnv);
     }
 }

@@ -478,20 +478,23 @@ final class Document
      * @param string|null $name Class name and optional variable alias.
      * @param array|null $dependencies Variable names required by the constructor.
      * @param array|null $attributes Script attributes.
+     * @param int $priority.
      * @return static
      */
     public function initScript(
         string|Uri $filename,
         ?string $name = null,
         ?array $dependencies = null,
-        ?array $attributes = null
+        ?array $attributes = null,
+        int $priority = 0
     ): static {
 
         $this->initScripts[] = [
             'uri' => $filename,
             'name' => $name ?: 'Init',
             'dependencies' => $dependencies ?? [],
-            'attributes' => $attributes ?? []
+            'attributes' => $attributes ?? [],
+            'priority' => $priority
         ];
 
         return $this;

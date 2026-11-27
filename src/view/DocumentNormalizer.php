@@ -325,6 +325,13 @@ class DocumentNormalizer
      * @param Document $document
      * @return array
      */
+
+    /**
+     * Normalize and resolve initialization scripts.
+     *
+     * @param Document $document
+     * @return array
+     */
     protected function initScripts(Document $document): array
     {
         $normalized = [];
@@ -338,10 +345,11 @@ class DocumentNormalizer
                 ),
                 'name' => $initScript['name'],
                 'dependencies' => $initScript['dependencies'],
-                'attributes' => $initScript['attributes']
+                'attributes' => $initScript['attributes'],
+                'priority' => $initScript['priority'] ?? 0
             ];
         }
 
-        return $normalized;
+        return Sorter::sort($normalized);
     }
 }

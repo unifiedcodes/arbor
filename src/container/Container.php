@@ -3,6 +3,7 @@
 namespace Arbor\container;
 
 use Exception;
+use LogicException;
 use Arbor\facade\Facade;
 use Arbor\container\ContainerInterface;
 

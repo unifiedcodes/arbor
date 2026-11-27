@@ -14,8 +14,6 @@ interface ContainerInterface
      *
      * @return mixed Entry.
      *
-     * @throws NotFoundExceptionInterface  No entry was found for this identifier.
-     * @throws ContainerExceptionInterface Error while retrieving the entry.
      */
     public function get(string $id): mixed;
 

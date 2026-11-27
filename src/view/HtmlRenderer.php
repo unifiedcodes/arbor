@@ -365,6 +365,15 @@ final class HtmlRenderer
      *
      * @return string
      */
+
+    /**
+     * Render all initialization modules in a single module script.
+     *
+     * Initialization order respects dependencies first,
+     * then priority (higher priority executes earlier).
+     *
+     * @return string
+     */
     private function renderInitScripts(): string
     {
         $initScripts = $this->html->initScripts();
@@ -446,14 +455,32 @@ final class HtmlRenderer
 
             $scripts[$variableName] = [
                 'class' => $className,
-                'dependencies' => array_values(array_unique($dependencies))
+                'dependencies' => array_values(array_unique($dependencies)),
+                'priority' => $initScript['priority'] ?? 0,
+                'index' => $index
             ];
         }
 
         /*
      * Second pass:
      * Resolve initialization order.
+     *
+     * Dependencies ALWAYS initialize first,
+     * regardless of their priority.
+     *
+     * Priority only determines the order of
+     * independent initialization scripts.
      */
+        $scriptNames = array_keys($scripts);
+
+        usort(
+            $scriptNames,
+            static function ($a, $b) use ($scripts): int {
+                return ($scripts[$a]['priority'] <=> $scripts[$b]['priority'])
+                    ?: ($scripts[$a]['index'] <=> $scripts[$b]['index']);
+            }
+        );
+
         $ordered = [];
         $resolving = [];
         $resolved = [];
@@ -484,7 +511,22 @@ final class HtmlRenderer
 
             $resolving[$variableName] = true;
 
-            foreach ($scripts[$variableName]['dependencies'] as $dependency) {
+            /*
+         * Resolve dependencies before initializing
+         * the current script.
+         */
+            $dependencies = $scripts[$variableName]['dependencies'];
+
+            // Dependencies are also ordered by priority.
+            usort(
+                $dependencies,
+                static function ($a, $b) use ($scripts): int {
+                    return ($scripts[$a]['priority'] <=> $scripts[$b]['priority'])
+                        ?: ($scripts[$a]['index'] <=> $scripts[$b]['index']);
+                }
+            );
+
+            foreach ($dependencies as $dependency) {
                 $resolve($dependency);
             }
 
@@ -495,7 +537,7 @@ final class HtmlRenderer
             $ordered[] = $variableName;
         };
 
-        foreach (array_keys($scripts) as $variableName) {
+        foreach ($scriptNames as $variableName) {
             $resolve($variableName);
         }
 
@@ -519,7 +561,8 @@ final class HtmlRenderer
                 ? "{" . implode(', ', $arguments) . "}"
                 : '';
 
-            $initializations[] = "var {$variableName} = new {$script['class']}({$constructorArguments});";
+            $initializations[] =
+                "var {$variableName} = new {$script['class']}({$constructorArguments});";
         }
 
         /*
